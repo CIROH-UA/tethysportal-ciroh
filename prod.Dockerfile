@@ -34,11 +34,6 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # INSTALL EXTENSIONS and APPLICATIONS #
 #######################################
 
-# RUN echo "Package: nodejs" >> /etc/apt/preferences.d/preferences && \
-#     echo "Pin: origin deb.nodesource.com" | tee -a /etc/apt/preferences.d/nodejs > /dev/null && \
-#     echo "Pin-Priority: 600" | tee -a /etc/apt/preferences.d/nodejs > /dev/null && \
-#     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-#     apt-get install -y nodejs && \
 RUN micromamba install --yes -c conda-forge --file requirements.txt && \
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba clean --all --yes && \ 
