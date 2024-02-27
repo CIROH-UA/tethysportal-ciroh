@@ -10,7 +10,7 @@ The Ciroh Tethys Portal is composed of the following micro-services:
 
 1. Django CMS
 2. Tethys Platform
-3. Geoserver
+3. Geoserver Cloud (Geoserver Cloud Native)
 4. Thredds Server
 
 The portal contains native Tethys Platform and Proxy applications:
@@ -23,9 +23,10 @@ The portal contains native Tethys Platform and Proxy applications:
 6. [Ground Subsseting Tool](https://github.com/Aquaveo/ggst.git) (GGST)
 7. [Snow Inspector](https://github.com/BYU-Hydroinformatics/snow-inspector)
 8. [OWP Tethys App](https://github.com/Aquaveo/OWP)
-9. [OWP NWM Map Viewer](https://water.noaa.gov/map) (Proxy App)
-10. [CIROH JupyterHub](https://jupyterhub.cuahsi.org/hub/login) (Proxy App)
-11. [HydroShare](https://www.hydroshare.org/home/) (Proxy App)
+9. [Community Streamflow Evaluation System (CSES) - Tethys Web Application](https://github.com/whitelightning450/Tethys-CSES)
+10. [OWP NWM Map Viewer](https://water.noaa.gov/map) (Proxy App)
+11. [CIROH JupyterHub](https://jupyterhub.cuahsi.org/hub/login) (Proxy App)
+12. [HydroShare](https://www.hydroshare.org/home/) (Proxy App)
 
 ## Installation with Cloud Providers
 

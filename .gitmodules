@@ -34,3 +34,7 @@
 	path = OWP
 	url = git@github.com:Aquaveo/OWP.git
 	branch = main
+[submodule "Tethys-CSES"]
+	path = Tethys-CSES
+	url = https://github.com/whitelightning450/Tethys-CSES
+	branch = main
