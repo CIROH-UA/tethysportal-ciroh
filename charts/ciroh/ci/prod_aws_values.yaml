@@ -11,7 +11,7 @@ namespace:
     ephemeral_storage: '20Gi'
 image:
   repository: 'gioelkin/tethysapp-ciroh-portal'
-  tag: v0.0.21-rc2
+  tag: v0.0.22-rc5
   pullPolicy: 'IfNotPresent'
 ingresses:
   enabled: true
@@ -196,9 +196,14 @@ tethys:
       value: 'The use of the portal will be carried out under the sole and exclusive responsibility of the user.'
     COPYRIGHT:
       value: 'Copyright © 2024 CIROH'
+    HYDROSHARE_CLIENT_ID:
+      value: 'sCqkdDBjnIUi6Nw9S8JyWe8D6MW3kMH9V6qVE2M3'
+    HYDROSHARE_SECRET_ID:
+      value: 'pbkdf2_sha256$260000$Mt3JQvUR5tNNUqkRqZgcWa$ZWibkRi6YYkB2vZ0P0h0HcQUwWUjW/ndrETaKw4tyJk='
+    AUTHENTICATION_BACKENDS:
+      value: '"[tethys_services.backends.hydroshare.HydroShareOAuth2]"'
 
   workspace_size: '16Gi'
-
   portal_changes:
     apps:
       app_store:
@@ -233,6 +238,7 @@ tethys:
           custom_settings: {}
           persistent:
             catalog_db: tethys_postgis
+
       gwdm:
         services:
           custom_settings:
@@ -244,6 +250,12 @@ tethys:
           spatial:
             primary_geoserver: tethys_geoserver
             primary_thredds: tethys_thredds
+
+      community_streamflow_evaluation_system:
+        services:
+          custom_settings:
+            Access_key_ID: ***REMOVED***
+            Secret_access_key: nBxfy5YcIOVGs2mpA1kYoLRATMFRtIxz/ewEd03S
   proxy_apps:
     owp_nwm_map_viewer:
       name: OWP NWM Map Viewer

@@ -33,6 +33,12 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 #######################################
 # INSTALL EXTENSIONS and APPLICATIONS #
 #######################################
+
+# RUN echo "Package: nodejs" >> /etc/apt/preferences.d/preferences && \
+#     echo "Pin: origin deb.nodesource.com" | tee -a /etc/apt/preferences.d/nodejs > /dev/null && \
+#     echo "Pin-Priority: 600" | tee -a /etc/apt/preferences.d/nodejs > /dev/null && \
+#     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+#     apt-get install -y nodejs && \
 RUN micromamba install --yes -c conda-forge --file requirements.txt && \
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba clean --all --yes && \ 
@@ -46,7 +52,7 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/hydrocompute.yml && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/gwdm.yml && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/snow-inspector.yml && \
-    cd ${TETHYS_HOME}/apps/OWP && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/OWP.yml && \
+    cd ${TETHYS_HOME}/apps/OWP && npm install && npm run build && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/OWP.yml && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/community_streamflow_evaluation_system.yml && \
     rm -rf ${TETHYS_HOME}/extensions/* && \
     rm -rf ${TETHYS_HOME}/apps/* && \
@@ -67,6 +73,8 @@ FROM tethysplatform/tethys-core:dev as build
 
 
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
+COPY --chown=www:www --from=base ${TETHYS_HOME}/apps ${TETHYS_HOME}/apps
+
 COPY config/tethys/asgi_supervisord.conf ${TETHYS_HOME}/asgi_supervisord.conf
 COPY config/tethys/supervisord.conf /etc/supervisor/supervisord.conf
 COPY config/tethys/update_tethys_apps.py ${TETHYS_HOME}

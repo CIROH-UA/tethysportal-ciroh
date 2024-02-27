@@ -5,3 +5,4 @@ see
 pywaterml
 gstools
 hydroeval
+pynhd
