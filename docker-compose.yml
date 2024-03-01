@@ -19,7 +19,8 @@ services:
       - postgresql_config_tethys_data:/var/lib/postgresql/data
 
   thredds:
-    image: tethysplatformuploader/thredds-docker:4.6.20-SNAPSHOT
+    # image: tethysplatformuploader/thredds-docker:4.6.20-SNAPSHOT
+    image: unidata/thredds-docker:5.4
     restart: always
     networks:
       - 'internal'
@@ -35,7 +36,6 @@ services:
       - type: bind
         source: ./data/tethys/thredds_data/
         target: /usr/local/tomcat/content/thredds/public/thredds_data
-
       - type: bind
         source: ./config/thredds/tomcat-users.xml
         target: /usr/local/tomcat/conf/tomcat-users.xml
@@ -45,10 +45,6 @@ services:
       - type: bind
         source: ./config/thredds/threddsConfig.xml
         target: /usr/local/tomcat/content/thredds/threddsConfig.xml
-      - type: bind
-        source: ./config/thredds/wmsPalettes
-        target: /usr/local/tomcat/content/thredds/wmsPalettes/
-
   redis:
     image: redis:latest
     restart: always
@@ -57,10 +53,9 @@ services:
     ports:
       - '6379:6379'
 
-
   web:
     image: tethys-portal-docker:latest
-    build: 
+    build:
       context: .
       dockerfile: prod.Dockerfile
     restart: always
@@ -199,7 +194,7 @@ services:
     depends_on:
       - config
     environment:
-      SPRING_PROFILES_ACTIVE: "jdbcconfig"
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
     ports:
       - 9090:8080
     networks:
@@ -218,7 +213,7 @@ services:
     depends_on:
       - config
     environment:
-      SPRING_PROFILES_ACTIVE: "jdbcconfig"
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
     networks:
       - 'external'
       - 'internal'
@@ -235,7 +230,7 @@ services:
     depends_on:
       - config
     environment:
-      SPRING_PROFILES_ACTIVE: "jdbcconfig"
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
     networks:
       - 'external'
       - 'internal'
@@ -252,7 +247,7 @@ services:
     depends_on:
       - config
     environment:
-      SPRING_PROFILES_ACTIVE: "jdbcconfig"
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
     networks:
       - 'external'
       - 'internal'
@@ -269,7 +264,7 @@ services:
     depends_on:
       - config
     environment:
-      SPRING_PROFILES_ACTIVE: "jdbcconfig"
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
     networks:
       - 'external'
       - 'internal'
@@ -288,7 +283,7 @@ services:
     depends_on:
       - rabbitmq
     environment:
-      SPRING_PROFILES_ACTIVE: "jdbcconfig"
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
       GEOWEBCACHE_CACHE_DIR: /data/geowebcache
     networks:
       - 'external'
@@ -304,7 +299,7 @@ services:
     depends_on:
       - config
     environment:
-      SPRING_PROFILES_ACTIVE: "jdbcconfig"
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
       GEOWEBCACHE_CACHE_DIR: /data/geowebcache
     networks:
       - 'external'

@@ -5,7 +5,6 @@ geopandas
 shapely
 xarray
 rioxarray
-netCDF4
 numpy
 pygithub
 gitpython==3.1.18
@@ -23,10 +22,8 @@ suds-community
 siphon
 owslib
 scipy
-statsmodels
 simplejson
 pandarallel
-thredds_crawler
 matplotlib
 sphinx_rtd_theme
 sphinx

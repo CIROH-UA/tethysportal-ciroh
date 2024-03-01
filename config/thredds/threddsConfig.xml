@@ -190,8 +190,9 @@
   -->
   
   <NetcdfSubsetService>
-    <scour>15 min</scour>
-    <maxAge>30 min</maxAge>
+    <allow>true</allow>
+    <scour>10 min</scour>
+    <maxAge>-1 min</maxAge>
   </NetcdfSubsetService>
 
   <!--
@@ -227,7 +228,6 @@
     <allowRemote>true</allowRemote>
     <maxImageWidth>2048</maxImageWidth>
     <maxImageHeight>2048</maxImageHeight>
-    <paletteLocationDir>/usr/local/tomcat/content/thredds/wmsPalettes</paletteLocationDir>
   </WMS>
   
 

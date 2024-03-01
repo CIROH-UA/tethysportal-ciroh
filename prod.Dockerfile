@@ -34,7 +34,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # INSTALL EXTENSIONS and APPLICATIONS #
 #######################################
 
-RUN micromamba install --yes -c conda-forge --file requirements.txt && \
+RUN micromamba install --yes -c conda-forge --file requirements.txt  && \
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba clean --all --yes && \ 
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\

@@ -72,7 +72,7 @@ thredds:
     - name: TDM_PW
       value: 'tdm_pass'
     - name: TDS_HOST
-      value: 'http://localhost'
+      value: 'ciroh-tds'
     - name: THREDDS_XMX_SIZE
       value: '4G'
     - name: THREDDS_XMS_SIZE
@@ -81,6 +81,11 @@ thredds:
       value: '6G'
     - name: TDM_XMS_SIZE
       value: '1G'
+    # - name: 'TOMCAT_USER_ID'
+    #   value: '1000'
+    # - name: TOMCAT_GROUP_ID
+    #   value: '1000'
+
   storage_size: 2Gi
   resources:
     requests:
