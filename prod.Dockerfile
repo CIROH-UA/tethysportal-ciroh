@@ -14,6 +14,8 @@ COPY tethysapp-hydrocompute ${TETHYS_HOME}/apps/tethysapp-hydrocompute
 COPY snow-inspector ${TETHYS_HOME}/apps/snow-inspector
 COPY OWP ${TETHYS_HOME}/apps/OWP
 COPY Tethys-CSES ${TETHYS_HOME}/apps/Tethys-CSES
+COPY hydroshare_api_tethysapp ${TETHYS_HOME}/apps/hydroshare_api_tethysapp
+
 
 
 COPY piprequirements.txt .
@@ -49,6 +51,7 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt  && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/snow-inspector.yml && \
     cd ${TETHYS_HOME}/apps/OWP && npm install && npm run build && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/OWP.yml && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/community_streamflow_evaluation_system.yml && \
+    cd ${TETHYS_HOME}/apps/hydroshare_api_tethysapp && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/hydroshare_api_tethysapp.yml && \
     rm -rf ${TETHYS_HOME}/extensions/* && \
     rm -rf ${TETHYS_HOME}/apps/* && \
     rm -rf /var/lib/apt/lists/* && \
