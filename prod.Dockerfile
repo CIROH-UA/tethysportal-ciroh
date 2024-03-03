@@ -34,12 +34,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # INSTALL EXTENSIONS and APPLICATIONS #
 #######################################
 
-# RUN echo "Package: nodejs" >> /etc/apt/preferences.d/preferences && \
-#     echo "Pin: origin deb.nodesource.com" | tee -a /etc/apt/preferences.d/nodejs > /dev/null && \
-#     echo "Pin-Priority: 600" | tee -a /etc/apt/preferences.d/nodejs > /dev/null && \
-#     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-#     apt-get install -y nodejs && \
-RUN micromamba install --yes -c conda-forge --file requirements.txt && \
+RUN micromamba install --yes -c conda-forge --file requirements.txt  && \
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba clean --all --yes && \ 
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\

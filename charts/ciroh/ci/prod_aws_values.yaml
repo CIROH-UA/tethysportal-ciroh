@@ -11,7 +11,7 @@ namespace:
     ephemeral_storage: '20Gi'
 image:
   repository: 'gioelkin/tethysapp-ciroh-portal'
-  tag: v0.0.22-rc5
+  tag: rc6
   pullPolicy: 'IfNotPresent'
 ingresses:
   enabled: true
@@ -356,9 +356,9 @@ thredds:
     storageClassName: 'efs-pv'
 
   image:
-    repository: tethysplatformuploader/thredds-docker
-    tag: 4.6.20-SNAPSHOT
-    pullPolicy: 'IfNotPresent'
+    repository: unidata/thredds-docker
+    tag: 5.4
+    pullPolicy: 'Always'
   persistentVolumeClaim:
     name: 'thredds-pv-claim'
   # Data to be used for the public folder and also for the wms palettes
@@ -372,7 +372,7 @@ thredds:
       subpath: 'tethys'
     wms_palettes:
       # an example of a wmsPalettes archive is the following https://example.com/some/web/wmsPalettes.tgz
-      init_data: true
+      init_data: false
       data_archive: 'https://init-service-data.s3.amazonaws.com/wmsPalettes.tar.gz'
       subpath: 'wmsPalettes'
 
@@ -620,8 +620,9 @@ thredds:
           -->
           
           <NetcdfSubsetService>
-            <scour>15 min</scour>
-            <maxAge>30 min</maxAge>
+            <allow>true</allow>
+            <scour>10 min</scour>
+            <maxAge>-1 min</maxAge>
           </NetcdfSubsetService>
 
           <!--
@@ -642,13 +643,14 @@ thredds:
           <!--
           The WCS Service is on by default.
           Also, off by default (and encouraged) is operating on a remote dataset.
+          -->
+
           <WCS>
             <allow>true</allow>
             <allowRemote>false</allowRemote>
             <scour>15 min</scour>
             <maxAge>30 min</maxAge>
           </WCS>
-          -->
 
           
           <WMS>
@@ -656,18 +658,16 @@ thredds:
             <allowRemote>true</allowRemote>
             <maxImageWidth>2048</maxImageWidth>
             <maxImageHeight>2048</maxImageHeight>
-            <paletteLocationDir>/usr/local/tomcat/content/thredds/wmsPalettes</paletteLocationDir>
-            <!-- <paletteLocationDir>/usr/local/tomcat/content/thredds/palettes</paletteLocationDir> -->
           </WMS>
           
 
-          <!--
+          
           <NCISO>
             <ncmlAllow>true</ncmlAllow>
             <uddcAllow>true</uddcAllow>
             <isoAllow>true</isoAllow>
           </NCISO>
-          -->
+
 
           <!--
           <NCSOS>
@@ -722,6 +722,7 @@ thredds:
           </Netcdf4Clibrary>
           -->
         </threddsConfig>
+
     wms_config:
       init_file: false
       file_content: ''
@@ -745,13 +746,13 @@ thredds:
                 password="tdm_pass"
                 roles="tdsConfig,tdsMonitor"/>
         </tomcat-users>
-  storage_size: '5Gi'
+  storage_size: '10Gi'
   resources:
     requests:
-      memory: '2Gi'
+      memory: '4Gi'
       cpu: '1'
     limits:
-      memory: '2Gi'
+      memory: '5Gi'
 
 gs-cloud:
   enabled: true
