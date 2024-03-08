@@ -14,11 +14,12 @@ COPY tethysapp-hydrocompute ${TETHYS_HOME}/apps/tethysapp-hydrocompute
 COPY snow-inspector ${TETHYS_HOME}/apps/snow-inspector
 COPY OWP ${TETHYS_HOME}/apps/OWP
 COPY Tethys-CSES ${TETHYS_HOME}/apps/Tethys-CSES
+COPY hydroshare_api_tethysapp ${TETHYS_HOME}/apps/hydroshare_api_tethysapp
+
 
 
 COPY piprequirements.txt .
 COPY requirements.txt .
-COPY config/tethys/tmp_app_store_files/conda_install.sh ${TETHYS_HOME}
 
 ###################
 # ADD THEME FILES #
@@ -49,11 +50,11 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt  && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/snow-inspector.yml && \
     cd ${TETHYS_HOME}/apps/OWP && npm install && npm run build && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/OWP.yml && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/community_streamflow_evaluation_system.yml && \
+    cd ${TETHYS_HOME}/apps/hydroshare_api_tethysapp && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/hydroshare_api_tethysapp.yml && \
     rm -rf ${TETHYS_HOME}/extensions/* && \
     rm -rf ${TETHYS_HOME}/apps/* && \
     rm -rf /var/lib/apt/lists/* && \
     find -name '*.a' -delete && \
-    mv -f ${TETHYS_HOME}/conda_install.sh $PYTHON_SITE_PACKAGE_PATH/site-packages/tethysapp/app_store/scripts/conda_install.sh &&\
     rm -rf ${CONDA_HOME}/envs/${CONDA_ENV_NAME}/conda-meta && \
     rm -rf ${CONDA_HOME}/envs/${CONDA_ENV_NAME}/include && \
     find -name '__pycache__' -type d -exec rm -rf '{}' '+' && \
@@ -68,7 +69,6 @@ FROM tethysplatform/tethys-core:dev as build
 
 
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
-COPY --chown=www:www --from=base ${TETHYS_HOME}/apps ${TETHYS_HOME}/apps
 
 COPY config/tethys/asgi_supervisord.conf ${TETHYS_HOME}/asgi_supervisord.conf
 COPY config/tethys/supervisord.conf /etc/supervisor/supervisord.conf

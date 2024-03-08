@@ -38,3 +38,7 @@
 	path = Tethys-CSES
 	url = https://github.com/whitelightning450/Tethys-CSES
 	branch = main
+[submodule "hydroshare_api_tethysapp"]
+	path = hydroshare_api_tethysapp
+	url = https://github.com/Aquaveo/hydroshare_api_tethysapp
+	branch = master
