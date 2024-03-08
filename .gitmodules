@@ -1,7 +1,3 @@
-[submodule "Water-Data-Explorer"]
-	path = Water-Data-Explorer
-	url = https://github.com/BYU-Hydroinformatics/Water-Data-Explorer.git
-	branch = master
 [submodule "tethysapp-metdataexplorer"]
 	path = tethysapp-metdataexplorer
 	url = https://github.com/BYU-Hydroinformatics/tethysapp-metdataexplorer.git
@@ -42,3 +38,7 @@
 	path = hydroshare_api_tethysapp
 	url = https://github.com/Aquaveo/hydroshare_api_tethysapp
 	branch = master
+[submodule "Water-Data-Explorer"]
+	path = Water-Data-Explorer
+	url = https://github.com/Aquaveo/Water-Data-Explorer
+	branch = hydroserver2-update-Jacob
