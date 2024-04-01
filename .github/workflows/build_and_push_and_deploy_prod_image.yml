@@ -1,10 +1,10 @@
 name: build_push_deploy_prod_image
 # Push to docker hub if tag has been created.
 on:
+  workflow_dispatch:
   push:
     tags:
       - '*'
-
 env:
   DOCKER_HUB_ORG: gioelkin
   # DOCKER_HUB_ORG: ciroh

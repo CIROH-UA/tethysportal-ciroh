@@ -4,15 +4,15 @@ name: helm_chart_lint_release
 
 # Push to docker hub if tag has been created.
 on:
+  workflow_dispatch:
   push:
     tags:
       - '*'
-
     branches:
       - main
-
     paths:
       - 'charts/**'
+
 jobs:
   # lint and test chart
   lint-test:
