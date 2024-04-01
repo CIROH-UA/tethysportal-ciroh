@@ -1,44 +1,44 @@
 [submodule "tethysapp-metdataexplorer"]
-	path = tethysapp-metdataexplorer
+	path = apps/tethysapp-metdataexplorer
 	url = https://github.com/BYU-Hydroinformatics/tethysapp-metdataexplorer.git
 	branch = master
 [submodule "ggst"]
-	path = ggst
+	path = apps/ggst
 	url = https://github.com/Aquaveo/ggst.git
 	branch = tethys4_upgrade
 [submodule "tethysapp-tethys_app_store"]
-	path = tethysapp-tethys_app_store
+	path = apps/tethysapp-tethys_app_store
 	url = https://github.com/Aquaveo/tethysapp-tethys_app_store.git
 	branch = master
 [submodule "tethysapp-swe"]
-	path = tethysapp-swe
+	path = apps/tethysapp-swe
 	url = https://github.com/Aquaveo/tethysapp-swe.git
 	branch = tethys4
 [submodule "tethysapp-hydrocompute"]
-	path = tethysapp-hydrocompute
+	path = apps/tethysapp-hydrocompute
 	url = https://github.com/tethysplatform/tethysapp-hydrocompute.git
 	branch = main
 [submodule "gwdm"]
-	path = gwdm
+	path = apps/gwdm
 	url = https://github.com/Aquaveo/gwdm.git
 	branch = gs-cloud-compatible
 [submodule "snow-inspector"]
-	path = snow-inspector
+	path = apps/snow-inspector
 	url = https://github.com/Aquaveo/snow-inspector
 	branch = tethys4_upgrade
 [submodule "OWP"]
-	path = OWP
+	path = apps/OWP
 	url = git@github.com:Aquaveo/OWP.git
 	branch = main
 [submodule "Tethys-CSES"]
-	path = Tethys-CSES
+	path = apps/Tethys-CSES
 	url = https://github.com/whitelightning450/Tethys-CSES
 	branch = main
 [submodule "hydroshare_api_tethysapp"]
-	path = hydroshare_api_tethysapp
+	path = apps/hydroshare_api_tethysapp
 	url = https://github.com/Aquaveo/hydroshare_api_tethysapp
 	branch = master
 [submodule "Water-Data-Explorer"]
-	path = Water-Data-Explorer
+	path = apps/Water-Data-Explorer
 	url = https://github.com/Aquaveo/Water-Data-Explorer
 	branch = hydroserver2-update-Jacob
