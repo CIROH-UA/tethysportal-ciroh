@@ -57,7 +57,7 @@ services:
     image: tethys-portal-docker:latest
     build:
       context: .
-      dockerfile: prod.Dockerfile
+      dockerfile: Dockerfile
     restart: always
     depends_on:
       - 'db'

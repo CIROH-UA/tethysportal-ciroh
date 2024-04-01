@@ -4,28 +4,15 @@ FROM tethysplatform/tethys-core:dev as base
 #########################
 # ADD APPLICATION FILES #
 #########################
-COPY Water-Data-Explorer ${TETHYS_HOME}/apps/Water-Data-Explorer
-COPY tethysapp-metdataexplorer ${TETHYS_HOME}/apps/tethysapp-metdataexplorer
-COPY tethysapp-tethys_app_store ${TETHYS_HOME}/apps/tethysapp-tethys_app_store
-COPY ggst ${TETHYS_HOME}/apps/ggst
-COPY gwdm ${TETHYS_HOME}/apps/gwdm
-COPY tethysapp-swe ${TETHYS_HOME}/apps/tethysapp-swe
-COPY tethysapp-hydrocompute ${TETHYS_HOME}/apps/tethysapp-hydrocompute
-COPY snow-inspector ${TETHYS_HOME}/apps/snow-inspector
-COPY OWP ${TETHYS_HOME}/apps/OWP
-COPY Tethys-CSES ${TETHYS_HOME}/apps/Tethys-CSES
-COPY hydroshare_api_tethysapp ${TETHYS_HOME}/apps/hydroshare_api_tethysapp
+COPY apps ${TETHYS_HOME}/apps
 
-
-
-COPY piprequirements.txt .
-COPY requirements.txt .
+COPY requirements/*.txt .
 
 ###################
 # ADD THEME FILES #
 ###################
-ADD  tethysext-ciroh_theme/tethysext ${TETHYS_HOME}/extensions/tethysext-ciroh_theme/tethysext
-ADD  tethysext-ciroh_theme/*.py ${TETHYS_HOME}/extensions/tethysext-ciroh_theme/
+ADD extensions ${TETHYS_HOME}/extensions
+
 
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
