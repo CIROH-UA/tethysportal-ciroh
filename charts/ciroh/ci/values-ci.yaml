@@ -1,6 +1,6 @@
 image:
   repository: 'gioelkin/tethysapp-ciroh-portal'
-  tag: dev_0f3754ce741c26054062ce7cad25aecf8c4bf276
+  tag: v0.0.21-rc
   pullPolicy: Always
 
 ingresses:
@@ -26,7 +26,7 @@ ingresses:
 djangocms:
   image:
     repository: gioelkin/django-cms
-    tag: dev_4e2d4deb320728e62b5534728f739287fcd4b669
+    tag: latest
   enabled: false
   ingress:
     enabled: false

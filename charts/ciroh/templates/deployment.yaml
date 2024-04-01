@@ -7,6 +7,8 @@ metadata:
 
 spec:
   replicas: {{ .Values.replicaCount }}
+  # strategy:
+  #   type: {{ .Values.strategy }}  # Use the Recreate update strategy
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "ciroh.name" . }}
@@ -16,6 +18,9 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "ciroh.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        # https://github.com/helm/helm/issues/5218
+        timstamp: "{{ date "20060102150405" .Release.Time }}"
     spec:
     {{- with .Values.imagePullSecrets }}
         imagePullSecrets:
@@ -26,80 +31,36 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: GWDM_WORKSPACE_NAME
-              value: {{ .Values.tethys.settings.gwdm_workspace_name | quote }}
-            - name: GWDM_STORE_NAME
-              value: {{ .Values.tethys.settings.gwdm_store_name | quote }}
-            - name: GWDM_TABLE_NAME
-              value: {{ .Values.tethys.settings.gwdm_table_name | quote }}
-            - name: GWDM_REGION_LAYER_NAME
-              value: {{ .Values.tethys.settings.gwdm_region_layer_name | quote }}
-            - name: GWDM_AQUIFER_LAYER_NAME
-              value: {{ .Values.tethys.settings.gwdm_aquifer_layer_name | quote }}                                          
-            - name: GWDM_WELL_LAYER_NAME
-              value: {{ .Values.tethys.settings.gwdm_well_layer_name | quote }}
-            - name: POSTGRES_USER
-              value: {{ .Values.tethys.settings.postgres_user | quote }}
-            - name: PREFIX_URL
-              value: {{ .Values.tethys.settings.prefix_url | quote }}
-            - name: ALLOWED_HOSTS
-              value: "\"[{{- range .Values.ingresses.external.hosts }}{{ .host }},{{- end }}]\""
-            - name: ENABLE_OPEN_PORTAL
-              value: {{ .Values.tethys.settings.enable_portal_open | quote }}
-            - name: BYPASS_TETHYS_HOME_PAGE
-              value: {{ .Values.tethys.settings.bypass_tethys_home_page | quote }}
-            - name: CHANNEL_LAYERS_BACKEND
-              value: {{ .Values.tethys.settings.channel_layers_backend | quote }}
-            - name: CHANNEL_LAYERS_CONFIG 
-              value: "\"{'hosts':[{'host':\ {{ .Values.redis.fullnameOverride }}-master,\ 'port':\ 6379}]}\""
-            - name: TETHYS_PUBLIC_HOST
-              value: {{ (index .Values.ingresses.external.hosts 0).host | quote }}
-            - name: POSTGRES_PASSWORD 
-              value: {{ .Values.postgis.postgres_password | quote }} 
-            - name: TETHYS_DB_NAME
-              value: {{ .Values.tethys.database.tethys_db_name | quote }}
-            - name: TETHYS_DB_USERNAME
-              value: {{ .Values.tethys.database.tethys_db_username | quote }}
-            - name: TETHYS_DB_PASSWORD
-              value: {{ .Values.tethys.database.tethys_db_password | quote }}
-            - name: TETHYS_DB_HOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: TETHYS_DB_PORT
-              value: "5432"
-            - name: TETHYS_DB_SUPERUSER
-              value: {{ .Values.tethys.database.tethys_db_superuser | quote }}
-            - name: TETHYS_DB_SUPERUSER_PASS
-              value: {{ .Values.tethys.database.tethys_db_superuser_pass | quote }}
-            - name: PORTAL_SUPERUSER_NAME
-              value: {{ .Values.tethys.super_user.username | quote }}
-            - name: PORTAL_SUPERUSER_EMAIL
-              value: {{ .Values.tethys.super_user.email | quote }}
-            - name: PORTAL_SUPERUSER_PASSWORD
-              value: {{ .Values.tethys.super_user.password | quote }}
+            # db values defined with postgis chart
             - name: APP_DB_HOST
               value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: APP_DB_PORT
-              value: "5432"
-            - name: APP_DB_USERNAME
-              value: {{ .Values.tethys.database.app_db_username | quote }}
-            - name: APP_DB_PASSWORD
-              value: {{ .Values.tethys.database.app_db_password | quote }}
+            - name: TETHYS_DB_HOST
+              value: {{ .Values.postgis.fullnameOverride | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgis.postgres_user | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgis.postgres_password | quote }}             
+            # Tethys settings defined outside the env
+            - name: ALLOWED_HOSTS
+              value: "\"[{{- range .Values.ingresses.external.hosts }}{{ .host }},{{- end }}]\""
+            # redis values
+            - name: CHANNEL_LAYERS_CONFIG 
+              value: "\"{'hosts':[{'host':\ {{ .Values.redis.fullnameOverride }}-master,\ 'port':\ {{ .Values.redis.master.containerPorts.redis }}}]}\""
+            # gs-cloud env variables
+            {{- if index .Values "gs-cloud" "enabled" }}
             - name: TETHYS_GS_USERNAME
-              value: {{ .Values.geoserver.username | quote }}
+              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "adminCredentials" "userKey" | quote }}
             - name: TETHYS_GS_PASSWORD
-              value: {{ .Values.geoserver.password | quote }}
+              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "adminCredentials" "passKey" | quote }}
             - name: TETHYS_GS_PROTOCOL
               value: 'http'
             - name: TETHYS_GS_HOST
-              value: {{ .Values.tethys.services.geoserver | quote }}
+              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "name" | quote }}
             - name: TETHYS_GS_PORT
-              value: "8181"
-            - name: TETHYS_GS_HOST_PUB
-              value: {{ .Values.tethys.services.geoserver | quote }}
-            - name: TETHYS_GS_PORT_PUB
-              value: "{{ if $.Values.ingresses.external.tls }}443{{else}}80{{ end }}"
-            - name: TETHYS_GS_PROTOCOL_PUB
-              value: "http{{ if $.Values.ingresses.external.tls }}s{{ end }}"
+              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "ports" 0 "port" | quote }}            
+            {{- end }}
+            # thredds env variables
+            {{- if .Values.thredds.enabled }}
             - name: THREDDS_TDS_USERNAME
               value: {{ .Values.thredds.username | quote }}
             - name: THREDDS_TDS_PASSWORD
@@ -109,53 +70,21 @@ spec:
             - name: THREDDS_TDS_PRIVATE_PROTOCOL
               value: 'http'
             - name: THREDDS_TDS_PRIVATE_HOST
-              value: {{ .Values.tethys.services.thredds | quote }}
+              value: {{ .Values.thredds.fullnameOverride | quote }}
             - name: THREDDS_TDS_PRIVATE_PORT
-              value: "8080"
+              value: {{ index .Values.thredds.service.ports 0 "port" | quote }}
             - name: THREDDS_TDS_PUBLIC_HOST
-              value: {{ .Values.tethys.services.thredds | quote }}
+              value: {{ .Values.thredds.fullnameOverride | quote }}
             - name: THREDDS_TDS_PUBLIC_PORT
               value: "{{ if $.Values.ingresses.external.tls }}443{{else}}80{{ end }}"
             - name: THREDDS_TDS_PUBLIC_PROTOCOL
               value: "http{{ if $.Values.ingresses.external.tls }}s{{ end }}"
-            - name: TETHYS_SETTINGS_FLAGS
-              value: {{ .Values.tethys.settings.tethys_settings_flags | quote }}
-            - name: CLIENT_MAX_BODY_SIZE
-              value: {{ .Values.tethys.settings.client_max_body_size | quote }}
-            - name: DATA_UPLOAD_MAX_MEMORY_SIZE
-              value: {{ .Values.tethys.settings.data_upload_max_memory_size | quote }}
-            - name: FILE_UPLOAD_MAX_MEMORY_SIZE
-              value: {{ .Values.tethys.settings.file_upload_max_memory_size | quote }}
-            - name: NGINX_READ_TIME_OUT
-              value: {{ .Values.tethys.settings.nginx_read_time_out | quote }}                           
-            - name: SITE_TITLE
-              value: {{ .Values.tethys.settings.portal_title | quote }}
-            - name: BRAND_TEXT
-              value: {{ .Values.tethys.settings.portal_title | quote }}
-            - name: PRIMARY_COLOR
-              value: {{ .Values.tethys.settings.primary_color | quote }}
-            - name: SECONDARY_COLOR
-              value: {{ .Values.tethys.settings.secondary_color | quote }}
-            - name: BACKGROUND_COLOR
-              value: {{ .Values.tethys.settings.background_color | quote }}
-            - name: HERO_TEXT
-              value: {{ .Values.tethys.settings.hero_text | quote }}              
-            - name: BLURB_TEXT
-              value: {{ .Values.tethys.settings.blurb_text | quote }}
-            - name: FEATURE_1_HEADING
-              value: {{ .Values.tethys.settings.feature_1_heading | quote }}
-            - name: FEATURE_1_BODY
-              value: {{ .Values.tethys.settings.feature_1_body | quote }}              
-            - name: FEATURE_2_HEADING
-              value: {{ .Values.tethys.settings.feature_2_heading | quote }}
-            - name: FEATURE_2_BODY
-              value: {{ .Values.tethys.settings.feature_2_body | quote }}
-            - name: FEATURE_3_HEADING
-              value: {{ .Values.tethys.settings.feature_3_heading | quote }}
-            - name: FEATURE_3_BODY
-              value: {{ .Values.tethys.settings.feature_3_body | quote }}
-            - name: COPYRIGHT
-              value: {{ .Values.tethys.settings.copyright | quote }}
+            {{- end }}
+            # extra env v
+            {{- range $key, $value :=  .Values.tethys.env }}
+            - name: {{ quote $key }}
+              value: {{ quote $value.value }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -163,29 +92,76 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            - name: tethys-persist-pv
-              mountPath: '/var/lib/tethys_persist'
-            {{- if .Values.thredds.data.init_default_config }}  
-            - name: thredds-persistent-storage
-              mountPath: '/var/lib/tethys_persist{{ .Values.tethys.settings.thredds_data_relative_path }}'
-              subPath: {{ .Values.thredds.data.public.subpath }}
-            {{- end }}
-            - name: config-volume
-              mountPath: '/usr/lib/tethys/portal_changes.yml'
-              subPath: portal_changes.yml
+          {{- range .Values.tethys.volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+          {{- end }}
+
+      {{- $init_scripts := .Files.Glob "extra_config/**.sh" }}
+      {{ if $init_scripts }}
+      initContainers:
+        {{- if .Values.tethys.init_containers.wait_for_db }}
+        - name: wait-tethys-postgresdb
+          image: postgis/postgis:latest
+          env:
+            - name: PGHOST
+              value: {{ .Values.postgis.fullnameOverride | quote }}
+            - name: PGUSER
+              value: {{ .Values.tethys.env.TETHYS_DB_USERNAME.value | quote }}
+            - name: PGPASSWORD
+              value: {{ .Values.tethys.env.TETHYS_DB_SUPERUSER_PASS.value | quote }}
+            - name: PGDATABASE
+              value: {{ .Values.tethys.env.TETHYS_DB_NAME.value | quote }}
+          args:
+            - /bin/bash
+            - -c
+            - |
+              while ! psql -c 'select 1' > /dev/null 2>&1; do
+                echo "waiting for tethys-postgresdb database to be ready"
+                sleep 1
+              done
+              echo "tethys-postgresdb database is ready!"
+        {{- end }}
+        {{- range $path, $_ :=  .Files.Glob  "extra_config/**.sh" }}    
+        - name: {{ $path | trimPrefix "extra_config/" | trimSuffix ".sh" }}
+          image: python:3.12.1-slim-bullseye
+          command: ["/bin/sh","/etc/mount/{{ $path | trimPrefix "extra_config/" }}"]
+          
+          env: 
+          {{- range $key, $value :=  $.Values.tethys.init_containers.env }}
+            - name: {{ quote $key }}
+              value: {{ quote $value.value }}
+          {{- end }}
+          volumeMounts:
+          - name: init-config-volume
+            mountPath: /etc/mount/{{ $path | trimPrefix "extra_config/" }}
+            subPath: {{ $path | trimPrefix "extra_config/" }}
+          imagePullPolicy: IfNotPresent
+        {{ end }}
+      {{- end }}
 
       volumes:
-        - name: tethys-persist-pv
-          persistentVolumeClaim:
-            claimName: tethys-persist-pvc
-        {{- if .Values.thredds.data.init_default_config }}
-        - name: thredds-persistent-storage
-          persistentVolumeClaim:
-            claimName: {{ .Values.thredds.persistentVolumeClaim.name }}
+        {{- range .Values.tethys.volumes }}
+          - name: {{ .name }}
+            {{- with .persistentVolumeClaim }}
+            persistentVolumeClaim:
+              claimName: {{ .claimName }}
+            {{- end }}
+            {{- with .configMap }}
+            configMap:
+              name: {{ .name }}
+            {{- end }}
         {{- end }}
-        - name: config-volume
-          configMap:
-            name: "{{ include "ciroh.fullname" . }}-configmap"        
+        {{- $init_scripts := .Files.Glob "extra_config/**.sh" }}
+        {{ if $init_scripts }}        
+          - name: init-config-volume
+            configMap:
+              name: "{{ include "ciroh.fullname" . }}-init-config"
+        {{- end }}
+
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

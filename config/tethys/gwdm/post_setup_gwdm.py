@@ -1,17 +1,21 @@
-
 import sys
 import argparse
 from geo.Geoserver import Geoserver
 import logging
 
-logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 def creat_and_init_gwdm(argv):
     parser = argparse.ArgumentParser(
         description="Create and initialize GWDM",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Example: {0} -gh <gs_host> -p <port> -u <user> -pw <password> -s <store_name> -w <workspace> -db <db_name> -dbp <db_port> -dbh <db_host> -dbu <db_user_name> -dbpw <db_password> -rt <region_table> -at <aquifer_table> -wt <wells_table>".format(argv[0]),
+        epilog="Example: {0} -gh <gs_host> -p <port> -u <user> -pw <password> -s <store_name> -w <workspace> -db <db_name> -dbp <db_port> -dbh <db_host> -dbu <db_user_name> -dbpw <db_password> -rt <region_table> -at <aquifer_table> -wt <wells_table>".format(
+            argv[0]
+        ),
     )
     parser.add_argument("-gh", "--gs_host", help="Geoserver host")
     parser.add_argument("-p", "--port", help="Port number")
@@ -27,11 +31,11 @@ def creat_and_init_gwdm(argv):
     parser.add_argument("-rt", "--region_table", help="Region table")
     parser.add_argument("-at", "--aquifer_table", help="Aquifer table")
     parser.add_argument("-wt", "--wells_table", help="Wells table")
-    
+
     args = parser.parse_args(argv[1:])
 
     geo = Geoserver(
-        f'{args.gs_host}:{args.port}/geoserver',
+        f"{args.gs_host}:{args.port}/geoserver-cloud",
         username=args.user,
         password=args.password,
     )
@@ -69,5 +73,4 @@ if __name__ == "__main__":
     try:
         creat_and_init_gwdm(sys.argv)
     except Exception as e:
-        logger.error('An error occurred', exc_info=True)
-
+        logger.error("An error occurred", exc_info=True)

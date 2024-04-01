@@ -2,7 +2,7 @@ image:
   repository: 'gioelkin/tethysapp-ciroh-portal'
   # repository: 'ciroh/tethysapp-ciroh'
   # tag: dev_aea20c0fc2e159559e561b2b1bf9a3861542fb0b
-  tag: dev_d40f0221e89460198dae10eaba7d3ec245b7207a
+  tag: v0.0.21-rc
   pullPolicy: Always
 
 ingresses:
@@ -28,7 +28,7 @@ ingresses:
 djangocms:
   image:
     repository: gioelkin/django-cms
-    tag: dev_4e2d4deb320728e62b5534728f739287fcd4b669
+    tag: latest
   enabled: true
   ingress:
     enabled: false
@@ -88,7 +88,7 @@ djangocms:
 tethys:
   workspace_size: '5Gi'
   services:
-    geoserver: 'ciroh-gs'
+    geoserver: 'ciroh-geoserver-gateway'
     thredds: 'ciroh-tds'
   settings:
     prefix_url: 't'
@@ -173,40 +173,40 @@ tethys:
           spatial:
             primary_geoserver: tethys_geoserver
             primary_thredds: tethys_thredds
-    proxy_apps:
-      owp_nwm_map_viewer:
-        name: OWP NWM Map Viewer
-        endpoint: https://water.noaa.gov/map
-        logo_url: /t/static/ciroh_theme/images/owp.png
-        description: Proxy app for Office in Water Prediction
-        tags: NOAA
-        enabled: true
-        show_in_apps_library: true
-        order: 0
-        back_url: web
-        open_in_new_tab: true
-      ciroh_jupyterhub:
-        name: CIROH JupyterHub
-        endpoint: https://jupyterhub.cuahsi.org/hub/login
-        logo_url: /t/static/ciroh_theme/images/jupyterhub.png
-        description: Proxy app for the CIROH JupyterHub
-        tags: CUAHSI
-        enabled: true
-        show_in_apps_library: true
-        order: 1
-        back_url: web
-        open_in_new_tab: true
-      hydroshare:
-        name: HydroShare
-        endpoint: https://www.hydroshare.org/home/
-        logo_url: /t/static/ciroh_theme/images/HydroShare.png
-        description: Proxy app for the Hydroshare app
-        tags: CUAHSI
-        enabled: true
-        show_in_apps_library: true
-        order: 2
-        back_url: web
-        open_in_new_tab: true
+  proxy_apps:
+    CIROH JupyterHub:
+      back_url: web
+      description: Proxy app for the CIROH JupyterHub
+      enabled: true
+      endpoint: https://jupyterhub.cuahsi.org/hub/login
+      logo_url: /static/ciroh_theme/images/jupyterhub.png
+      name: CIROH JupyterHub
+      open_in_new_tab: true
+      order: 1
+      show_in_apps_library: true
+      tags: CUAHSI
+    HydroShare:
+      back_url: web
+      description: Proxy app for the Hydroshare app
+      enabled: true
+      endpoint: https://www.hydroshare.org/home/
+      logo_url: /static/ciroh_theme/images/HydroShare.png
+      name: HydroShare
+      open_in_new_tab: true
+      order: 2
+      show_in_apps_library: true
+      tags: CUAHSI
+    OWP NWM Map Viewer:
+      back_url: web
+      description: Proxy app for Office in Water Prediction
+      enabled: true
+      endpoint: https://water.noaa.gov/map
+      logo_url: /static/ciroh_theme/images/owp.png
+      name: OWP NWM Map Viewer
+      open_in_new_tab: true
+      order: 0
+      show_in_apps_library: true
+      tags: '"NOAA", "Ciroh", "Office of Water Prediction"'
 
 thredds:
   image:
@@ -607,14 +607,26 @@ thredds:
       cpu: '2'
     limits:
       memory: '2Gi'
-geoserver:
-  storage_size: 2Gi
-  resources:
-    requests:
-      memory: '2Gi'
-      cpu: '1'
-    limits:
-      memory: '4Gi'
+
+gs-cloud:
+  enabled: true
+  nfsserver: 'host.minikube.internal'
+  nfs:
+    raster:
+      path: /nfs/raster
+      storageClass:
+        enabled: true
+        storageClassName: 'standard'
+    config:
+      path: /nfs/datadir
+      storageClass:
+        enabled: true
+        storageClassName: 'standard'
+    cache:
+      path: /nfs/tiles
+      storageClass:
+        enabled: true
+        storageClassName: 'standard'
 resources:
   requests:
     cpu: 1

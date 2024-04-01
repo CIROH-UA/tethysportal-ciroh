@@ -1,0 +1,13 @@
+{{- $init_scripts := .Files.Glob "extra_config/**.sh" }}
+{{ if $init_scripts }}
+{{- $fullName := include "ciroh.fullname" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ $fullName }}-init-config"
+data:
+  {{- range $path, $_ :=  .Files.Glob  "extra_config/**.sh" }}    
+  {{ $path | trimPrefix "extra_config/" }}: |- 
+{{ $.Files.Get $path | indent 4 }}
+  {{ end }}
+{{ end }}

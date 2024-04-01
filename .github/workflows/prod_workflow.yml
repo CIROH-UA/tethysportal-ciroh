@@ -17,6 +17,8 @@ on:
       - 'tethysapp-tethys_app_store/**'
       - 'tethysext-ciroh_theme/**'
       - 'Water-Data-Explorer/**'
+      - 'OWP/**'
+
 env:
   DOCKER_HUB_ORG: gioelkin
   # DOCKER_HUB_ORG: ciroh
@@ -112,6 +114,7 @@ jobs:
               - tethysapp-tethys_app_store/**
               - tethysext-ciroh_theme/**
               - Water-Data-Explorer/**
+              - OWP/**
 
       - name: Set up Docker Buildx
         if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'

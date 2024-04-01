@@ -40,6 +40,11 @@ apps:
       spatial:
         primary_geoserver: tethys_geoserver
         primary_thredds: tethys_thredds
+  community_streamflow_evaluation_system:
+    services:
+      custom_settings:
+        Access_key_ID: xxxxxxxxxxxxxas-xxxa
+        Secret_access_key: afassxxxxasasfaxxx-afasaaxxxxxx-xxxxxxx
 
 proxy_apps:
   owp_nwm_map_viewer:

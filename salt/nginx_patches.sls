@@ -18,6 +18,7 @@ Add_Wasm_MIME_Type:
         cat /etc/nginx/sites-enabled/tethys_nginx.conf
     - shell: /bin/bash
 
+{% if PREFIX_URL %}
 # necesary for prefix path:
 Add_Prefix_to_static:
   cmd.run:
@@ -25,6 +26,7 @@ Add_Prefix_to_static:
           sed -i 's/location \/static/location \/{{ PREFIX_URL }}\/static/g' /etc/nginx/sites-enabled/tethys_nginx.conf &&
           cat /etc/nginx/sites-enabled/tethys_nginx.conf
     - shell: /bin/bash
+{% endif %}
 
 #necessary to handle the Invalid HTTP_HOST header error due to dynamic ip addresses
 Add_Error_Handler:

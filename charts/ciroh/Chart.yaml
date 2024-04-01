@@ -8,12 +8,12 @@ dependencies:
   - name: 'postgis'
     repository: 'https://raw.githubusercontent.com/aquaveo/misc-helm-charts/master/docs'
     version: '*'
-  - name: 'geoserver'
-    repository: 'https://raw.githubusercontent.com/aquaveo/misc-helm-charts/master/docs'
+  - name: 'gs-cloud'
+    repository: 'oci://ghcr.io/romer8'
     version: '*'
-    condition: geoserver.enabled
+    condition: gs-cloud.enabled
   - name: 'thredds'
-    repository: 'https://raw.githubusercontent.com/aquaveo/misc-helm-charts/master/docs'
+    repository: 'oci://ghcr.io/romer8'
     version: '*'
     condition: thredds.enabled
   - name: 'redis'

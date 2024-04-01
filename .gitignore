@@ -12,6 +12,6 @@ data/*
 keys/*
 logs/*
 public_data/*
-charts/ciroh/ci/aws_values.yaml
 charts/ciroh/*.lock
 charts/ciroh/charts
+charts/ciroh/ci/prod_aws_values.yaml

@@ -11,9 +11,7 @@ namespace:
     ephemeral_storage: '20Gi'
 image:
   repository: 'gioelkin/tethysapp-ciroh-portal'
-  tag: dev_d40f0221e89460198dae10eaba7d3ec245b7207a
-  # repository: 'ciroh/tethysapp-ciroh'
-  # tag: dev_b197ec4e84d613a26e754293bd877f9a4d0a718b
+  tag: v0.0.21-rc
   pullPolicy: 'IfNotPresent'
 ingresses:
   enabled: true
@@ -125,45 +123,45 @@ tethys:
             primary_geoserver: tethys_geoserver
             primary_thredds: tethys_thredds
 
-    proxy_apps:
-      owp_nwm_map_viewer:
-        name: OWP NWM Map Viewer
-        endpoint: https://water.noaa.gov/map
-        logo_url: /t/static/ciroh_theme/images/owp.png
-        description: Proxy app for Office in Water Prediction
-        tags: NOAA
-        enabled: true
-        show_in_apps_library: true
-        order: 0
-        back_url: web
-        open_in_new_tab: true
-      ciroh_jupyterhub:
-        name: CIROH JupyterHub
-        endpoint: https://jupyterhub.cuahsi.org/hub/login
-        logo_url: /t/static/ciroh_theme/images/jupyterhub.png
-        description: Proxy app for the CIROH JupyterHub
-        tags: CUAHSI
-        enabled: true
-        show_in_apps_library: true
-        order: 1
-        back_url: web
-        open_in_new_tab: true
-      hydroshare:
-        name: HydroShare
-        endpoint: https://www.hydroshare.org/home/
-        logo_url: /t/static/ciroh_theme/images/HydroShare.png
-        description: Proxy app for the Hydroshare app
-        tags: CUAHSI
-        enabled: true
-        show_in_apps_library: true
-        order: 2
-        back_url: web
-        open_in_new_tab: true
+  proxy_apps:
+    owp_nwm_map_viewer:
+      name: OWP NWM Map Viewer
+      endpoint: https://water.noaa.gov/map
+      logo_url: /t/static/ciroh_theme/images/owp.png
+      description: Proxy app for Office in Water Prediction
+      tags: NOAA
+      enabled: true
+      show_in_apps_library: true
+      order: 0
+      back_url: web
+      open_in_new_tab: true
+    ciroh_jupyterhub:
+      name: CIROH JupyterHub
+      endpoint: https://jupyterhub.cuahsi.org/hub/login
+      logo_url: /t/static/ciroh_theme/images/jupyterhub.png
+      description: Proxy app for the CIROH JupyterHub
+      tags: CUAHSI
+      enabled: true
+      show_in_apps_library: true
+      order: 1
+      back_url: web
+      open_in_new_tab: true
+    hydroshare:
+      name: HydroShare
+      endpoint: https://www.hydroshare.org/home/
+      logo_url: /t/static/ciroh_theme/images/HydroShare.png
+      description: Proxy app for the Hydroshare app
+      tags: CUAHSI
+      enabled: true
+      show_in_apps_library: true
+      order: 2
+      back_url: web
+      open_in_new_tab: true
 
 djangocms:
   image:
     repository: gioelkin/django-cms
-    tag: dev_4e2d4deb320728e62b5534728f739287fcd4b669
+    tag: latest
     pullPolicy: 'IfNotPresent'
   enabled: true
   ingress:
@@ -621,19 +619,35 @@ thredds:
       cpu: '1'
     limits:
       memory: '2Gi'
-geoserver:
-  image:
-    pullPolicy: 'IfNotPresent'
+
+geoservercloud:
   enabled: true
-  storage_size: 5Gi
-  resources:
-    requests:
-      memory: '8Gi'
-      cpu: '4'
-    limits:
-      memory: '9Gi'
-  storageClass:
-    storageClassName: 'efs-pv'
+  geoserver:
+    global:
+      profile: standalone,datadir
+      image:
+        pullPolicy: IfNotPresent
+    enabled: true
+  nfsserver: 'localhost'
+  nfs:
+    raster:
+      path: /nfs/raster
+      storage: 3Gi
+      storageClass:
+        enabled: true
+        storageClassName: 'efs-pv'
+    config:
+      path: /nfs/datadir
+      storage: 3Gi
+      storageClass:
+        enabled: true
+        storageClassName: 'efs-pv'
+    cache:
+      path: /nfs/tiles
+      storage: 3Gi
+      storageClass:
+        enabled: true
+        storageClassName: 'efs-pv'
 redis:
   enabled: true
   global:

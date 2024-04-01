@@ -1,4 +1,10 @@
-version: '3.1'
+# before starting the docker compose create the following:
+# sudo mkdir -p <root_level>/data/tethys/thredds_data/tethys/ggst_thredds_directory
+# if needed to build new image
+# docker compose --compatibility up -d --build
+# if do not need to build new image
+# docker compose --compatibility up -d
+version: '3.8'
 services:
   db:
     image: postgis/postgis:15-3.3
@@ -10,10 +16,11 @@ services:
     env_file:
       - ./env/db.env
     volumes:
-      - ./data/psql:/var/lib/postgresql/data
+      - postgresql_config_tethys_data:/var/lib/postgresql/data
 
   thredds:
-    image: tethysplatformuploader/thredds-docker:4.6.20-SNAPSHOT
+    # image: tethysplatformuploader/thredds-docker:4.6.20-SNAPSHOT
+    image: unidata/thredds-docker:5.4
     restart: always
     networks:
       - 'internal'
@@ -23,15 +30,21 @@ services:
     env_file:
       - ./env/thredds.env
     volumes:
-      - ./data/thredds/:/usr/local/tomcat/content/thredds
-      - ./logs/thredds/tomcat/:/usr/local/tomcat/logs/
-      - ./logs/thredds/thredds/:/usr/local/tomcat/content/thredds/logs/
-      - ./config/thredds/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
-      - ./config/thredds/catalog.xml:/usr/local/tomcat/content/thredds/catalog.xml
-      - ./config/thredds/threddsConfig.xml:/usr/local/tomcat/content/thredds/threddsConfig.xml
-      - ./config/thredds/wmsPalettes/:/usr/local/tomcat/content/thredds/wmsPalettes/
-      - ./data/tethys/thredds_data/:/usr/local/tomcat/content/thredds/public/thredds_data
-
+      - thredds_tomcat_local_content:/usr/local/tomcat
+      - tomcat_logs:/usr/local/tomcat/logs/
+      - thredds_logs:/usr/local/tomcat/content/thredds/logs/
+      - type: bind
+        source: ./data/tethys/thredds_data/
+        target: /usr/local/tomcat/content/thredds/public/thredds_data
+      - type: bind
+        source: ./config/thredds/tomcat-users.xml
+        target: /usr/local/tomcat/conf/tomcat-users.xml
+      - type: bind
+        source: ./config/thredds/catalog.xml
+        target: /usr/local/tomcat/content/thredds/catalog.xml
+      - type: bind
+        source: ./config/thredds/threddsConfig.xml
+        target: /usr/local/tomcat/content/thredds/threddsConfig.xml
   redis:
     image: redis:latest
     restart: always
@@ -40,26 +53,9 @@ services:
     ports:
       - '6379:6379'
 
-  geoserver:
-    image: tethysplatform/geoserver:latest
-    restart: always
-    networks:
-      - 'internal'
-      - 'external'
-    ports:
-      - '8181:8181'
-      - '8081:8081'
-      - '8082:8082'
-      - '8083:8083'
-      - '8084:8084'
-    env_file:
-      - ./env/geoserver.env
-    volumes:
-      - ./data/geoserver/:/var/geoserver/data
-
   web:
     image: tethys-portal-docker:latest
-    build: 
+    build:
       context: .
       dockerfile: prod.Dockerfile
     restart: always
@@ -75,12 +71,259 @@ services:
     env_file:
       - ./env/web.env
     volumes:
-      - ./data/tethys:/var/lib/tethys_persist
-      - ./logs/tethys:/var/log/tethys
-      # - ./config/tethys/portal_changes.yml:/var/lib/tethys_persist/portal_changes.yml
-      - ./config/tethys/portal_changes.yml:/usr/lib/tethys/portal_changes.yml
+      - tethys_persist:/var/lib/tethys_persist
+      - tethys_logs:/var/log/tethys
+      - type: bind
+        source: ./data/tethys/thredds_data
+        target: /var/lib/tethys_persist/thredds_data
+      - type: bind
+        source: ./config/tethys/portal_changes.yml
+        target: /usr/lib/tethys/portal_changes.yml
+      - type: bind
+        source: ./config/tethys/proxy_apps.yml
+        target: /usr/lib/tethys/proxy_apps.yml
+  rabbitmq:
+    image: rabbitmq:3.9-management
+    user: 1000:1000 # set the userid:groupid the container runs as
+    restart: always
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - external
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  database:
+    # be sure geoserver.backend.jdbcconfig.initdb is set to true in application.yml at lease for the first app run
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: geoserver_config
+      POSTGRES_USER: geoserver
+      POSTGRES_PASSWORD: geo5erver
+    networks:
+      - 'external'
+      - 'internal'
+    volumes:
+      - postgresql_config_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  # Eureka service discovery. This is a Discovery First Bootstrap configuration.
+  # The discovery service is the only fixed entry point.
+  # Browse to http://localhost:8761 to check all services are registered.
+  # Run docker-compose -f docker-compose.yml -f docker-compose-discovery-ha.yml to run extra discovery service instances for HA
+  discovery:
+    image: geoservercloud/geoserver-cloud-discovery:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    ports:
+      - 8761:8761
+    networks:
+      - 'external'
+      - 'internal'
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+
+  # Spring Cloud Config service, provides centralized configuration to all
+  # microservices. Being a Discovery First Bootstrap configuration, it'll
+  # register itself with the Eureka discovery service and can be scaled
+  config:
+    image: geoservercloud/geoserver-cloud-config:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - discovery
+      - rabbitmq
+      - database
+    environment:
+      # Either 'git' or 'native'. Use the default sample git repository to download the services configuration from
+      # If 'git', BEWARE config server will look for a branch called "master", and github changed the default branch name to "main"
+      # For more information, see https://cloud.spring.io/spring-cloud-config/multi/multi__spring_cloud_config_server.html#_git_backend
+      SPRING_PROFILES_ACTIVE: git
+      # 'git' profile config
+      CONFIG_GIT_URI: https://github.com/geoserver/geoserver-cloud-config.git
+      # get the config for this release from the v1.5.0 tag
+      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: v1.5.0
+      # where to store the cloned repository, if unset, it'll use /tmp/config-repo-<randomid>
+      CONFIG_GIT_BASEDIR: /tmp/git_config
+      # 'native' profile config
+      CONFIG_NATIVE_PATH: /tmp/config
+      # avoid stack trace due to jgit not being able of creating a .config dir at $HOME
+      XDG_CONFIG_HOME: /tmp
+    networks:
+      - 'external'
+      - 'internal'
+    # Uncoment to bind to a local filesystem directory if using the 'native' profile
+    #volumes:
+    #  - ./config:/tmp/config
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+
+  admin:
+    image: geoservercloud/geoserver-cloud-admin-server:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - config
+    ports:
+      - 9091:8080
+    networks:
+      - 'external'
+      - 'internal'
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  # Application facade, provides a single entry point routing to all
+  # microservices (e.g. http://localhost:9090/geoserver/wms, http://localhost:9090/geoserver/wfs, etc)
+  gateway:
+    image: geoservercloud/geoserver-cloud-gateway:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - config
+    environment:
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
+    ports:
+      - 9090:8080
+    networks:
+      - 'external'
+      - 'internal'
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 1G
+
+  # WFS microservice, port dynamically allocated to allow scaling (e.g docker-compose scale wfs=5)
+  wfs:
+    image: geoservercloud/geoserver-cloud-wfs:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - config
+    environment:
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
+    networks:
+      - 'external'
+      - 'internal'
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  # WMS microservice, port dynamically allocated to allow scaling (e.g docker-compose scale wms=5)
+  wms:
+    image: geoservercloud/geoserver-cloud-wms:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - config
+    environment:
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
+    networks:
+      - 'external'
+      - 'internal'
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  # WCS microservice, port dynamically allocated to allow scaling (e.g docker-compose scale wcs=5)
+  wcs:
+    image: geoservercloud/geoserver-cloud-wcs:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - config
+    environment:
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
+    networks:
+      - 'external'
+      - 'internal'
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+
+  # REST config microservice, port dynamically allocated to allow scaling (e.g docker-compose scale rest=5)
+  rest:
+    image: geoservercloud/geoserver-cloud-rest:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - config
+    environment:
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
+    networks:
+      - 'external'
+      - 'internal'
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1G
+
+  # WEB UI microservice
+  webui:
+    image: geoservercloud/geoserver-cloud-webui:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - rabbitmq
+    environment:
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
+      GEOWEBCACHE_CACHE_DIR: /data/geowebcache
+    networks:
+      - 'external'
+      - 'internal'
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+  gwc:
+    image: geoservercloud/geoserver-cloud-gwc:1.5.0
+    user: 1000:1000 # set the userid:groupid the container runs as
+    depends_on:
+      - config
+    environment:
+      SPRING_PROFILES_ACTIVE: 'jdbcconfig'
+      GEOWEBCACHE_CACHE_DIR: /data/geowebcache
+    networks:
+      - 'external'
+      - 'internal'
+    volumes:
+      - geowebcache_data:/data/geowebcache
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
 
 networks:
   internal:
     internal: true
   external:
+
+volumes:
+  postgresql_config_tethys_data: # tethys data
+  postgresql_config_data: # volume for postgresql data, used to store the geoserver config through jdbcconfig
+  rabbitmq_data: # volume for rabbitmq data, so it doesn't create an anonymous one on each container
+  geowebcache_data: # used by gwc and web-ui to locate the default gwc tile cache directory
+  thredds_tomcat_local_content: # volume for thredds local tomcat directory
+  tethys_persist: # volume for tethys persist data
+  tethys_logs: # volume for tethys logs
+  thredds_logs:
+  tomcat_logs:
