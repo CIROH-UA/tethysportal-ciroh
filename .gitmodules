@@ -14,10 +14,6 @@
 	path = apps/tethysapp-swe
 	url = https://github.com/Aquaveo/tethysapp-swe.git
 	branch = tethys4
-[submodule "tethysapp-hydrocompute"]
-	path = apps/tethysapp-hydrocompute
-	url = https://github.com/tethysplatform/tethysapp-hydrocompute.git
-	branch = main
 [submodule "gwdm"]
 	path = apps/gwdm
 	url = https://github.com/Aquaveo/gwdm.git
@@ -42,3 +38,7 @@
 	path = apps/Water-Data-Explorer
 	url = https://github.com/Aquaveo/Water-Data-Explorer
 	branch = hydroserver2-update-Jacob
+[submodule "apps/tethysapp-hydrocompute"]
+	path = apps/tethysapp-hydrocompute
+	url = https://github.com/tethysplatform/tethysapp-hydrocompute.git
+	branch = main
