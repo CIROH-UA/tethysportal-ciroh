@@ -1,10 +1,9 @@
 name: build_push_dev_image
 # Push to docker hub if tag has been created.
 on:
-  workflow_dispatch:
   push:
     branches:
-      - '**'
+      - '*'
     paths:
       - 'apps/**'
       - 'salt/**'
