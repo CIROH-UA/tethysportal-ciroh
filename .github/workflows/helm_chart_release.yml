@@ -9,7 +9,7 @@ on:
     tags:
       - '*'
     branches:
-      - main
+      - '**'
     paths:
       - 'charts/**'
 
