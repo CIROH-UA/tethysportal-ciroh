@@ -38,8 +38,8 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt  && \
     cd ${TETHYS_HOME}/apps/OWP && npm install && npm run build && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/OWP.yml && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/community_streamflow_evaluation_system.yml && \
     cd ${TETHYS_HOME}/apps/hydroshare_api_tethysapp && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/hydroshare_api_tethysapp.yml && \
-    rm -rf ${TETHYS_HOME}/extensions/* && \
-    rm -rf ${TETHYS_HOME}/apps/* && \
+    # rm -rf ${TETHYS_HOME}/extensions/* && \
+    # rm -rf ${TETHYS_HOME}/apps/* && \
     rm -rf /var/lib/apt/lists/* && \
     find -name '*.a' -delete && \
     rm -rf ${CONDA_HOME}/envs/${CONDA_ENV_NAME}/conda-meta && \
