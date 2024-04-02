@@ -82,7 +82,7 @@ jobs:
       # Checks-out the hydrocompute extra submodule
       - name: checkout Hydrocompute submodule
         run: |
-          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --init --recursive --remote
+          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --force --init --recursive --remote
 
       - name: Set Tag
         run: |
