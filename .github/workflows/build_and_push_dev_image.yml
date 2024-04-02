@@ -20,7 +20,7 @@ env:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # build image
-  build:
+  clean-space:
     runs-on: ubuntu-latest
     steps:
       - name: Free disk space
@@ -69,6 +69,10 @@ jobs:
       - name: Check disk space
         run: df -h
 
+  build:
+    needs: [clean-space]
+    runs-on: ubuntu-latest
+    steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
         with:
@@ -78,7 +82,7 @@ jobs:
       # Checks-out the hydrocompute extra submodule
       - name: checkout Hydrocompute submodule
         run: |
-          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --init --recursive
+          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --init --recursive --remote
 
       - name: Set Tag
         run: |
