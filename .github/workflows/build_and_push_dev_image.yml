@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - '*'
-    # paths:
-    #   - 'apps/**'
-    #   - 'salt/**'
-    #   - 'extensions/**'
-    #   - 'config/**'
-    #   - 'Dokerfile'
-    #   - 'requirements/**'
+    paths:
+      - 'apps/**'
+      - 'salt/**'
+      - 'extensions/**'
+      - 'config/**'
+      - 'Dockerfile'
+      - 'requirements/**'
 env:
   DOCKER_HUB_ORG: gioelkin
   # DOCKER_HUB_ORG: ciroh
