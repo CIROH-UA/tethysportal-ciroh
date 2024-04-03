@@ -19,6 +19,7 @@ jobs:
     env:
       AWS_REGION: us-east-1
       CLUSTER_NAME: ciroh-portal-prod
+
     steps:
       - uses: actions/checkout@v3
 
@@ -40,6 +41,7 @@ jobs:
         run: |
           echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
           echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+          echo "GPG_TTY=$(tty)" >> $GITHUB_ENV
 
       - name: Import GPG Key
         run: |
