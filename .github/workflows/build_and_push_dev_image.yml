@@ -1,34 +1,25 @@
-name: push_on_tag_prod_workflow
+name: build_push_dev_image
 
-# Push to docker hub if tag has been created.
 on:
   push:
-    tags:
+    branches:
       - '*'
     paths:
-      - 'charts/**'
+      - 'apps/**'
       - 'salt/**'
+      - 'extensions/**'
       - 'config/**'
-      - '**.Dokerfile'
-      - 'snow-inspector/**'
-      - 'tethysapp-hydrocompute/**'
-      - 'tethysapp-metdataexplorer/**'
-      - 'tethysapp-swe/**'
-      - 'tethysapp-tethys_app_store/**'
-      - 'tethysext-ciroh_theme/**'
-      - 'Water-Data-Explorer/**'
-      - 'OWP/**'
-
+      - 'Dockerfile'
+      - 'requirements/**'
 env:
   DOCKER_HUB_ORG: gioelkin
   # DOCKER_HUB_ORG: ciroh
   DOCKER_REPO: tethysapp-ciroh-portal
-  # DOCKER_REPO: tethysapp-ciroh
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # build image
-  build:
+  clean-space:
     runs-on: ubuntu-latest
     steps:
       - name: Free disk space
@@ -77,8 +68,12 @@ jobs:
       - name: Check disk space
         run: df -h
 
+  build:
+    needs: [clean-space]
+    runs-on: ubuntu-latest
+    steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: 'true'
@@ -86,153 +81,52 @@ jobs:
       # Checks-out the hydrocompute extra submodule
       - name: checkout Hydrocompute submodule
         run: |
-          cd tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --init --recursive
+          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --force --init --recursive --remote
 
       - name: Set Tag
         run: |
-          echo "TAG=${GITHUB_REF:10}" >> $GITHUB_ENV
-          echo "TAG_LATEST=latest" >> $GITHUB_ENV
+          echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+
       - name: Test Tag
         run: |
           echo $TAG
 
-      - name: check_docker_file_changed_files
-        id: changed-files-yaml
-        uses: tj-actions/changed-files@v37
-        with:
-          files_yaml: |
-            docker:
-              - salt/**
-              - prod.Dockerfile
-              - piprequirements.txt
-              - config/**
-              - .gitmodules
-              - snow-inspector/**
-              - tethysapp-hydrocompute/**
-              - tethysapp-metdataexplorer/**
-              - tethysapp-swe/**
-              - tethysapp-tethys_app_store/**
-              - tethysext-ciroh_theme/**
-              - Water-Data-Explorer/**
-              - OWP/**
-
       - name: Set up Docker Buildx
-        if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
           password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
 
-      - name: build and push stable tag
-        if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'
-        uses: docker/build-push-action@v4
+      - name: Build and push
+        uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./prod.Dockerfile
           push: true
-          tags: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
-          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest
-          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest,mode=max
+          tags: |
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
+          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-dev-cache:latest
+          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-dev-cache:latest,mode=max
 
-      # - name: build and push latest tag
-      #   if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #     context: .
-      #     file: ./prod.Dockerfile
-      #     push: true
-      #     tags: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-      #     cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest
-      #     cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest,mode=max
-
-  # lint and test chart
-  lint-test:
-    runs-on: ubuntu-latest
+  cleanup:
     needs: [build]
-    if: |
-      always() &&
-      !contains(needs.*.result, 'failure') &&
-      !cancelled()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: check_chart_file_changed_files
-        id: changed-chart-files-yaml
-        uses: tj-actions/changed-files@v37
-        with:
-          files_yaml: |
-            charts:
-              - charts/**
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.6.3
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.3.1
-
-      - name: Run chart-testing (list-changed)
-        id: list-changed
-        run: |
-          ## If executed with debug this won't work anymore.
-          changed=$(ct --config .github/config/ct.yaml list-changed)
-          charts=$(echo "$changed" | tr '\n' ' ' | xargs)
-          if [[ -n "$changed" ]]; then
-            echo "::set-output name=changed::true"
-            echo "::set-output name=changed_charts::$charts"
-          fi
-
-      - name: Run Artifact Hub lint
-        run: |
-          curl -s https://api.github.com/repos/artifacthub/hub/releases/latest | grep -E 'browser_download_url' | grep linux_amd64.tar.gz\" | grep -Eo 'https://[^\"]*' | xargs wget -O - | tar -xz
-          ./ah lint -p charts/ciroh || exit 1
-          rm -f ./ah
-
-      - name: Run chart-testing (lint)
-        run: ct lint --debug --config .github/config/ct.yaml
-
-      ## Might need to be uncommented when the testing gets resolved:
-      ## the testing fails for two reasons the TDS services does never gets scheduled
-      ## the automatization of the geoserver does not work and the salt job is failling
-      # - name: Create kind cluster
-      #   uses: helm/kind-action@v1.5.0
-      #   if: steps.list-changed.outputs.changed == 'true'
-
-      # - name: Run chart-testing (install)
-      #   run: ct install --debug --config .github/config/ct.yaml
-      #   if: steps.list-changed.outputs.changed == 'true'
-
-  # release chart
-  release:
     runs-on: ubuntu-latest
-    needs: lint-test
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Publish Helm charts
-        uses: stefanprodan/helm-gh-pages@master
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          charts_dir: charts
+      - uses: actions/checkout@v2
+      - name: only keeps the first 5 image
+        run: |
+          echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
+          echo $TAG
+          . .github/scripts/clean_up_docker_hub.sh '${{ secrets.DOCKER_BUILDER_USERNAME }}' '${{ secrets.DOCKER_BUILDER_TOKEN }}' '${{ env.DOCKER_HUB_ORG }}' '${{ env.DOCKER_REPO }}' '${{ env.MAX_NUMBER_IMAGE }}'
 
-  #deploy chart
-  deploy:
+  # update image in current deployment
+  deploy-fake:
+    needs: [build]
     runs-on: ubuntu-latest
-    needs: release
     permissions:
       id-token: write # This is required for requesting the JWT
       contents: read # This is required for actions/checkout
@@ -258,12 +152,19 @@ jobs:
 
       - name: Set Tag
         run: |
-          echo "TAG=${GITHUB_REF:10}" >> $GITHUB_ENV
-          echo "TAG_LATEST=latest" >> $GITHUB_ENV
+          echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
 
       - name: helm deploy
         uses: koslib/helm-eks-action@master
         env:
           KUBE_CONFIG_DATA: ${{ env.KUBE_CONFIG_DATA }}
         with:
-          command: helm repo add tethysportal-ciroh https://alabamawaterinstitute.github.io/tethysportal-ciroh && helm upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --wait --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml  --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
+          plugins: 'https://github.com/jkroepke/helm-secrets'
+          command: helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh && helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --dry-run --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml  --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
