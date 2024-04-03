@@ -42,18 +42,18 @@ jobs:
           echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
           echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
 
-      #   - name: Import GPG key
-      #     uses: crazy-max/ghaction-import-gpg@v6
-      #     with:
-      #       gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-      #       passphrase: ${{ secrets.PASSPHRASE }}
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v3.2.0
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
 
-      #     # - name: import secring
-      #     #   run: |
-      #     #     echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-      #     #     gpgconf --reload gpg-agent
-      #     #     gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
-      - uses: olafurpg/setup-gpg@v3
+          # - name: import secring
+          #   run: |
+          #     echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          #     gpgconf --reload gpg-agent
+          #     gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
+      #   - uses: olafurpg/setup-gpg@v3
       - name: Prepare GPG key #this step is for using exported keys and make your github runner
         run: |
           gpg_dir=/home/runner/.gnupg
