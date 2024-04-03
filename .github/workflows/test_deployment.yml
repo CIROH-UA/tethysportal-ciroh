@@ -50,9 +50,6 @@ jobs:
 
       - name: export secring
         run: |
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-          gpgconf --reload gpg-agent
           gpg --export-secret-keys > ~/.gnupg/secring.gpg
 
       #   - name: Prepare GPG key #this step is for using exported keys and make your github runner
