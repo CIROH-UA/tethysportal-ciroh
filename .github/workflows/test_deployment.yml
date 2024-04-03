@@ -48,6 +48,10 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
 
+      - name: export secring
+        run: |
+          gpg --export-secret-keys >~/.gnupg/secring.gpg
+
       - name: helm deploy
         uses: koslib/helm-eks-action@master
         env:
