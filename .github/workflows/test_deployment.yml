@@ -47,11 +47,12 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
+
       - name: import secring
         run: |
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --reload gpg-agent
-          gpg --batch --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
+          gpg --batch --export-secret-keys > ~/.gnupg/secring.gpg
 
       - name: helm deploy
         uses: koslib/helm-eks-action@master
