@@ -43,14 +43,10 @@ jobs:
           echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
 
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@v4
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-
-      - name: Sops Binary Installer
-        uses: mdgreenwald/mozilla-sops-action@v1.6.0
-        id: install
 
       - name: helm deploy
         uses: koslib/helm-eks-action@master
