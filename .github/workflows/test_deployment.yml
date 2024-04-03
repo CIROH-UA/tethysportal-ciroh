@@ -50,6 +50,8 @@ jobs:
 
       - name: export secring
         run: |
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --reload gpg-agent
           gpg --export-secret-keys >~/.gnupg/secring.gpg
 
       - name: helm deploy
