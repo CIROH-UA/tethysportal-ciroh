@@ -49,7 +49,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
       - name: import secring
         run: |
-          echo $PASSPHRASE | gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
+          gpg --batch --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
 
       - name: helm deploy
         uses: koslib/helm-eks-action@master
