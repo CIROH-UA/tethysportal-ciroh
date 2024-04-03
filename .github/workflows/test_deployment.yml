@@ -48,25 +48,26 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
 
-      #   - name: import secring
-      #     run: |
-      #       echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-      #       gpgconf --reload gpg-agent
-      #       gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
-      #   - name: Prepare GPG key #this step is for using exported keys and make your github runner
-      #     run: |
-      #       gpg_dir=/root/.gnupg
-      #       mkdir -p "$gpg_dir"
-      #       keyring="$gpg_dir/secring.gpg" #referring keyring to private key of gpg
-      #       touch "$keyring"
-      #       base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring" #storing base64 GPG key into keyring
-      #       passphrase_file="$gpg_dir/passphrase"
-      #       echo "$GPG_PASSPHRASE" > "$passphrase_file" #storing passphrase data into a file
-      #       echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV" #saving passphrase into github-environment
-      #       echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV" #saving private key into github-environemnt
-      #     env:
-      #       GPG_KEYRING_BASE64: '${{ secrets.GPG_KEYRING_BASE64 }}' #Referring secrets of github above
-      #       GPG_PASSPHRASE: '${{ secrets.PASSPHRASE }}'
+        # - name: import secring
+        #   run: |
+        #     echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+        #     gpgconf --reload gpg-agent
+        #     gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
+
+      - name: Prepare GPG key #this step is for using exported keys and make your github runner
+        run: |
+          gpg_dir=~/.gnupg
+          mkdir -p "$gpg_dir"
+          keyring="$gpg_dir/secring.gpg" #referring keyring to private key of gpg
+          touch "$keyring"
+          base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring" #storing base64 GPG key into keyring
+          passphrase_file="$gpg_dir/passphrase"
+          echo "$GPG_PASSPHRASE" > "$passphrase_file" #storing passphrase data into a file
+          echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV" #saving passphrase into github-environment
+          echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV" #saving private key into github-environemnt
+        env:
+          GPG_KEYRING_BASE64: '${{ secrets.GPG_KEYRING_BASE64 }}' #Referring secrets of github above
+          GPG_PASSPHRASE: '${{ secrets.PASSPHRASE }}'
       - name: helm deploy
         uses: koslib/helm-eks-action@master
         env:
