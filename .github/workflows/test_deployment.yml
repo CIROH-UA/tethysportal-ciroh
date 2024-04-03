@@ -48,17 +48,31 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
 
-      - name: import secring
+      #   - name: import secring
+      #     run: |
+      #       echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+      #       gpgconf --reload gpg-agent
+      #       gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
+
+      - name: Prepare GPG key #this step is for using exported keys and make your github runner
         run: |
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          gpgconf --reload gpg-agent
-          gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
+          gpg_dir=.gnupg
+          keyring="$gpg_dir/secring.gpg" #referring keyring to private key of gpg
+          base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring" #storing base64 GPG key into keyring 
+          passphrase_file="$gpg_dir/passphrase"
+          echo "$GPG_PASSPHRASE" > "$passphrase_file" #storing passphrase data into a file
+          echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV" #saving passphrase into github-environment
+          echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV" #saving private key into github-environemnt
+
+        env:
+          GPG_KEYRING_BASE64: '${{ secrets.GPG_KEYRING_BASE64 }}' #Referring secrets of github above
+          GPG_PASSPHRASE: '${{ secrets.PASSPHRASE }}'
 
       - name: helm deploy
         uses: koslib/helm-eks-action@master
         env:
           KUBE_CONFIG_DATA: ${{ env.KUBE_CONFIG_DATA }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSPHRASE: ${{ secrets.PASSPHRASE }}
         with:
           plugins: 'https://github.com/jkroepke/helm-secrets'
           command: helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh &&  echo $GPG_PASSPHRASE | helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --dry-run --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml -f charts/ciroh/ci/secrets.yaml --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
