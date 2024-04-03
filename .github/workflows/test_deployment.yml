@@ -48,8 +48,9 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
 
-      - name: gpg version
-        run: echo gpg --version
+      - name: Sops Binary Installer
+        uses: mdgreenwald/mozilla-sops-action@v1.6.0
+        id: install
 
       - name: helm deploy
         uses: koslib/helm-eks-action@master
