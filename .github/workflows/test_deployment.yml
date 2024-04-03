@@ -50,8 +50,8 @@ jobs:
 
       - name: export secring
         run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          gpg --export-secret-keys > ~/.gnupg/secring.gpg
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --import
+          echo $PASSPHRASE | gpg --export-secret-keys > ~/.gnupg/secring.gpg
 
       #   - name: Prepare GPG key #this step is for using exported keys and make your github runner
       #     run: |
