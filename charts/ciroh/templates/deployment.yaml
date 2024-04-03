@@ -18,9 +18,6 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "ciroh.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-      annotations:
-        # https://github.com/helm/helm/issues/5218
-        timstamp: "{{ date "20060102150405" .Release.Time }}"
     spec:
     {{- with .Values.imagePullSecrets }}
         imagePullSecrets:
