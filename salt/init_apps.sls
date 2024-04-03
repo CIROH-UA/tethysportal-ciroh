@@ -11,6 +11,7 @@
 {% set HYDROSHARE_CLIENT_ID = salt['environ.get']('HYDROSHARE_CLIENT_ID') %}
 {% set HYDROSHARE_SECRET_ID = salt['environ.get']('HYDROSHARE_SECRET_ID') %}
 {% set AUTHENTICATION_BACKENDS = salt['environ.get']('AUTHENTICATION_BACKENDS') %}
+{% set SOCIAL_AUTH_LOGIN_REDIRECT_URL = salt['environ.get']('SOCIAL_AUTH_LOGIN_REDIRECT_URL') %}
 
 Pre_Apps_Settings:
   cmd.run:
@@ -32,6 +33,7 @@ Set_HydroShare_Login:
         tethys settings --set AUTHENTICATION_BACKENDS {{ AUTHENTICATION_BACKENDS }} &&
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_KEY {{ HYDROSHARE_CLIENT_ID }} &&
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_SECRET {{ HYDROSHARE_SECRET_ID }}
+        tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_LOGIN_REDIRECT_URL {{ SOCIAL_AUTH_LOGIN_REDIRECT_URL: }}
 
 
 {% if PREFIX_URL %}
