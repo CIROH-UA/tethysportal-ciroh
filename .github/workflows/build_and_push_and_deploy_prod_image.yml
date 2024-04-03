@@ -1,7 +1,6 @@
 name: build_push_deploy_prod_image
 # Push to docker hub if tag has been created.
 on:
-  workflow_dispatch:
   push:
     tags:
       - '*'
@@ -148,13 +147,11 @@ jobs:
           echo "TAG=${GITHUB_REF:10}" >> $GITHUB_ENV
           echo "TAG_LATEST=latest" >> $GITHUB_ENV
 
-      - name: Import GPG Key
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --yes --edit-key ${{ secrets.GPG_KEY_ID }} trust quit
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
 
       - name: helm deploy
         uses: koslib/helm-eks-action@master
@@ -162,4 +159,4 @@ jobs:
           KUBE_CONFIG_DATA: ${{ env.KUBE_CONFIG_DATA }}
         with:
           plugins: 'https://github.com/jkroepke/helm-secrets'
-          command: helm repo add tethysportal-ciroh https://alabamawaterinstitute.github.io/tethysportal-ciroh && helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml  --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
+          command: helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh && helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --wait --install --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml  --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
