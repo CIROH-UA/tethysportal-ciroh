@@ -30,12 +30,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: kubeconfig
+      # - name: kubeconfig
+      #   run: |
+      #     aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }} --kubeconfig ./kubeconfig
+      #     echo 'KUBE_CONFIG_DATA<<EOF' >> $GITHUB_ENV
+      #     echo $(cat ./kubeconfig | base64) >> $GITHUB_ENV
+      #     echo 'EOF' >> $GITHUB_ENV
+      - name: Install kubectl
         run: |
-          aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }} --kubeconfig ./kubeconfig
-          echo 'KUBE_CONFIG_DATA<<EOF' >> $GITHUB_ENV
-          echo $(cat ./kubeconfig | base64) >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Setup Kubernetes context
+        run: aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
       - name: Set Tag
         run: |
@@ -47,20 +55,6 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-
-      #   - name: Prepare GPG key #this step is for using exported keys and make your github runner
-      #     run: |
-      #       gpg_dir=/home/runner/.gnupg
-      #       keyring="$gpg_dir/secring.gpg" #referring keyring to private key of gpg
-      #       touch "$keyring"
-      #       base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring" #storing base64 GPG key into keyring
-      #       passphrase_file="$gpg_dir/passphrase"
-      #       echo "$GPG_PASSPHRASE" > "$passphrase_file" #storing passphrase data into a file
-      #       echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV" #saving passphrase into github-environment
-      #       echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV" #saving private key into github-environemnt
-      #     env:
-      #       GPG_KEYRING_BASE64: '${{ secrets.GPG_KEYRING_BASE64 }}' #Referring secrets of github above
-      #       GPG_PASSPHRASE: '${{ secrets.PASSPHRASE }}'
 
       - name: Install helm
         uses: azure/setup-helm@v3
@@ -81,6 +75,20 @@ jobs:
         run: |
           helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh
           helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --dry-run --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml -f charts/ciroh/ci/secrets.yaml --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
+
+    #   - name: Prepare GPG key #this step is for using exported keys and make your github runner
+    #     run: |
+    #       gpg_dir=/home/runner/.gnupg
+    #       keyring="$gpg_dir/secring.gpg" #referring keyring to private key of gpg
+    #       touch "$keyring"
+    #       base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring" #storing base64 GPG key into keyring
+    #       passphrase_file="$gpg_dir/passphrase"
+    #       echo "$GPG_PASSPHRASE" > "$passphrase_file" #storing passphrase data into a file
+    #       echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV" #saving passphrase into github-environment
+    #       echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV" #saving private key into github-environemnt
+    #     env:
+    #       GPG_KEYRING_BASE64: '${{ secrets.GPG_KEYRING_BASE64 }}' #Referring secrets of github above
+    #       GPG_PASSPHRASE: '${{ secrets.PASSPHRASE }}'
 
     #   - name: helm deploy
     #     uses: koslib/helm-eks-action@master
