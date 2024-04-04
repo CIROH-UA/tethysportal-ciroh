@@ -4,8 +4,20 @@ on: # Specifies the event triggering the workflow
       dry-run: # Name of the input
         required: true # Specifies that this input is mandatory
         type: boolean # Specifies the type of the input
-
-        # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      GPG_PRIVATE_KEY:
+        required: true
+      PASSPHRASE:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+      FILE_SYSTEM_ID:
+        required: true
+      # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy-to-eks:
     runs-on: ubuntu-latest
