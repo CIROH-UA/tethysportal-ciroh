@@ -22,7 +22,6 @@ Pre_Apps_Settings:
 Set_Tethys_Settings_For_Apps:
   cmd.run:
     - name: >
-        
         tethys settings --set FILE_UPLOAD_MAX_MEMORY_SIZE {{ FILE_UPLOAD_MAX_MEMORY_SIZE }} &&
         tethys settings --set DATA_UPLOAD_MAX_MEMORY_SIZE {{ FILE_UPLOAD_MAX_MEMORY_SIZE }} &&
         tethys settings --set DATA_UPLOAD_MAX_NUMBER_FIELDS {{ FILE_UPLOAD_MAX_MEMORY_SIZE }}
@@ -33,7 +32,7 @@ Set_HydroShare_Login:
         tethys settings --set AUTHENTICATION_BACKENDS {{ AUTHENTICATION_BACKENDS }} &&
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_KEY {{ HYDROSHARE_CLIENT_ID }} &&
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_SECRET {{ HYDROSHARE_SECRET_ID }}
-        tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_LOGIN_REDIRECT_URL {{ SOCIAL_AUTH_LOGIN_REDIRECT_URL: }}
+        tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_LOGIN_REDIRECT_URL {{ SOCIAL_AUTH_LOGIN_REDIRECT_URL }}
 
 
 {% if PREFIX_URL %}
