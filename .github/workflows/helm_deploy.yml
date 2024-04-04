@@ -1,3 +1,5 @@
+# a good reference: https://aws.plainenglish.io/the-ultimate-guide-to-streamlining-cloud-development-mastering-aws-eks-with-helm-terraform-and-02159d7dfb39
+
 on: # Specifies the event triggering the workflow
   workflow_call: # Indicates that this is a reusable workflow
     inputs: # Defines the inputs that can be passed from the caller workflow

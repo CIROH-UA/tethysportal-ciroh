@@ -19,7 +19,7 @@ env:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   clean-space:
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@fix_deployment_actions
+    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
 
   build:
     needs: [clean-space]
@@ -78,7 +78,7 @@ jobs:
 
   deploy-with_dry-run:
     needs: [build]
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@fix_deployment_actions
+    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
     with:
       dry-run: true
     secrets: inherit
