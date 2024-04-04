@@ -14,9 +14,4 @@ jobs:
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@fix_deployment_actions
     with:
       dry-run: true
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      FILE_SYSTEM_ID: ${{ secrets.FILE_SYSTEM_ID }}
+    secrets: inherit
