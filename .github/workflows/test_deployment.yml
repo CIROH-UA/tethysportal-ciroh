@@ -69,6 +69,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
         id: install-helm
 
+      - name: Install Mozilla Sops
+        uses: mdgreenwald/mozilla-sops-action@v1.6.0
+        id: install-sops
+
       - name: Install helm secrets
         run: |
           helm plugin install https://github.com/jkroepke/helm-secrets
