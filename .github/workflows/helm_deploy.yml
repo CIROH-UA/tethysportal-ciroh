@@ -1,0 +1,79 @@
+# a good reference: https://aws.plainenglish.io/the-ultimate-guide-to-streamlining-cloud-development-mastering-aws-eks-with-helm-terraform-and-02159d7dfb39
+
+on: # Specifies the event triggering the workflow
+  workflow_call: # Indicates that this is a reusable workflow
+    inputs: # Defines the inputs that can be passed from the caller workflow
+      dry-run: # Name of the input
+        required: true # Specifies that this input is mandatory
+        type: boolean # Specifies the type of the input
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      GPG_PRIVATE_KEY:
+        required: true
+      PASSPHRASE:
+        required: true
+      FILE_SYSTEM_ID:
+        required: true
+      # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy-to-eks:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
+    env:
+      AWS_REGION: us-east-1
+      CLUSTER_NAME: ciroh-portal-prod
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Setup Kubernetes context
+        run: aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Set Tag
+        run: |
+          echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+
+      - name: Install helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.11.1' # default is latest (stable)
+          token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
+        id: install-helm
+
+      - name: Install Mozilla Sops
+        uses: mdgreenwald/mozilla-sops-action@v1.6.0
+        id: install-sops
+
+      - name: Install helm secrets
+        run: |
+          helm plugin install https://github.com/jkroepke/helm-secrets
+
+      - name: Deploy Helm chart to EKS
+        run: |
+          helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh
+          helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install ${{ inputs.dry-run && '--dry-run' || '' }} --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml -f charts/ciroh/ci/secrets.yaml --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
