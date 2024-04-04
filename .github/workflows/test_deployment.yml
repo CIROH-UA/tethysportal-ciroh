@@ -11,6 +11,13 @@ env:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   call-deployment-workflow:
-    uses: ./.github/workflows/helm_deploy.yml
+    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@fix_deployment_actions
     with:
       dry-run: true
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      FILE_SYSTEM_ID: ${{ secrets.FILE_SYSTEM_ID }}
