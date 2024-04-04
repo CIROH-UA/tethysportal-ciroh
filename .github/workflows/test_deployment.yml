@@ -19,5 +19,4 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       FILE_SYSTEM_ID: ${{ secrets.FILE_SYSTEM_ID }}
