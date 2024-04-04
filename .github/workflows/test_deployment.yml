@@ -43,17 +43,11 @@ jobs:
           echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
 
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v3.2.0
+        uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
 
-          # - name: import secring
-          #   run: |
-          #     echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          #     gpgconf --reload gpg-agent
-          #     gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
-      #   - uses: olafurpg/setup-gpg@v3
       - name: Prepare GPG key #this step is for using exported keys and make your github runner
         run: |
           gpg_dir=/home/runner/.gnupg
@@ -67,17 +61,41 @@ jobs:
         env:
           GPG_KEYRING_BASE64: '${{ secrets.GPG_KEYRING_BASE64 }}' #Referring secrets of github above
           GPG_PASSPHRASE: '${{ secrets.PASSPHRASE }}'
-      - name: helm deploy
-        uses: koslib/helm-eks-action@master
-        env:
-          KUBE_CONFIG_DATA: ${{ env.KUBE_CONFIG_DATA }}
-          GPG_PASSPHRASE: ${{ secrets.PASSPHRASE }}
-          GNUPGHOME: /home/runner/.gnupg
-        with:
-          plugins: 'https://github.com/jkroepke/helm-secrets'
-          command: helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh &&  echo $GPG_PASSPHRASE | helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --dry-run --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml -f charts/ciroh/ci/secrets.yaml --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
 
-        #   - name: export secring
-        #   run: |
-        #     echo "${{ secrets.PASSPHRASE }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --import
-        #     echo $PASSPHRASE | gpg --export-secret-keys > ~/.gnupg/secring.gpg
+      - name: Install helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.11.1' # default is latest (stable)
+          token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
+        id: install-helm
+
+      - name: Install helm secrets
+        run: |
+          helm plugin install https://github.com/jkroepke/helm-secrets
+
+      - name: Deploy Helm chart to EKS
+        run: |
+          helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh
+          helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --dry-run --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml -f charts/ciroh/ci/secrets.yaml --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
+
+    #   - name: helm deploy
+    #     uses: koslib/helm-eks-action@master
+    #     env:
+    #       KUBE_CONFIG_DATA: ${{ env.KUBE_CONFIG_DATA }}
+    #       GPG_PASSPHRASE: ${{ secrets.PASSPHRASE }}
+    #       GNUPGHOME: /home/runner/.gnupg
+    #     with:
+    #       plugins: 'https://github.com/jkroepke/helm-secrets'
+    #       command: helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh &&  echo $GPG_PASSPHRASE | helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install --dry-run --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml -f charts/ciroh/ci/secrets.yaml --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
+
+    #   - name: export secring
+    #   run: |
+    #     echo "${{ secrets.PASSPHRASE }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --import
+    #     echo $PASSPHRASE | gpg --export-secret-keys > ~/.gnupg/secring.gpg
+
+    # - name: import secring
+    #   run: |
+    #     echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+    #     gpgconf --reload gpg-agent
+    #     gpg --pinentry-mode loopback --export-secret-keys > ~/.gnupg/secring.gpg
+    #   - uses: olafurpg/setup-gpg@v3
