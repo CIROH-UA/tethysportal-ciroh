@@ -9,11 +9,11 @@ dependencies:
     repository: 'https://raw.githubusercontent.com/aquaveo/misc-helm-charts/master/docs'
     version: '*'
   - name: 'gs-cloud'
-    repository: 'oci://ghcr.io/romer8'
+    repository: 'https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs'
     version: '*'
     condition: gs-cloud.enabled
   - name: 'thredds'
-    repository: 'oci://ghcr.io/romer8'
+    repository: 'https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs'
     version: '*'
     condition: thredds.enabled
   - name: 'redis'
