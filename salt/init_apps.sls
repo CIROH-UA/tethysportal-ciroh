@@ -31,7 +31,7 @@ Set_HydroShare_Login:
     - name: >
         tethys settings --set AUTHENTICATION_BACKENDS {{ AUTHENTICATION_BACKENDS }} &&
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_KEY {{ HYDROSHARE_CLIENT_ID }} &&
-        tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_SECRET {{ HYDROSHARE_SECRET_ID }}
+        tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_SECRET {{ HYDROSHARE_SECRET_ID }} &&
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_LOGIN_REDIRECT_URL {{ SOCIAL_AUTH_LOGIN_REDIRECT_URL }}
 
 
