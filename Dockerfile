@@ -1,6 +1,5 @@
 FROM tethysplatform/tethys-core:dev as base
 
-
 #########################
 # ADD APPLICATION FILES #
 #########################
@@ -13,10 +12,8 @@ COPY requirements/*.txt .
 ###################
 ADD extensions ${TETHYS_HOME}/extensions
 
-
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
-
 
 #######################################
 # INSTALL EXTENSIONS and APPLICATIONS #
