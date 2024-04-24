@@ -143,7 +143,7 @@ tethys:
       configMap:
         name: 'cirohportal-prod-configmap'
   env:
-    TETHYS_DB_ENGINE=django.db.backends.postgresql:
+    TETHYS_DB_ENGINE:
       value: 'django.db.backends.postgresql'
     SKIP_DB_SETUP:
       value: true
@@ -359,7 +359,7 @@ thredds:
     init_default_config: true
     # an example of a data archive is the following https://example.com/some/web/thredds_data.tgz
     public:
-      init_data: true
+      init_data: false
       data_archive: 'https://init-service-data.s3.amazonaws.com/tds_data.tar.gz'
       # should match the last folder in grace_thredds_directory_relative_path: 'fake_data'
       subpath: 'tethys'
@@ -903,6 +903,8 @@ postgis:
     pullPolicy: 'IfNotPresent'
   storageClass:
     storageClassName: 'efs-pv'
+  PersistentVolumeClaim:
+    name: django-postgis-pv-claim
 
 nodeSelector: {}
 tolerations: []
