@@ -18,7 +18,6 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 #######################################
 # INSTALL EXTENSIONS and APPLICATIONS #
 #######################################
-
 RUN micromamba install --yes -c conda-forge --file requirements.txt  && \
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba clean --all --yes && \ 
@@ -51,7 +50,6 @@ FROM tethysplatform/tethys-core:dev as build
 
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
-
 COPY config/tethys/asgi_supervisord.conf ${TETHYS_HOME}/asgi_supervisord.conf
 COPY config/tethys/supervisord.conf /etc/supervisor/supervisord.conf
 COPY config/tethys/update_tethys_apps.py ${TETHYS_HOME}
