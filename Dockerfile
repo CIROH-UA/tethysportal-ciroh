@@ -49,7 +49,7 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt  && \
 
 FROM tethysplatform/tethys-core:dev as build
 
-
+# Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 
 COPY config/tethys/asgi_supervisord.conf ${TETHYS_HOME}/asgi_supervisord.conf
