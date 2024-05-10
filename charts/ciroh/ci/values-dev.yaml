@@ -1,8 +1,6 @@
 image:
-  repository: 'gioelkin/tethysapp-ciroh-portal'
-  # repository: 'ciroh/tethysapp-ciroh'
-  # tag: dev_aea20c0fc2e159559e561b2b1bf9a3861542fb0b
-  tag: v0.0.21-rc
+  repository: 'awiciroh/tethysapp-ciroh-portal'
+  tag: dev_latest
   pullPolicy: Always
 
 ingresses:

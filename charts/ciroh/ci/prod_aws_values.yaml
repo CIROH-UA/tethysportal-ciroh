@@ -10,8 +10,8 @@ namespace:
     memory: 16Gi
     ephemeral_storage: '20Gi'
 image:
-  repository: 'gioelkin/tethysapp-ciroh-portal'
-  tag: v1.0.0
+  repository: 'awiciroh/tethysapp-ciroh-portal'
+  tag: dev_latest
   pullPolicy: 'IfNotPresent'
 ingresses:
   enabled: true
