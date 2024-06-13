@@ -3,18 +3,18 @@ entries:
   ciroh:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-06-06T18:12:50.711979703Z"
+    created: "2024-06-13T05:14:04.804051247Z"
     dependencies:
     - name: postgis
-      repository: https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs
+      repository: https://romer8.github.io/misc-helm-charts
       version: '*'
     - condition: gs-cloud.enabled
       name: gs-cloud
-      repository: https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs
+      repository: https://romer8.github.io/misc-helm-charts
       version: '*'
     - condition: thredds.enabled
       name: thredds
-      repository: https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs
+      repository: https://romer8.github.io/misc-helm-charts
       version: '*'
     - condition: redis.enabled
       name: redis
@@ -22,13 +22,13 @@ entries:
       version: '*'
     - condition: djangocms.enabled
       name: djangocms
-      repository: https://aquaveo.github.io/django-cms-quickstart
+      repository: https://romer8.github.io/misc-helm-charts
       version: '*'
     description: Tethys portal for CIROH
-    digest: c8c70824d232d7c61b43e9dd0083047db77b19abe3df9799bd3760b0ada625a8
+    digest: b0ce042665116581762d754de86bb5186bbf4ba8e7f67eaebe6e63ed988dfaf3
     name: ciroh
     type: application
     urls:
     - https://CIROH-UA.github.io/tethysportal-ciroh/ciroh-0.1.6.tgz
     version: 0.1.6
-generated: "2024-06-06T18:12:50.690125998Z"
+generated: "2024-06-13T05:14:04.775186604Z"
