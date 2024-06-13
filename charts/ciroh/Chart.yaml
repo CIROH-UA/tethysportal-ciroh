@@ -21,6 +21,6 @@ dependencies:
     version: '*'
     condition: redis.enabled
   - name: 'djangocms'
-    repository: 'https://aquaveo.github.io/django-cms-quickstart'
+    repository: 'https://romer8.github.io/misc-helm-charts'
     version: '*'
     condition: djangocms.enabled
