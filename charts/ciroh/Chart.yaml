@@ -6,14 +6,14 @@ type: application
 version: 0.1.6
 dependencies:
   - name: 'postgis'
-    repository: 'https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs'
+    repository: 'https://romer8.github.io/misc-helm-charts'
     version: '*'
   - name: 'gs-cloud'
-    repository: 'https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs'
+    repository: 'https://romer8.github.io/misc-helm-charts'
     version: '*'
     condition: gs-cloud.enabled
   - name: 'thredds'
-    repository: 'https://raw.githubusercontent.com/romer8/misc-helm-charts/master/docs'
+    repository: 'https://romer8.github.io/misc-helm-charts'
     version: '*'
     condition: thredds.enabled
   - name: 'redis'

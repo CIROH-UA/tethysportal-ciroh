@@ -15,13 +15,13 @@ fullnameOverride: ''
 
 gs-cloud:
   enabled: false
-  geoservercloud:
-    geoserver:
-      name: 'gs-cloud-ciroh'
-      adminCredentials:
-        secretConfig: portal-auth
-        userKey: admin
-        passKey: geoserver
+  # geoservercloud:
+  # geoserver:
+  # name: 'gs-cloud-ciroh'
+  # adminCredentials:
+  #   # secretConfig: portal-auth
+  #   userKey: admin
+  #   passKey: geoserver
 
 djangocms:
   enabled: false

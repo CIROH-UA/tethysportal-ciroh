@@ -46,9 +46,9 @@ spec:
             # gs-cloud env variables
             {{- if index .Values "gs-cloud" "enabled" }}
             - name: TETHYS_GS_USERNAME
-              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "adminCredentials" "userKey" | quote }}
+              value: {{ index .Values "gs-cloud" "adminCredentials" "userKey" | quote }}
             - name: TETHYS_GS_PASSWORD
-              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "adminCredentials" "passKey" | quote }}
+              value: {{ index .Values "gs-cloud" "adminCredentials" "passKey" | quote }}
             - name: TETHYS_GS_PROTOCOL
               value: 'http'
             - name: TETHYS_GS_HOST

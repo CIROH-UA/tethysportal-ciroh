@@ -776,6 +776,9 @@ gs-cloud:
         enabled: false
         storageClassName: 'efs-pv'
 
+  pdb: &common-pdb
+    enabled: false
+
   # tweak the resources here
   resources: &common-resources
     requests:
@@ -819,9 +822,12 @@ gs-cloud:
     geoserver:
       ingress:
         enabled: false
-        tls: []
+        # tls: []
       services:
         gateway:
+          pdb:
+            enabled: false
+            # <<: *common-pdb
           service:
             name: 'cirohportal-prod-geoserver-gateway'
             <<: *common-service-definition
@@ -833,6 +839,8 @@ gs-cloud:
                 <<: *env-override
               <<: *containers-additional-conf
         webui:
+          pdb:
+            <<: *common-pdb
           service:
             <<: *common-service-definition
           containers:
@@ -841,6 +849,8 @@ gs-cloud:
                 <<: *env-override
               <<: *containers-additional-conf
         rest:
+          pdb:
+            <<: *common-pdb
           service:
             <<: *common-service-definition
           containers:
@@ -849,6 +859,8 @@ gs-cloud:
                 <<: *env-override
               <<: *containers-additional-conf
         wms:
+          pdb:
+            <<: *common-pdb
           service:
             <<: *common-service-definition
           containers:
@@ -857,6 +869,8 @@ gs-cloud:
                 <<: *env-override
               <<: *containers-additional-conf
         wcs:
+          pdb:
+            <<: *common-pdb
           service:
             <<: *common-service-definition
           containers:
@@ -865,6 +879,8 @@ gs-cloud:
                 <<: *env-override
               <<: *containers-additional-conf
         wfs:
+          pdb:
+            <<: *common-pdb
           service:
             <<: *common-service-definition
           containers:
@@ -873,6 +889,8 @@ gs-cloud:
                 <<: *env-override
               <<: *containers-additional-conf
         gwc:
+          pdb:
+            <<: *common-pdb
           service:
             <<: *common-service-definition
           containers:
