@@ -365,7 +365,7 @@ thredds:
       subpath: 'tethys'
     wms_palettes:
       # an example of a wmsPalettes archive is the following https://example.com/some/web/wmsPalettes.tgz
-      init_data: true
+      init_data: false
       data_archive: 'https://init-service-data.s3.amazonaws.com/wmsPalettes.tar.gz'
       subpath: 'wmsPalettes'
 

@@ -107,9 +107,9 @@ tethys:
     feature_3_heading: 'Terms of Use'
     feature_3_body: 'The use of the portal will be carried out under the sole and exclusive responsibility of the user.'
     client_max_body_size: '1G'
-    file_upload_max_memory_size: '1073741824'
+    file_upload_max_memory_size: 1073741824
     nginx_read_time_out: '1800'
-    data_upload_max_memory_size: '1073741824'
+    data_upload_max_memory_size: 1073741824
     copyright: 'Copyright © 2023 CIROH'
     gwdm_workspace_name: 'gwdm'
     gwdm_store_name: 'gwdm'
