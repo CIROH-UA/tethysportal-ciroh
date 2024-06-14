@@ -1,6 +1,6 @@
 [submodule "tethysapp-metdataexplorer"]
 	path = apps/tethysapp-metdataexplorer
-	url = https://github.com/BYU-Hydroinformatics/tethysapp-metdataexplorer.git
+	url = https://github.com/Aquaveo/tethysapp-metdataexplorer.git
 	branch = master
 [submodule "ggst"]
 	path = apps/ggst
