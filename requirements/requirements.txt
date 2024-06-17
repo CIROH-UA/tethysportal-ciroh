@@ -37,3 +37,4 @@ geoserver-rest
 boto3
 scikit-learn
 hs_restclient
+djangorestframework
