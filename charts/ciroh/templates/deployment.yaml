@@ -7,8 +7,8 @@ metadata:
 
 spec:
   replicas: {{ .Values.replicaCount }}
-  # strategy:
-  #   type: {{ .Values.strategy }}  # Use the Recreate update strategy
+  strategy:
+    type: {{ .Values.strategy }}  # Use the Recreate update strategy
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "ciroh.name" . }}
