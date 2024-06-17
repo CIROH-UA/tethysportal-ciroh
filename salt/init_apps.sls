@@ -34,6 +34,10 @@ Set_HydroShare_Login:
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_SECRET {{ HYDROSHARE_SECRET_ID }} &&
         tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_LOGIN_REDIRECT_URL {{ SOCIAL_AUTH_LOGIN_REDIRECT_URL }}
 
+Set_White_Listes_Origins:
+  cmd.run:
+    - name: >
+        tethys settings --set CSRF_TRUSTED_ORIGINS {{ ALLOWED_HOSTS }}
 
 {% if PREFIX_URL %}
 Set_Prefix_URL_Tethys_Settings:
