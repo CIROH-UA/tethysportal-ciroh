@@ -13,6 +13,9 @@
 {% set AUTHENTICATION_BACKENDS = salt['environ.get']('AUTHENTICATION_BACKENDS') %}
 {% set SOCIAL_AUTH_LOGIN_REDIRECT_URL = salt['environ.get']('SOCIAL_AUTH_LOGIN_REDIRECT_URL') %}
 
+{% set HYDROSHARE_CLIENT_ID = salt['environ.get']('ALLOWED_HOSTS') %}
+
+
 Pre_Apps_Settings:
   cmd.run:
     - name: cat {{ TETHYS_HOME }}/portal_config.yml
