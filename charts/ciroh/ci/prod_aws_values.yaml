@@ -11,8 +11,8 @@ namespace:
     ephemeral_storage: '20Gi'
 image:
   repository: 'awiciroh/tethysapp-ciroh-portal'
-  tag: dev_f37ef075395e034c1debb2a94578e640b51abf89
-  pullPolicy: 'IfNotPresent'
+  tag: dev_latest
+  pullPolicy: 'Always'
 ingresses:
   enabled: true
   external:
