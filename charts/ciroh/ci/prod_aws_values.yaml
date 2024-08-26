@@ -23,7 +23,7 @@ ingresses:
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/backend-protocol: HTTP
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
-      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:180789647333:certificate/d86de939-8ffd-410f-adce-0ce1f5be6e0d # this is an example, please use yours
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:456531024327:certificate/67b7e3a9-b0a4-4c4e-9165-39044e063b87 # this is an example, please use yours
       alb.ingress.kubernetes.io/ssl-redirect: '443'
       alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=4000
 
@@ -74,7 +74,7 @@ ingresses:
       alb.ingress.kubernetes.io/scheme: internal
       alb.ingress.kubernetes.io/backend-protocol: HTTP
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
-      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:180789647333:certificate/d86de939-8ffd-410f-adce-0ce1f5be6e0d
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:456531024327:certificate/67b7e3a9-b0a4-4c4e-9165-39044e063b87
       alb.ingress.kubernetes.io/ssl-redirect: '443'
     hosts:
       - host: portal.ciroh.org
