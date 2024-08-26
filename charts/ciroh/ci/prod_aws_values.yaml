@@ -291,20 +291,6 @@ djangocms:
   fullnameOverride: 'ciroh-cms'
   storageClass:
     storageClassName: 'efs-pv'
-  env:
-    - name: DJANGOCMS_DB_HOST
-      value: 'ciroh-db'
-    - name: DJANGOCMS_DB_PORT
-      value: '5432'
-    - name: DEBUG
-      value: 'True'
-    - name: SECURE_SSL_REDIRECT
-      value: 'False'
-    - name: DOMAIN
-      value: 'portal.ciroh.org'
-    - name: STATIC_URL
-      value: '/static_cms/'
-
   service:
     type: ClusterIP
     externalPort: 80
