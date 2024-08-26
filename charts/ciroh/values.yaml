@@ -22,7 +22,6 @@ djangocms:
   postgis:
     enabled: false
   env: []
-
 thredds:
   enabled: true
   fullnameOverride: 'ciroh-tds'

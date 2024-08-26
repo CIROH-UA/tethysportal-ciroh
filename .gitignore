@@ -16,3 +16,4 @@ public_data/*
 charts/ciroh/*.lock
 charts/ciroh/charts
 charts/ciroh/ci/.sops.yaml
+charts/ciroh/ci/secrets-dec.yaml
