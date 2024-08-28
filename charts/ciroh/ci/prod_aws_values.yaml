@@ -22,7 +22,8 @@ ingresses:
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/backend-protocol: HTTP
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
       alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=4000
 
     hosts:
@@ -71,7 +72,8 @@ ingresses:
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/scheme: internal
       alb.ingress.kubernetes.io/backend-protocol: HTTP
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
     hosts:
       - host: portal.ciroh.org
         paths:
@@ -94,18 +96,10 @@ tethys:
         value: 'ciroh-db'
       TETHYS_DB_PORT:
         value: '5432'
-      POSTGRES_PASSWORD:
-        value: 'please_dont_use_default_passwords'
-      POSTGRES_USER:
-        value: 'postgres'
       TETHYS_GS_HOST:
         value: 'cirohportal-prod-geoserver-gateway'
-      TETHYS_GS_PASSWORD:
-        value: 'geoserver'
       TETHYS_GS_PORT:
         value: '8080'
-      TETHYS_GS_USERNAME:
-        value: 'admin'
       TETHYS_GS_PROTOCOL:
         value: 'http'
       GWDM_WORKSPACE_NAME:
@@ -295,39 +289,6 @@ djangocms:
   fullnameOverride: 'ciroh-cms'
   storageClass:
     storageClassName: 'efs-pv'
-  env:
-    - name: SECRET_KEY
-      value: 'ztw%%f050)x2=t+2y+td#xfl$%i35g=s0!^%w7@pqo8z6w7(mz'
-    - name: DJANGOCMS_DB_NAME
-      value: 'djangocms'
-    - name: DJANGOCMS_DB_USER
-      value: 'djangocmsadmin'
-    - name: DJANGOCMS_DB_PWD
-      value: 'pass'
-    - name: DJANGOCMS_DB_HOST
-      value: 'ciroh-db'
-    - name: DJANGOCMS_DB_PORT
-      value: '5432'
-    - name: DJANGO_SUPERUSER_USERNAME
-      value: 'admin'
-    - name: DJANGO_SUPERUSER_EMAIL
-      value: 'example@gmail.com'
-    - name: DJANGO_SUPERUSER_PASSWORD
-      value: 'pass'
-    - name: DJANGOCMS_ADMIN_DB_USER
-      value: 'postgres'
-    - name: DJANGOCMS_ADMIN_DB_PWD
-      value: 'please_dont_use_default_passwords'
-    - name: DEBUG
-      value: 'True'
-    - name: SECURE_SSL_REDIRECT
-      value: 'False'
-    - name: DOMAIN
-      value: 'portal.ciroh.org'
-    - name: STATIC_URL
-      value: '/static_cms/'
-    # - name: SKIP_CREATION_USER
-    #   value: 'done'
   service:
     type: ClusterIP
     externalPort: 80
@@ -803,8 +764,6 @@ gs-cloud:
   env: &env-override
     RABBITMQ_HOST:
       value: 'cirohportal-prod-rabbitmq'
-    RABBITMQ_USER:
-      value: 'geoserver'
     RABBITMQ_PASSWORD:
       type: secret
       name: 'cirohportal-prod-rabbitmq'
