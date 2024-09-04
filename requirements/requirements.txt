@@ -5,7 +5,7 @@ geopandas
 shapely
 xarray
 rioxarray
-numpy
+numpy==1.26.4 #if using > 2.0.0, the portal will break
 pygithub
 gitpython==3.1.18
 requests
