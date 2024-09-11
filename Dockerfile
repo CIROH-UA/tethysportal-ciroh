@@ -12,7 +12,6 @@ COPY requirements/*.txt .
 ###################
 ADD extensions ${TETHYS_HOME}/extensions
 
-# Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 #######################################
