@@ -10,7 +10,7 @@ dependencies:
     version: '*'
   - name: 'gs-cloud'
     repository: 'https://romer8.github.io/misc-helm-charts'
-    version: '*'
+    version: '0.1.3'
     condition: gs-cloud.enabled
   - name: 'thredds'
     repository: 'https://romer8.github.io/misc-helm-charts'
