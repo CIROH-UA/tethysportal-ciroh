@@ -199,6 +199,14 @@ tethys:
       value: '"[tethys_services.backends.hydroshare.HydroShareOAuth2]"'
     SOCIAL_AUTH_LOGIN_REDIRECT_URL:
       value: '/t/apps/'
+    PKCE_REQUIRED:
+      value: 'true'
+    OIDC_ENABLED:
+      value: 'true'
+    SCOPES_OPENID:
+      value: 'OpenID Connect scope'
+    OIDC_RSA_PRIVATE_KEY:
+      value: ''
 
   workspace_size: '16Gi'
   portal_changes:
