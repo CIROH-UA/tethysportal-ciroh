@@ -62,8 +62,8 @@ COPY salt/ /srv/salt/
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN rm -Rf ~/.cache/pip && \
-    micromamba clean --all --yes
-
+    micromamba install --yes -c conda-forge numpy==1.26.4 && \
+    micromamba clean --all --yes  
 EXPOSE 80
 
 CMD bash run.sh
