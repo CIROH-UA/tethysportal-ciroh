@@ -18,11 +18,11 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  clean-space:
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
+  # clean-space:
+  #   uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
 
   build:
-    needs: [clean-space]
+    # needs: [clean-space]
     runs-on: ubuntu-latest
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
