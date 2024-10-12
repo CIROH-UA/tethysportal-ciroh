@@ -50,6 +50,7 @@ jobs:
       - name: Update submodules recursively
         run: |
           git submodule sync --recursive
+          git submodule update --init --recursive
 
       # Checks-out the hydrocompute extra submodule
       - name: checkout Hydrocompute submodule
