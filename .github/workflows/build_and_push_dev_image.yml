@@ -34,10 +34,10 @@ jobs:
       # Step 3: Set up Git credentials for GitLab submodule
       - name: Set up Git credentials for GitLab submodule
         run: |
-          git config --global url."https://${GITLAB_USERNAME}:${GITLAB_PAT}@git.aquaveo.com/".insteadOf "https://git.aquaveo.com/"
+          git config --global url.'https://${GITLAB_USERNAME}:${GIT_PAT}@git.aquaveo.com/'.insteadOf "https://git.aquaveo.com/"
         env:
           GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
-          GIT_AQUAVEO_PAT: ${{ secrets.GITLAB_PAT }}
+          GIT_PAT: ${{ secrets.GITLAB_PAT }}
 
       # Step 4: Update submodules recursively
       - name: Update submodules recursively
