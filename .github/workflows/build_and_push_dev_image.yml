@@ -18,31 +18,18 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # clean-space:
-  #   uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
+  clean-space:
+    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
 
   build:
     # needs: [clean-space]
     runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: 'false'
 
-      # - name: Set up Git credentials for GitLab submodule
-      #   run: |
-      #     git config --global url.'https://${GITLAB_USERNAME}:${GITLAB_PAT}@git.aquaveo.com/'.insteadOf "https://git.aquaveo.com/"
-      #   env:
-      #     GITLAB_USERNAME: 'ggggg'
-      #     GITLAB_PAT: 'hety'
-
-      - name: Verify Git configuration
-        run: |
-          git config --get-regexp url
-
-      # Alternative using oauth2 as username
       - name: Set up Git credentials for GitLab submodule
         run: |
           git config --global url."https://oauth2:${GITLAB_PAT}@git.aquaveo.com/".insteadOf "https://git.aquaveo.com/"

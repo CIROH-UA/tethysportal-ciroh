@@ -39,6 +39,6 @@
 	url = https://github.com/tethysplatform/tethysapp-hydrocompute.git
 	branch = main
 [submodule "aquainsight"]
-	path = aquainsight
+	path = apps/aquainsight
 	url = https://git.aquaveo.com/tethys/firo/aquainsight.git
 	branch = ciroh
