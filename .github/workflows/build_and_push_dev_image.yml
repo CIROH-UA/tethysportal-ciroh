@@ -22,7 +22,7 @@ jobs:
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
 
   build:
-    # needs: [clean-space]
+    needs: [clean-space]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
