@@ -66,8 +66,10 @@ RUN rm -Rf ~/.cache/pip && \
     micromamba install --yes -c conda-forge numpy==1.26.4 && \
     #important, this fixes th error of not finding pyrpoj database, it seems it is installed wiht both conda and pypi, so it has conflicting paths
     pip uninstall -y pyproj && \
-    pip install --no-cache-dir --quiet pyproj && \ 
-    micromamba clean --all --yes  
+    pip install --no-cache-dir --quiet pyproj && \
+    pip uninstall -y pyogrio && \
+    pip install --no-cache-dir --quiet pyogrio && \
+    micromamba clean --all --yes
 EXPOSE 80
 
 CMD bash run.sh
