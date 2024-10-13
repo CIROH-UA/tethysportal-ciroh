@@ -64,8 +64,9 @@ COPY salt/ /srv/salt/
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN rm -Rf ~/.cache/pip && \
     micromamba install --yes -c conda-forge numpy==1.26.4 && \
+    #important, this fixes th error of not finding pyrpoj database, it seems it is installed wiht both conda and pypi, so it has conflicting paths
     pip uninstall -y pyproj && \
-    pip install --no-cache-dir --quiet pyproj && \
+    pip install --no-cache-dir --quiet pyproj && \ 
     micromamba clean --all --yes  
 EXPOSE 80
 
