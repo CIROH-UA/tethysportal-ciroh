@@ -31,14 +31,6 @@ jobs:
           fetch-depth: 0
           submodules: 'false'
 
-      # Step 2: Set up Git credentials for GitHub submodules
-      - name: Set up Git credentials for GitHub
-        run: |
-          git config --global url."https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
-
       # Step 3: Set up Git credentials for GitLab submodule
       - name: Set up Git credentials for GitLab submodule
         run: |
