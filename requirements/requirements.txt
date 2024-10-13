@@ -44,4 +44,3 @@ intake>=0.6.6
 pygeoogc
 pygeoutils
 pygeohydro
-asyncio
