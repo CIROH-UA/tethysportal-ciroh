@@ -20,6 +20,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
+    pip install --no-deps nwm-plugins && \
     micromamba clean --all --yes && \
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && python setup.py install && \
