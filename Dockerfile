@@ -24,7 +24,6 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba clean --all --yes && \
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && python setup.py install && \
-    cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/water_data_explorer.yml && \
     cd ${TETHYS_HOME}/apps/tethysapp-tethys_app_store && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/app_store.yml && \
     cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/ggst.yml && \
     cd ${TETHYS_HOME}/apps/tethysapp-metdataexplorer && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/metdataexplorer.yml && \
@@ -35,6 +34,7 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     cd ${TETHYS_HOME}/apps/aquainsight && mv ${TETHYS_HOME}/apps/aquainsight/reactapp/config/development.env ${TETHYS_HOME}/apps/aquainsight/reactapp/config/production.env && npm install && npm run build && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/aquainsight.yml && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/community_streamflow_evaluation_system.yml && \
     cd ${TETHYS_HOME}/apps/hydroshare_api_tethysapp && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/hydroshare_api_tethysapp.yml && \
+    cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && cp install.yml $PYTHON_SITE_PACKAGE_PATH/site-packages/water_data_explorer.yml && \
     rm -rf /var/lib/apt/lists/* && \
     find -name '*.a' -delete && \
     rm -rf ${CONDA_HOME}/envs/${CONDA_ENV_NAME}/conda-meta && \
