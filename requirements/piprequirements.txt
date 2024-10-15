@@ -5,5 +5,4 @@ see
 pywaterml
 gstools
 hydroeval
-pynhd
-numpy==1.26.4
+asyncio

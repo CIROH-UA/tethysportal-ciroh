@@ -22,10 +22,6 @@
 	path = apps/snow-inspector
 	url = https://github.com/Aquaveo/snow-inspector
 	branch = tethys4_upgrade
-[submodule "OWP"]
-	path = apps/OWP
-	url = git@github.com:Aquaveo/OWP.git
-	branch = main
 [submodule "Tethys-CSES"]
 	path = apps/Tethys-CSES
 	url = https://github.com/whitelightning450/Tethys-CSES
@@ -37,8 +33,12 @@
 [submodule "Water-Data-Explorer"]
 	path = apps/Water-Data-Explorer
 	url = https://github.com/Aquaveo/Water-Data-Explorer
-	branch = hydroserver2-update-Jacob
+	branch = master
 [submodule "apps/tethysapp-hydrocompute"]
 	path = apps/tethysapp-hydrocompute
 	url = https://github.com/tethysplatform/tethysapp-hydrocompute.git
 	branch = main
+[submodule "aquainsight"]
+	path = apps/aquainsight
+	url = https://git.aquaveo.com/tethys/firo/aquainsight.git
+	branch = ciroh
