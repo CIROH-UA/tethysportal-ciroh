@@ -120,12 +120,6 @@ tethys:
     - name: thredds-persistent-storage
       mountPath: '/var/lib/tethys_persist/thredds_data/tethys'
       subPath: 'tethys'
-    - name: config-volume
-      mountPath: '/usr/lib/tethys/portal_changes.yml'
-      subPath: portal_changes.yml
-    - name: config-volume
-      mountPath: '/usr/lib/tethys/proxy_apps.yml'
-      subPath: proxy_apps.yml
   volumes:
     - name: tethys-persist-pv
       persistentVolumeClaim:
@@ -141,7 +135,7 @@ tethys:
       value: 'django.db.backends.postgresql'
     SKIP_DB_SETUP:
       value: true
-    # gwdm settings
+    # gwdm envs
     GWDM_WORKSPACE_NAME:
       value: 'gwdm'
     GWDM_STORE_NAME:
@@ -154,6 +148,28 @@ tethys:
       value: 'aquifer'
     GWDM_WELL_LAYER_NAME:
       value: 'well'
+    GWDM_CS_DATA_DIRECTORY:
+      value: /var/lib/tethys_persist/thredds_data/tethys/gwdm_data_directory
+    GWDM_CS_THREDDS_DIRECTORY:
+      value: /var/lib/tethys_persist/thredds_data/tethys/gwdm_thredds_directory
+    GWDM_CS_THREDDS_CATALOG:
+      value: 'http://portal.ciroh.org/thredds/catalog/ciroh_data/tethys/gwdm_thredds_directory/catalog.xml'
+    # ggst envs
+    GGST_CS_THREDDS_DIRECTORY:
+      value: '/var/lib/tethys_persist/thredds_data/tethys/ggst_thredds_directory'
+    GGST_CS_THREDDS_CATALOG:
+      value: 'http://portal.ciroh.org/thredds/catalog/ciroh_data/tethys/ggst_thredds_directory/catalog.xml'
+    GGST_CS_GLOBAL_OUTPUT_DIRECTORY:
+      value: /usr/lib/tethys
+    GGST_CS_EARTHDATA_USERNAME:
+      value: byugrace
+    GGST_CS_CONDA_PYTHON_PATH:
+      value: /opt/conda/envs/tethys/bin/python
+    # mde envs
+    MDE_CS_DISCLAIMER_HEADER:
+      value: CIROH Met Data Explorer
+    MDE_CS_DISCLAIMER_MESSAGE:
+      value: 'The CIROH Met Data Explorer is provided as a tool for accessing and exploring meteorological datasets. While we strive to ensure the accuracy and reliability of the information presented, data sourced from third-party providers may contain errors or omissions. Users are responsible for independently verifying any information obtained through the app before making decisions based on it'
     # Tethys settings
     PREFIX_URL:
       value: 't'
@@ -209,82 +225,6 @@ tethys:
       value: ''
 
   workspace_size: '16Gi'
-  portal_changes:
-    apps:
-      ggst:
-        services:
-          custom_settings:
-            conda_python_path: /opt/conda/envs/tethys/bin/python
-            earthdata_pass: byuGRACE1
-            earthdata_username: byugrace
-            global_output_directory: /usr/lib/tethys
-            grace_thredds_catalog: 'http://portal.ciroh.org/thredds/catalog/ciroh_data/tethys/ggst_thredds_directory/catalog.xml'
-            grace_thredds_directory: /var/lib/tethys_persist/thredds_data/tethys/ggst_thredds_directory
-      metdataexplorer:
-        services:
-          custom_settings:
-            disclaimer_header: GIO TERMS OF SERVICE 4
-            disclaimer_message: The MDE is a happy tethys application
-          persistent:
-            thredds_db: tethys_postgis
-      swe:
-        services:
-          custom_settings: {}
-          spatial:
-            thredds_service: tethys_thredds
-
-      water_data_explorer:
-        services:
-          custom_settings: {}
-          persistent:
-            catalog_db: tethys_postgis
-
-      gwdm:
-        services:
-          custom_settings:
-            gw_data_directory: /var/lib/tethys_persist/thredds_data/tethys/gwdm_data_directory
-            gw_thredds_directory: /var/lib/tethys_persist/thredds_data/tethys/gwdm_thredds_directory
-            gw_thredds_catalog: 'http://portal.ciroh.org/thredds/catalog/ciroh_data/tethys/gwdm_thredds_directory/catalog.xml'
-          persistent:
-            gwdb: tethys_postgis
-          spatial:
-            primary_geoserver: tethys_geoserver
-            primary_thredds: tethys_thredds
-
-  proxy_apps:
-    owp_nwm_map_viewer:
-      name: OWP NWM Map Viewer
-      endpoint: https://water.noaa.gov/map
-      logo_url: /t/static/ciroh_theme/images/owp.png
-      description: Proxy app for Office in Water Prediction
-      tags: NOAA
-      enabled: true
-      show_in_apps_library: true
-      order: 0
-      back_url: web
-      open_in_new_tab: true
-    ciroh_jupyterhub:
-      name: CIROH JupyterHub
-      endpoint: https://jupyterhub.cuahsi.org/hub/login
-      logo_url: /t/static/ciroh_theme/images/jupyterhub.png
-      description: Proxy app for the CIROH JupyterHub
-      tags: CUAHSI
-      enabled: true
-      show_in_apps_library: true
-      order: 1
-      back_url: web
-      open_in_new_tab: true
-    hydroshare:
-      name: HydroShare
-      endpoint: https://www.hydroshare.org/home/
-      logo_url: /t/static/ciroh_theme/images/HydroShare.png
-      description: Proxy app for the Hydroshare app
-      tags: CUAHSI
-      enabled: true
-      show_in_apps_library: true
-      order: 2
-      back_url: web
-      open_in_new_tab: true
 
 djangocms:
   image:

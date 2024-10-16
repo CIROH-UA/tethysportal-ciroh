@@ -47,8 +47,6 @@ Create_THREDDS_Spatial_Dataset_Service:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_services_complete" ];"
 
-## this needs to be checked, the tethys command uses
-##check#1
 Create_GeoServer_Spatial_Dataset_Service:
   cmd.run:
     - name: "tethys services create spatial -t GeoServer -n {{ GS_SERVICE_NAME }} -c {{ TETHYS_GS_USERNAME }}:{{ TETHYS_GS_PASSWORD }}@{{ TETHYS_GS_PROTOCOL }}://{{ TETHYS_GS_HOST }}:{{ TETHYS_GS_PORT }} -p {{ TETHYS_GS_PROTOCOL_PUB }}://{{ TETHYS_GS_HOST_PUB }}:{{ TETHYS_GS_PORT_PUB }}"

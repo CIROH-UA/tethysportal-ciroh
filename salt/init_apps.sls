@@ -24,7 +24,7 @@ Set_Tethys_Settings_For_Apps:
         tethys settings --set FILE_UPLOAD_MAX_MEMORY_SIZE {{ FILE_UPLOAD_MAX_MEMORY_SIZE }} &&
         tethys settings --set DATA_UPLOAD_MAX_MEMORY_SIZE {{ FILE_UPLOAD_MAX_MEMORY_SIZE }} &&
         tethys settings --set DATA_UPLOAD_MAX_NUMBER_FIELDS {{ FILE_UPLOAD_MAX_MEMORY_SIZE }}
-
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_apps_setup_complete" ];"
 
 Set_White_Listed_Origins:
   cmd.run:
@@ -38,6 +38,14 @@ Set_Prefix_URL_Tethys_Settings:
         tethys settings --set PREFIX_URL {{ PREFIX_URL }}
 {% endif %}
 
+Adding_Proxy_Apps:
+  cmd.run:
+    - name: >
+        tethys proxyapp add "OWP NWM Map Viewer" "https://water.noaa.gov/map" "Proxy app for Office in Water Prediction" "/static/ciroh_theme/images/owp.png" "NOAA" True True "https://portal.ciroh.org/t" True True
+        tethys proxyapp add "CIROH JupyterHub" "https://jupyterhub.cuahsi.org/hub/login" "Proxy app for the CIROH JupyterHub" "/static/ciroh_theme/images/jupyterhub.png" "CUAHSI" True True "https://portal.ciroh.org/t" True True
+        tethys proxyapp add "HydroShare" "https://water.noaa.gov/map" "Proxy app for the Hydroshare app" "/static/ciroh_theme/images/HydroShare.png" "CUAHSI" True True "https://portal.ciroh.org/t" True True
+    - shell: /bin/bash
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_apps_setup_complete" ];"
 
 Sync_Apps:
   cmd.run:
@@ -45,26 +53,13 @@ Sync_Apps:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_apps_setup_complete" ];"
 
-Update_Tethys_Apps:
-  file.managed:
-    - name: {{ TETHYS_PERSIST }}/portal_changes.yml
-    - source: {{ TETHYS_HOME }}/portal_changes.yml
-
-run_on_apps_hanges:
+Sync_App_Persistent_Stores:
   cmd.run:
-    - name: {{ TETHYS_HOME }}/update_state.sh 
+    - name: tethys syncstores all
     - shell: /bin/bash
-    - onchanges:
-      - file: Update_Tethys_Apps
+    - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/init_apps_setup_complete" ];"
 
-Manage_Proxy_Apps:
-  file.managed:
-    - name: {{ TETHYS_PERSIST }}/proxy_apps.yml
-    - source: {{ TETHYS_HOME }}/proxy_apps.yml
-
-run_on_proxy_apps_changes:
+Flag_Complete_Setup:
   cmd.run:
-    - name: python {{ TETHYS_HOME }}/update_proxy_apps.py
+    - name: touch ${TETHYS_PERSIST}/init_apps_setup_complete
     - shell: /bin/bash
-    - onchanges:
-      - file: Manage_Proxy_Apps

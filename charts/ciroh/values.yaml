@@ -161,9 +161,6 @@ tethys:
     TETHYS_SETTINGS_FLAGS:
       value: '--production, --overwrite'
 
-  portal_changes: {}
-  proxy_apps: {}
-
 podAnnotations: {}
 
 podSecurityContext: {}
