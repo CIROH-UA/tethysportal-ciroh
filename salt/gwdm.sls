@@ -28,13 +28,6 @@
 {% set GWDM_WELL_LAYER_NAME = salt['environ.get']('GWDM_WELL_LAYER_NAME') %}
 
 
-
-Post_Setup_GWDM:
-  cmd.run:
-    - name: "python {{ TETHYS_HOME }}/post_setup_gwdm.py -gh {{ TETHYS_GS_PROTOCOL }}://{{ TETHYS_GS_HOST }} -p {{ TETHYS_GS_PORT }} -u {{ TETHYS_GS_USERNAME }} -pw {{ TETHYS_GS_PASSWORD }} -s {{ GWDM_STORE_NAME }} -w {{ GWDM_WORKSPACE_NAME }} -db {{ GWDM_TABLE_NAME }} -dbp {{ TETHYS_DB_PORT }} -dbh {{ TETHYS_DB_HOST }} -dbu {{ POSTGRES_USER }} -dbpw {{ POSTGRES_PASSWORD }} -rt {{ GWDM_REGION_LAYER_NAME }} -at {{ GWDM_AQUIFER_LAYER_NAME }} -wt {{ GWDM_WELL_LAYER_NAME }}"
-    - shell: /bin/bash
-    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/post_set_up_gwdm_complete" ];"
-
 Link_Persistent_Stores_Database_GWDM:
   cmd.run:
     - name: "tethys link persistent:{{ POSTGIS_SERVICE_NAME }} gwdm:ps_database:gwdb"
@@ -59,7 +52,7 @@ Sync_GWDM_Stores_Persistent_Stores:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/gwdm_complete" ];"
 
-Set_Settings:
+Set_GWDM_Settings:
   cmd.run:
     - name: > 
         tethys app_settings set gwdm gw_data_directory {{ GWDM_CS_DATA_DIRECTORY }} && 

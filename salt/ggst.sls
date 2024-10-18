@@ -7,7 +7,7 @@
 {% set GGST_CS_EARTHDATA_PASS = salt['environ.get']('GGST_CS_EARTHDATA_PASS') %}
 {% set GGST_CS_CONDA_PYTHON_PATH = salt['environ.get']('GGST_CS_CONDA_PYTHON_PATH') %}
 
-Set_Settings:
+Set_GGST_Settings:
   cmd.run:
     - name: > 
         tethys app_settings set ggst grace_thredds_directory {{ GGST_CS_THREDDS_DIRECTORY }} &&

@@ -13,7 +13,7 @@ Link_Persistent_Stores_Database_MDE:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/mde_complete" ];"
 
-Set_Settings:
+Set_MDE_Settings:
   cmd.run:
     - name: > 
         tethys app_settings set metdataexplorer disclaimer_header {{ MDE_CS_DISCLAIMER_HEADER }} &&
