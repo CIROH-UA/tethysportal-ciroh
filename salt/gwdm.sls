@@ -4,7 +4,6 @@
 {% set POSTGIS_SERVICE_NAME = 'tethys_postgis' %}
 
 
-
 {% set TETHYS_HOME = salt['environ.get']('TETHYS_HOME') %}
 {% set TETHYS_DB_HOST = salt['environ.get']('TETHYS_DB_HOST') %}
 {% set TETHYS_DB_PORT = salt['environ.get']('TETHYS_DB_PORT') %}
@@ -56,7 +55,7 @@ Link_Spatial_Thredds_Dataset_Service:
 
 Sync_GWDM_Stores_Persistent_Stores:
   cmd.run:
-    - name: micromamba run -n {{ CONDA_ENV_NAME }} tethys syncstores gwdm
+    - name: tethys syncstores gwdm
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/gwdm_complete" ];"
 
