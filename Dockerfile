@@ -25,11 +25,11 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && python setup.py install && \
     cd ${TETHYS_HOME}/apps/tethysapp-tethys_app_store && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && cp install.yml  && \
+    cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-metdataexplorer && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-swe && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q && cp install.yml && \
+    cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/aquainsight && mv ${TETHYS_HOME}/apps/aquainsight/reactapp/config/development.env ${TETHYS_HOME}/apps/aquainsight/reactapp/config/production.env && npm install && npm run build && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && \
