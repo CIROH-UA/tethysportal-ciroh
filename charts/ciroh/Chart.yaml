@@ -3,7 +3,7 @@ name: ciroh
 appVersion: '0.0.1'
 description: 'Tethys portal for CIROH'
 type: application
-version: 0.1.6
+version: 0.1.7
 dependencies:
   - name: 'postgis'
     repository: 'https://romer8.github.io/misc-helm-charts'
