@@ -4,7 +4,6 @@
 
 {% set MDE_CS_DISCLAIMER_HEADER = salt['environ.get']('MDE_CS_DISCLAIMER_HEADER') %}
 {% set MDE_CS_DISCLAIMER_MESSAGE = salt['environ.get']('MDE_CS_DISCLAIMER_MESSAGE') %}
-{% set MDE_CS_SERVER_HOME_DIRECTORY = salt['environ.get']('MDE_CS_SERVER_HOME_DIRECTORY') %}
 
 
 Link_Persistent_Stores_Database_MDE:
@@ -17,8 +16,7 @@ Set_MDE_Settings:
   cmd.run:
     - name: > 
         tethys app_settings set metdataexplorer disclaimer_header {{ MDE_CS_DISCLAIMER_HEADER }} &&
-        tethys app_settings set metdataexplorer disclaimer_message {{ MDE_CS_DISCLAIMER_MESSAGE }} &&
-        tethys app_settings set metdataexplorer server_home_directory {{ MDE_CS_SERVER_HOME_DIRECTORY }}
+        tethys app_settings set metdataexplorer disclaimer_message {{ MDE_CS_DISCLAIMER_MESSAGE }}
 
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/mde_complete" ];"

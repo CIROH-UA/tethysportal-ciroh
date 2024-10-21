@@ -11,7 +11,8 @@ base:
     - wde
     - swe
     - mde
-    - init_apps
+    - config
+    - proxy_apps
     - oauth
     - post_app
     - nginx_patches

@@ -8,7 +8,7 @@
 Set_App_Store_Settings:
   cmd.run:
     - name: > 
-        tethys app_settings set app_store stores_settings {{ APP_STORE_CS_STORES_SETTINGS }} &&
+        tethys app_settings set app_store stores_settings '{{ APP_STORE_CS_STORES_SETTINGS }}' &&
         tethys app_settings set app_store encryption_key {{ APP_STORE_CS_ENCRYPTION_KEY }}
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/app_store_complete" ];"
