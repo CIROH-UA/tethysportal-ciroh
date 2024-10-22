@@ -11,7 +11,7 @@ Adding_Proxy_Apps:
         tethys proxyapp add "CIROH JupyterHub" "https://jupyterhub.cuahsi.org/hub/login" "Proxy app for the CIROH JupyterHub" "/static/ciroh_theme/images/jupyterhub.png" "CUAHSI" True True "https://portal.ciroh.org/t" True True &&
         tethys proxyapp add "HydroShare" "https://water.noaa.gov/map" "Proxy app for the Hydroshare app" "/static/ciroh_theme/images/HydroShare.png" "CUAHSI" True True "https://portal.ciroh.org/t" True True
     - shell: /bin/bash
-    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_apps_setup_complete" ];"
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_proxy_apps_setup_complete" ];"
 
 Flag_Proxy_Apps_Complete_Setup:
   cmd.run:
