@@ -40,6 +40,8 @@ spec:
             # Tethys settings defined outside the env
             - name: ALLOWED_HOSTS
               value: "\"[{{- range .Values.ingresses.external.hosts }}{{ .host }},{{- end }}]\""
+            - name: CSRF_TRUSTED_ORIGINS
+              value: "\"[{{- range $index, $host := .Values.ingresses.external.hosts }}{{ if $index }},{{ end }}{{ $.Values.tethys.env.PUBLIC_PORTAL_PROTOCOL.value }}://{{ $host.host }}{{- end }}]\""
             # redis values
             - name: CHANNEL_LAYERS_CONFIG 
               value: "\"{'hosts':[{'host':\ {{ .Values.redis.fullnameOverride }}-master,\ 'port':\ {{ .Values.redis.master.containerPorts.redis }}}]}\""

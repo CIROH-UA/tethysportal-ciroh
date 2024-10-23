@@ -131,6 +131,8 @@ tethys:
       configMap:
         name: 'cirohportal-prod-configmap'
   env:
+    PUBLIC_PORTAL_PROTOCOL:
+      value: 'https'
     TETHYS_DB_ENGINE:
       value: 'django.db.backends.postgresql'
     SKIP_DB_SETUP:

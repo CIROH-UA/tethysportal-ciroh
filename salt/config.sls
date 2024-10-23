@@ -7,9 +7,8 @@
 {% set CHANNEL_LAYERS_BACKEND = salt['environ.get']('CHANNEL_LAYERS_BACKEND') %}
 {% set CHANNEL_LAYERS_CONFIG = salt['environ.get']('CHANNEL_LAYERS_CONFIG') %}
 {% set PREFIX_URL = salt['environ.get']('PREFIX_URL') %}
-
-
 {% set ALLOWED_HOSTS = salt['environ.get']('ALLOWED_HOSTS') %}
+{% set CSRF_TRUSTED_ORIGINS = salt['environ.get']('CSRF_TRUSTED_ORIGINS') %}
 
 
 Pre_Apps_Settings:
@@ -24,33 +23,35 @@ Set_Tethys_Settings_For_Apps:
         tethys settings --set FILE_UPLOAD_MAX_MEMORY_SIZE {{ FILE_UPLOAD_MAX_MEMORY_SIZE }} &&
         tethys settings --set DATA_UPLOAD_MAX_MEMORY_SIZE {{ FILE_UPLOAD_MAX_MEMORY_SIZE }} &&
         tethys settings --set DATA_UPLOAD_MAX_NUMBER_FIELDS {{ FILE_UPLOAD_MAX_MEMORY_SIZE }}
-    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_apps_setup_complete" ];"
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/config_complete" ];"
 
 Set_White_Listed_Origins:
   cmd.run:
     - name: >
-        tethys settings --set CSRF_TRUSTED_ORIGINS {{ ALLOWED_HOSTS }}
+        tethys settings --set CSRF_TRUSTED_ORIGINS {{ CSRF_TRUSTED_ORIGINS }}
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/config_complete" ];"
 
 {% if PREFIX_URL %}
 Set_Prefix_URL_Tethys_Settings:
   cmd.run:
     - name: >
         tethys settings --set PREFIX_URL {{ PREFIX_URL }}
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/config_complete" ];"
 {% endif %}
 
 Sync_Apps:
   cmd.run:
     - name: tethys db sync
     - shell: /bin/bash
-    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_apps_setup_complete" ];"
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/config_complete" ];"
 
 Sync_App_Persistent_Stores:
   cmd.run:
     - name: tethys syncstores all
     - shell: /bin/bash
-    - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/init_apps_setup_complete" ];"
+    - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/config_complete" ];"
 
 Flag_Complete_Setup:
   cmd.run:
-    - name: touch ${TETHYS_PERSIST}/init_apps_setup_complete
+    - name: touch ${TETHYS_PERSIST}/config_complete
     - shell: /bin/bash

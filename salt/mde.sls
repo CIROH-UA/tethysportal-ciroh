@@ -15,8 +15,8 @@ Link_Persistent_Stores_Database_MDE:
 Set_MDE_Settings:
   cmd.run:
     - name: > 
-        tethys app_settings set metdataexplorer disclaimer_header {{ MDE_CS_DISCLAIMER_HEADER }} &&
-        tethys app_settings set metdataexplorer disclaimer_message {{ MDE_CS_DISCLAIMER_MESSAGE }}
+        tethys app_settings set metdataexplorer disclaimer_header "{{ MDE_CS_DISCLAIMER_HEADER }}" &&
+        tethys app_settings set metdataexplorer disclaimer_message "{{ MDE_CS_DISCLAIMER_MESSAGE }}"
 
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/mde_complete" ];"
