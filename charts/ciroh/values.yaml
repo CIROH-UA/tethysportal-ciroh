@@ -144,6 +144,8 @@ tethys:
     APP_DB_PASSWORD:
       value: 'please_dont_use_default_passwords'
     # portal-settings
+    PUBLIC_PORTAL_PROTOCOL:
+      value: 'https'
     PREFIX_URL:
       value: t
     ENABLE_OPEN_PORTAL:
@@ -160,9 +162,6 @@ tethys:
       value: pass
     TETHYS_SETTINGS_FLAGS:
       value: '--production, --overwrite'
-
-  portal_changes: {}
-  proxy_apps: {}
 
 podAnnotations: {}
 
