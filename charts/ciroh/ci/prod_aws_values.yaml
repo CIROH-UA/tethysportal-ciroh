@@ -136,7 +136,7 @@ tethys:
     TETHYS_DB_ENGINE:
       value: 'django.db.backends.postgresql'
     SKIP_DB_SETUP:
-      value: false
+      value: true
     # gwdm envs
     GWDM_WORKSPACE_NAME:
       value: 'gwdm'

@@ -67,6 +67,8 @@ RUN rm -Rf ~/.cache/pip && \
     pip uninstall -y pyogrio && \
     pip install --no-cache-dir --quiet pyogrio && \
     micromamba clean --all --yes
+
+    
 EXPOSE 80
 
 CMD bash run.sh
