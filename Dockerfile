@@ -57,6 +57,7 @@ COPY config/tethys/gwdm/post_setup_gwdm.py ${TETHYS_HOME}
 
 COPY salt/ /srv/salt/
 
+
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN rm -Rf ~/.cache/pip && \
