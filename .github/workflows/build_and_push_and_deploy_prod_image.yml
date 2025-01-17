@@ -5,7 +5,7 @@ on:
     tags:
       - '*'
 env:
-  DOCKER_HUB_ORG: gioelkin
+  DOCKER_HUB_ORG: awiciroh
   DOCKER_REPO: tethysapp-ciroh-portal
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -39,12 +39,13 @@ jobs:
       # Checks-out the hydrocompute extra submodule
       - name: checkout Hydrocompute submodule
         run: |
-          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --init --recursive
+          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --force --init --recursive --remote
 
       - name: Set Tag
         run: |
-          echo "TAG=${GITHUB_REF:10}" >> $GITHUB_ENV
-          echo "TAG_LATEST=latest" >> $GITHUB_ENV
+          echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+
 
       - name: Test Tag
         run: |
