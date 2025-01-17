@@ -5,11 +5,10 @@ base:
     - tethys_services
     - ciroh_theme
     - app_store
-    - aquainsight
+    - tethysdash
     - gwdm
     - ggst
     - wde
-    - swe
     - mde
     - config
     - proxy_apps

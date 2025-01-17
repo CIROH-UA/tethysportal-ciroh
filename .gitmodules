@@ -10,10 +10,6 @@
 	path = apps/tethysapp-tethys_app_store
 	url = https://github.com/Aquaveo/tethysapp-tethys_app_store.git
 	branch = master
-[submodule "tethysapp-swe"]
-	path = apps/tethysapp-swe
-	url = https://github.com/Aquaveo/tethysapp-swe.git
-	branch = tethys4
 [submodule "gwdm"]
 	path = apps/gwdm
 	url = https://github.com/Aquaveo/gwdm.git
@@ -38,7 +34,9 @@
 	path = apps/tethysapp-hydrocompute
 	url = https://github.com/tethysplatform/tethysapp-hydrocompute.git
 	branch = main
-[submodule "aquainsight"]
-	path = apps/aquainsight
-	url = https://git.aquaveo.com/tethys/firo/aquainsight.git
-	branch = ciroh
+[submodule "apps/tethysapp-sweml"]
+	path = apps/tethysapp-sweml
+	url = https://github.com/karnesh/tethysapp-sweml.git
+[submodule "apps/tethysdash"]
+	path = apps/tethysdash
+	url = https://git.aquaveo.com/tethys/firo/tethysdash.git

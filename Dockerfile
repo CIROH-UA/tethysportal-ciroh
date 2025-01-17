@@ -27,11 +27,11 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     cd ${TETHYS_HOME}/apps/tethysapp-tethys_app_store && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-metdataexplorer && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/tethysapp-swe && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/tethysapp-sweml && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/aquainsight && mv ${TETHYS_HOME}/apps/aquainsight/reactapp/config/development.env ${TETHYS_HOME}/apps/aquainsight/reactapp/config/production.env && npm install && npm run build && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/tethysdash && mv ${TETHYS_HOME}/apps/tethysdash/reactapp/config/development.env ${TETHYS_HOME}/apps/tethysdash/reactapp/config/production.env && npm install && npm run build && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/hydroshare_api_tethysapp && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && \
