@@ -218,7 +218,7 @@ djangocms:
     name: 'djangocms-pv-claim'
 thredds:
   fullnameOverride: 'ciroh-tds'
-  thredds_tds_catalog: '/thredds/catalog/ciroh_data/tethys/swe/catalog.xml'
+  thredds_tds_catalog: '/thredds/catalog/ciroh_data/tethys/catalog.xml'
   storageClass:
     storageClassName: 'efs-pv'
 

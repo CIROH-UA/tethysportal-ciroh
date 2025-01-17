@@ -9,7 +9,6 @@ base:
     - gwdm
     - ggst
     - wde
-    - swe
     - mde
     - config
     - proxy_apps

@@ -27,7 +27,7 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     cd ${TETHYS_HOME}/apps/tethysapp-tethys_app_store && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-metdataexplorer && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/tethysapp-swe && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/tethysapp-sweml && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
