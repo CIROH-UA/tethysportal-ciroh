@@ -19,11 +19,10 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 ########################################################
 
 COPY config/tethys/tethysdash/webpack.config.js ${TETHYS_HOME}/apps/tethysdash/reactapp/config/webpack.config.js
-COPY config/tethys/tethysdash/utilities.js ${TETHYS_HOME}/apps/apps/tethysdash/reactapp/services/utilities.js
+COPY config/tethys/tethysdash/utilities.js ${TETHYS_HOME}/apps/tethysdash/reactapp/services/utilities.js
 COPY config/tethys/tethysdash/index.js ${TETHYS_HOME}/apps/tethysdash/reactapp/index.js
 COPY config/tethys/tethysdash/Error.js ${TETHYS_HOME}/apps/tethysdash/reactapp/components/error/Error.js
 ADD config/tethys/tethysdash/production.env ${TETHYS_HOME}/apps/tethysdash/reactapp/config
-
 
 #######################################
 # INSTALL EXTENSIONS and APPLICATIONS #
