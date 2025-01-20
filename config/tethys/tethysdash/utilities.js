@@ -21,4 +21,4 @@ function getTethysAppRoot() {
 }
 
 
-export { getTethysPortalHost, getTethysAppRoot};
+export { getTethysPortalHost, getTethysAppRoot };
