@@ -14,6 +14,17 @@ ADD extensions ${TETHYS_HOME}/extensions
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
+########################################################
+# COPY FILE PATCHES FOR TETHYSDASH TO WORK WITH PREFIX #
+########################################################
+
+COPY config/tethys/tethysdash/webpack.config.js ${TETHYS_HOME}/apps/tethysdash/reactapp/config/webpack.config.js
+COPY config/tethys/tethysdash/utilities.js ${TETHYS_HOME}/apps/apps/tethysdash/reactapp/services/utilities.js
+COPY config/tethys/tethysdash/index.js ${TETHYS_HOME}/apps/tethysdash/reactapp/index.js
+COPY config/tethys/tethysdash/Error.js ${TETHYS_HOME}/apps/tethysdash/reactapp/components/error/Error.js
+ADD config/tethys/tethysdash/production.env ${TETHYS_HOME}/apps/tethysdash/reactapp/config
+
+
 #######################################
 # INSTALL EXTENSIONS and APPLICATIONS #
 #######################################
@@ -31,7 +42,7 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/tethysdash && mv ${TETHYS_HOME}/apps/tethysdash/reactapp/config/development.env ${TETHYS_HOME}/apps/tethysdash/reactapp/config/production.env && npm install && npm run build && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/tethysdash && npm install && npm run build && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/hydroshare_api_tethysapp && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && \
