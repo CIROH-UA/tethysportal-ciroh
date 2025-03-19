@@ -27,7 +27,7 @@ ingresses:
       alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=4000
 
     hosts:
-      - host: portal.ciroh.org
+      - host: tethys.ciroh.org
         paths:
           - path: '/'
             pathType: Prefix
@@ -66,7 +66,7 @@ ingresses:
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
       alb.ingress.kubernetes.io/ssl-redirect: '443'
     hosts:
-      - host: portal.ciroh.org
+      - host: tethys.ciroh.org
         paths:
           - path: /static
             pathType: Prefix
@@ -146,12 +146,12 @@ tethys:
     GWDM_CS_THREDDS_DIRECTORY:
       value: /var/lib/tethys_persist/thredds_data/tethys/gwdm_thredds_directory
     GWDM_CS_THREDDS_CATALOG:
-      value: 'http://portal.ciroh.org/thredds/catalog/ciroh_data/tethys/gwdm_thredds_directory/catalog.xml'
+      value: 'http://tethys.ciroh.org/thredds/catalog/ciroh_data/tethys/gwdm_thredds_directory/catalog.xml'
     # ggst envs
     GGST_CS_THREDDS_DIRECTORY:
       value: '/var/lib/tethys_persist/thredds_data/tethys/ggst_thredds_directory'
     GGST_CS_THREDDS_CATALOG:
-      value: 'http://portal.ciroh.org/thredds/catalog/ciroh_data/tethys/ggst_thredds_directory/catalog.xml'
+      value: 'http://tethys.ciroh.org/thredds/catalog/ciroh_data/tethys/ggst_thredds_directory/catalog.xml'
     GGST_CS_GLOBAL_OUTPUT_DIRECTORY:
       value: /usr/lib/tethys
     GGST_CS_EARTHDATA_USERNAME:
