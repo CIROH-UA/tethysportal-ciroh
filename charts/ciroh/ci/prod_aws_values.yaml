@@ -37,15 +37,6 @@ ingresses:
                 name: cirohportal-prod
                 port:
                   name: http
-          - path: '/'
-            pathType: Prefix
-            backend:
-              service:
-                # @djangocms.fullnameOverride
-                name: ciroh-cms
-                port:
-                  # @djangocms.service.externalPort
-                  number: 80
           - path: '/geoserver-cloud'
             pathType: Prefix
             backend:
@@ -228,31 +219,6 @@ tethys:
 
   workspace_size: '16Gi'
 
-djangocms:
-  image:
-    repository: gioelkin/django-cms
-    tag: latest
-    pullPolicy: 'Always'
-  enabled: true
-  ingress:
-    enabled: false
-  fullnameOverride: 'ciroh-cms'
-  storageClass:
-    storageClassName: 'efs-pv'
-  service:
-    type: ClusterIP
-    externalPort: 80
-    internalPort: 80
-  storage_size: 3Gi
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 2
-      memory: 1Gi
-  persistentVolumeClaim:
-    name: 'djangocms-pv-claim'
 thredds:
   fullnameOverride: 'ciroh-tds'
   thredds_tds_catalog: '/thredds/catalog/ciroh_data/tethys/catalog.xml'

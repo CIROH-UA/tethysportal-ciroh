@@ -16,11 +16,7 @@ fullnameOverride: ''
 gs-cloud:
   enabled: false
 
-djangocms:
-  enabled: false
-  fullnameOverride: 'ciroh-cms'
-  postgis:
-    enabled: false
+
 thredds:
   enabled: true
   fullnameOverride: 'ciroh-tds'

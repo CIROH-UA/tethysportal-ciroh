@@ -20,7 +20,3 @@ dependencies:
     repository: 'https://charts.bitnami.com/bitnami'
     version: '*'
     condition: redis.enabled
-  - name: 'djangocms'
-    repository: 'https://romer8.github.io/misc-helm-charts'
-    version: '*'
-    condition: djangocms.enabled
