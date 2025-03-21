@@ -24,13 +24,6 @@ jobs:
           fetch-depth: 0
           submodules: 'false'
 
-      - name: Set up Git credentials for GitLab submodule
-        run: |
-          git config --global url."https://oauth2:${GITLAB_PAT}@git.aquaveo.com/".insteadOf "https://git.aquaveo.com/"
-        env:
-          GITLAB_PAT: ${{ secrets.GITLAB_PAT }}
-
-      # Step 4: Update submodules recursively
       - name: Update submodules recursively
         run: |
           git submodule sync --recursive

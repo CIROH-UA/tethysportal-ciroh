@@ -30,19 +30,11 @@ jobs:
           fetch-depth: 0
           submodules: 'false'
 
-      - name: Set up Git credentials for GitLab submodule
-        run: |
-          git config --global url."https://oauth2:${GITLAB_PAT}@git.aquaveo.com/".insteadOf "https://git.aquaveo.com/"
-        env:
-          GITLAB_PAT: ${{ secrets.GITLAB_PAT }}
-
-      # Step 4: Update submodules recursively
       - name: Update submodules recursively
         run: |
           git submodule sync --recursive
           git submodule update --init --recursive
 
-      # Checks-out the hydrocompute extra submodule
       - name: checkout Hydrocompute submodule
         run: |
           cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --force --init --recursive --remote

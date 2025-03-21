@@ -37,6 +37,6 @@
 [submodule "apps/tethysapp-sweml"]
 	path = apps/tethysapp-sweml
 	url = https://github.com/karnesh/tethysapp-sweml.git
-[submodule "apps/tethysdash"]
-	path = apps/tethysdash
-	url = https://git.aquaveo.com/tethys/firo/tethysdash.git
+[submodule "apps/tethysapp-tethys_dash"]
+	path = apps/tethysapp-tethys_dash
+	url = https://github.com/tethysplatform/tethysapp-tethys_dash.git
