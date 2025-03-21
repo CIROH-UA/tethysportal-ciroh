@@ -225,7 +225,7 @@ thredds:
 
   image:
     repository: unidata/thredds-docker
-    tag: 5.4
+    tag: 5.6
     pullPolicy: 'Always'
   persistentVolumeClaim:
     name: 'thredds-pv-claim'
