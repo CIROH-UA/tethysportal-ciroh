@@ -46,7 +46,6 @@ tethys:
     geoserver: 'ciroh-gs'
     thredds: dev.elkingio.com
   settings:
-    prefix_url: 't'
     tethys_settings_flags: '--production, --overwrite'
     enable_portal_open: 'true'
     bypass_tethys_home_page: 'true'

@@ -142,8 +142,6 @@ tethys:
     # portal-settings
     PUBLIC_PORTAL_PROTOCOL:
       value: 'https'
-    PREFIX_URL:
-      value: t
     ENABLE_OPEN_PORTAL:
       value: true
     BYPASS_TETHYS_HOME_PAGE:
