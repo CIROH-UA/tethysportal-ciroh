@@ -71,4 +71,5 @@ RUN rm -Rf ~/.cache/pip && \
     
 EXPOSE 80
 
+
 CMD bash run.sh

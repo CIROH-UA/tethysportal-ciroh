@@ -100,6 +100,7 @@ spec:
           {{- end }}
 
       {{- $init_scripts := .Files.Glob "extra_config/**.sh" }}
+      
       {{ if $init_scripts }}
       initContainers:
         {{- if .Values.tethys.init_containers.wait_for_db }}
