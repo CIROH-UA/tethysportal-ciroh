@@ -105,8 +105,7 @@ tethys:
         value: 'aquifer'
       GWDM_WELL_LAYER_NAME:
         value: 'well'
-      TETHYS_PUBLIC_HOST:
-        value: 'tethys.ciroh.org'           
+     
   volumeMounts:
     - name: tethys-persist-pv
       mountPath: '/var/lib/tethys_persist'

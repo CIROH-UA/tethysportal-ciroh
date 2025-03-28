@@ -156,6 +156,8 @@ tethys:
       value: pass
     TETHYS_SETTINGS_FLAGS:
       value: '--production, --overwrite'
+    TETHYS_PUBLIC_HOST:
+      value: 'tethys.ciroh.org'
 
 podAnnotations: {}
 
