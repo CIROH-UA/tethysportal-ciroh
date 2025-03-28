@@ -1,5 +1,20 @@
 FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as base
 
+ARG TETHYS_PORTAL_HOST=""
+ARG TETHYS_APP_ROOT_URL="/apps/tethysdash/"
+ARG TETHYS_LOADER_DELAY="500"
+ARG TETHYS_DEBUG_MODE="false"
+
+
+###############################
+# DEFAULT ENVIRONMENT VARIABLES
+###############################
+
+ENV TETHYS_DASH_APP_SRC_ROOT=${TETHYS_HOME}/apps/tethysapp-tethys_dash
+ENV DEV_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/development.env"
+ENV PROD_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/production.env"
+
+
 #########################
 # ADD APPLICATION FILES #
 #########################
@@ -31,7 +46,15 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
+    
+    mv ${DEV_REACT_CONFIG} ${PROD_REACT_CONFIG} && \
+    sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g" ${PROD_REACT_CONFIG}  && \
+    sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" ${PROD_REACT_CONFIG} && \
+    sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" ${PROD_REACT_CONFIG}  && \
+    sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} && \
+  
     cd ${TETHYS_HOME}/apps/tethysapp-tethys_dash && npm install && npm run build && tethys install -w -N -q && \
+    
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/hydroshare_api_tethysapp && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && \
