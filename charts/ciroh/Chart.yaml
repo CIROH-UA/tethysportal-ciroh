@@ -1,5 +1,4 @@
 apiVersion: v2
-
 name: ciroh
 appVersion: '0.0.1'
 description: 'Tethys portal for CIROH'
