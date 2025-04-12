@@ -2,15 +2,15 @@ terraform {
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = "> 2.0.1"
+      version = ">= 2.9"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "> 2.0.1"
+      version = ">= 2.20"
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.47.0"
+      version = ">= 5.0"
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
@@ -18,7 +18,7 @@ terraform {
     }
   }
 
-  required_version = "~> 1.3"
+  required_version = ">= 1.4.0"
 }
 
 provider "aws" {
@@ -35,7 +35,7 @@ provider "kubectl" {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
     # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", var.region, "--profile", var.profile]
   }
 }
 
@@ -49,7 +49,7 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--profile", var.profile]
   }
 }
 provider "helm" {

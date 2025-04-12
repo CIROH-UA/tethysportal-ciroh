@@ -10,12 +10,12 @@ An SQS queue and Eventbridge event rules for Karpenter to utilize for spot termi
 */
 module "karpenter" {
   source = "terraform-aws-modules/eks/aws//modules/karpenter"
-
   cluster_name = module.eks.cluster_name
 
+  version = "19.20.0"
+  
   irsa_oidc_provider_arn          = module.eks.oidc_provider_arn
   irsa_namespace_service_accounts = ["karpenter:karpenter"]
-
   create_iam_role = false
   iam_role_arn    = module.eks.eks_managed_node_groups["tethys-core"].iam_role_arn
 
@@ -31,7 +31,7 @@ resource "helm_release" "karpenter" {
   name       = "karpenter"
   repository = "oci://public.ecr.aws/karpenter"
   chart      = "karpenter"
-  version    = "v0.27.3"
+  version    = "v0.31.3"
 
   set {
     name  = "settings.aws.clusterName"
@@ -46,17 +46,18 @@ resource "helm_release" "karpenter" {
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = module.karpenter.irsa_arn
+    # value = module.karpenter.iam_role_arn
   }
 
   set {
     name  = "settings.aws.defaultInstanceProfile"
     value = module.karpenter.instance_profile_name
   }
-
   set {
     name  = "settings.aws.interruptionQueueName"
     value = module.karpenter.queue_name
   }
+
 }
 resource "kubectl_manifest" "karpenter_provisioner" {
   yaml_body = <<-YAML
@@ -65,16 +66,34 @@ resource "kubectl_manifest" "karpenter_provisioner" {
     metadata:
       name: default
     spec:
-      requirements:
-        - key: karpenter.sh/capacity-type
-          operator: In
-          values: ["spot"]
-      limits:
-        resources:
-          cpu: 1000
+      # References cloud provider-specific custom resource, see your cloud provider specific documentation
       providerRef:
         name: default
-      ttlSecondsAfterEmpty: 30
+      requirements:
+        - key: "karpenter.k8s.aws/instance-category"
+          operator: In
+          values: ["c", "m", "t"]
+
+        - key: karpenter.k8s.aws/instance-size
+          operator: In
+          values:
+            - small
+            - medium
+            - large
+        - key: "karpenter.sh/capacity-type" # If not included, the webhook for the AWS cloud provider will default to on-demand
+          operator: In
+          values: ["on-demand"]
+      limits:
+        resources:
+          cpu: "1000"
+          memory: 1000Gi
+      consolidation:
+        enabled: true
+
+      ttlSecondsUntilExpired: 2592000 # 30 Days = 60 * 60 * 24 * 30 Seconds;
+
+      weight: 10
+
   YAML
 
   depends_on = [
@@ -95,6 +114,12 @@ resource "kubectl_manifest" "karpenter_node_template" {
         karpenter.sh/discovery: ${module.eks.cluster_name}
       tags:
         karpenter.sh/discovery: ${module.eks.cluster_name}
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            volumeType: gp3
+            volumeSize: 50Gi
+            deleteOnTermination: true        
   YAML
 
   depends_on = [
@@ -102,34 +127,3 @@ resource "kubectl_manifest" "karpenter_node_template" {
   ]
 }
 
-# Example deployment using the [pause image](https://www.ianlewis.org/en/almighty-pause-container)
-# and starts with zero replicas
-resource "kubectl_manifest" "karpenter_example_deployment" {
-  yaml_body = <<-YAML
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: inflate
-    spec:
-      replicas: 0
-      selector:
-        matchLabels:
-          app: inflate
-      template:
-        metadata:
-          labels:
-            app: inflate
-        spec:
-          terminationGracePeriodSeconds: 0
-          containers:
-            - name: inflate
-              image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
-              resources:
-                requests:
-                  cpu: 1
-  YAML
-
-  depends_on = [
-    helm_release.karpenter
-  ]
-}

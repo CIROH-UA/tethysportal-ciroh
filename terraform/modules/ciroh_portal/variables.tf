@@ -8,6 +8,10 @@ variable "helm_values_file" {}
 variable "environment" {}
 variable "use_elastic_ips" {}
 variable "single_nat_gate_way" {}
+variable "deploy_portal" {
+  type    = bool
+  default = false
+}
 variable "eips" {
   type = list(string)
   description = "List of Elastic IP IDs"

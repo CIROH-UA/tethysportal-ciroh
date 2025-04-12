@@ -1,23 +1,15 @@
 
 data "aws_availability_zones" "available" {}
 
-# Creation of the different Elastic IPs 
-# Commenting this line because we will use already created Elastic IPs
-# resource "aws_eip" "nat" {
-#   # count = 2
-#   count = var.create_elastic_ips ? 2 : 0
-#   vpc   = true
-# }
-
 data "aws_eip" "nlb" {
   count = var.use_elastic_ips ? "${length(var.eips)}" : 0
-  id = "${element(var.eips, count.index)}"
+  id    = element(var.eips, count.index)
 }
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.19.0"
-
+  # version = "3.19.0"
+  version = "5.19.0"
   # name = "${var.app_name}-ciroh-vpc"
   name = "${var.app_name}-${var.environment}-vpc"
   cidr = "10.0.0.0/16"
@@ -75,7 +67,7 @@ module "vpc_cni_irsa" {
 
 # Create Load Balancer of type Network Load Balancer with subnet mapping
 resource "aws_lb" "nlb" {
-  count = var.use_elastic_ips ? 1 : 0
+  count              = var.use_elastic_ips ? 1 : 0
   name               = "${var.app_name}-${var.environment}-nlb"
   internal           = false
   load_balancer_type = "network"
@@ -83,8 +75,8 @@ resource "aws_lb" "nlb" {
 
   dynamic "subnet_mapping" {
     for_each = [for i in range(length(module.vpc.public_subnets)) : {
-      subnet_id = module.vpc.public_subnets[i]
-        allocation_id = data.aws_eip.nlb[i].id
+      subnet_id     = module.vpc.public_subnets[i]
+      allocation_id = data.aws_eip.nlb[i].id
       # allocation_id = aws_eip.nat[i].id
 
     }]
@@ -100,11 +92,11 @@ resource "aws_lb" "nlb" {
 
 # Create Load Balancer of type Network Load Balancer without subnet mapping
 resource "aws_lb" "nlb-dev" {
-  count = var.use_elastic_ips ? 0 : 1
+  count              = var.use_elastic_ips ? 0 : 1
   name               = "${var.app_name}-${var.environment}-nlb"
   internal           = false
   load_balancer_type = "network"
-  subnets = module.vpc.public_subnets
+  subnets            = module.vpc.public_subnets
 
   depends_on = [helm_release.tethysportal_helm_release]
 
@@ -114,7 +106,6 @@ resource "aws_lb" "nlb-dev" {
 # Listener rule for HTTP traffic on each of the ALBs
 # It might help:https://medium.com/@sampark02/application-load-balancer-and-target-group-attachment-using-terraform-d212ce8a38a0
 resource "aws_lb_listener" "nlb" {
-  # load_balancer_arn = aws_lb.nlb.arn
   load_balancer_arn = var.use_elastic_ips ? aws_lb.nlb[0].arn : aws_lb.nlb-dev[0].arn
   port              = "80"
   protocol          = "TCP"
@@ -125,6 +116,23 @@ resource "aws_lb_listener" "nlb" {
   }
   depends_on = [helm_release.tethysportal_helm_release]
 }
+
+
+# # Listener rule for HTTPS traffic on each of the ALBs
+# # It might help:https://medium.com/@sampark02/application-load-balancer-and-target-group-attachment-using-terraform-d212ce8a38a0
+resource "aws_lb_listener" "nlb_https" {
+  load_balancer_arn = var.use_elastic_ips ? aws_lb.nlb[0].arn : aws_lb.nlb-dev[0].arn
+  port              = "443"
+  protocol          = "TCP"
+  # ssl_policy       = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  # certificate_arn   = "arn:aws:acm:us-east-1:456531024327:certificate/7db78d8f-2148-4af2-a239-6e9a2445dbe7"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nlb_tg_https.arn
+  }
+  depends_on = [helm_release.tethysportal_helm_release]
+}
+
 
 
 # It is a must in order to have the load balancer type application that the ALB AWS creates when the chart is deployed
@@ -164,6 +172,21 @@ resource "aws_lb_target_group" "nlb_tg" {
     healthy_threshold   = "3"
   }
 }
+resource "aws_lb_target_group" "nlb_tg_https" {
+  name        = "${var.app_name}-${var.environment}-alb-https"
+  port        = 443
+  protocol    = "TCP"
+  vpc_id      = module.vpc.vpc_id
+  target_type = "alb"
+  depends_on  = [helm_release.tethysportal_helm_release]
+  health_check {
+    timeout             = "10"
+    interval            = "20"
+    path                = "/"
+    unhealthy_threshold = "2"
+    healthy_threshold   = "3"
+  }
+}
 
 # Create target group attachment
 # More details: https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_TargetDescription.html
@@ -175,6 +198,16 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
   #   target_id = data.aws_resourcegroupstaggingapi_resources.load_balancer.resource_tag_mapping_list[0].resource_arn
   #  If the target type is alb, the targeted Application Load Balancer must have at least one listener whose port matches the target group port.
   port       = 80
+  depends_on = [helm_release.tethysportal_helm_release]
+
+}
+resource "aws_lb_target_group_attachment" "tg_attachment_https" {
+  target_group_arn = aws_lb_target_group.nlb_tg_https.arn
+  # attach the ALB to this target group
+  target_id = data.aws_lb.alb_listener_details.arn
+  #   target_id = data.aws_resourcegroupstaggingapi_resources.load_balancer.resource_tag_mapping_list[0].resource_arn
+  #  If the target type is alb, the targeted Application Load Balancer must have at least one listener whose port matches the target group port.
+  port       = 443
   depends_on = [helm_release.tethysportal_helm_release]
 
 }
