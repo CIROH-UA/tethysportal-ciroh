@@ -226,3 +226,9 @@ namespace:
     # cpu: '4'
     # memory: 8Gi
     ephemeral_storage: '5Gi'
+
+hpa:
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
