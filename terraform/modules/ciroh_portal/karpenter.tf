@@ -72,7 +72,7 @@ resource "kubectl_manifest" "karpenter_provisioner" {
       requirements:
         - key: "karpenter.k8s.aws/instance-category"
           operator: In
-          values: ["c", "m", "t"]
+          values: ["c", "m", "t" ]
 
         - key: karpenter.k8s.aws/instance-size
           operator: In
@@ -80,6 +80,8 @@ resource "kubectl_manifest" "karpenter_provisioner" {
             - small
             - medium
             - large
+            - xlarge
+            - 2xlarge
         - key: "karpenter.sh/capacity-type" # If not included, the webhook for the AWS cloud provider will default to on-demand
           operator: In
           values: ["on-demand"]
