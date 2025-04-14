@@ -43,7 +43,7 @@ resource "helm_release" "tethysportal_helm_release" {
   timeout           = 3600
   dependency_update = true
   values = [
-    file(var.helm_values_file),
+    file("${var.helm_ci_path}/prod_aws_values.yaml"),
     base64decode(data.external.helm-secrets.result.content_base64),
   ]
 

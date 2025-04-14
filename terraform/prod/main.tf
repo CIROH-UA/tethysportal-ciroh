@@ -31,7 +31,6 @@ module "ciroh_portal" {
   app_name            = "cirohportal"
   helm_chart          = "ciroh"
   helm_repo           = "https://docs.ciroh.org/tethysportal-ciroh"
-  helm_values_file    = "../../charts/ciroh/ci/prod_aws_values.yaml"
   helm_ci_path        = "../../charts/ciroh/ci"
   environment         = "prod"
   single_nat_gate_way = false
