@@ -193,13 +193,12 @@ ingresses:
 
 resources:
   requests:
-    cpu: 1
-    memory: 2Gi
+    cpu: 2
+    memory: 4Gi
     ephemeral-storage: 3Gi
   limits:
-    cpu: 2
-    memory: 3Gi
-    ephemeral-storage: 3Gi
+    memory: 6Gi
+    ephemeral-storage: 4Gi
 nodeSelector: {}
 tolerations: []
 affinity: {}
