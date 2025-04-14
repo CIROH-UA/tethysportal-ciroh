@@ -1,9 +1,9 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.5.1"
+  version = "20.35.0"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.24"
+  cluster_version = "1.30"
 
   cluster_endpoint_public_access = true
 
@@ -16,6 +16,8 @@ module "eks" {
   # See note below for `tags`
   create_cluster_security_group = false
   create_node_security_group    = false
+  
+  create_cloudwatch_log_group	  = false # first time, we should probably have this as true
 
   eks_managed_node_group_defaults = {
     ami_type                   = "AL2_x86_64"

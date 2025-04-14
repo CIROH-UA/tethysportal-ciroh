@@ -103,3 +103,4 @@ Run `terraform destroy` again, if the problem ios still the same delete the vpc 
   - `Kubernetes cluster unreachable: invalid configuration: no configuration has been provided, try setting KUBERNETES_MASTER environment variable`
   - The following [Github Issue Comment](https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1234#issuecomment-894998800) is helpful
   - The following [Medium Article](https://itnext.io/terraform-dont-use-kubernetes-provider-with-your-cluster-resource-d8ec5319d14a) is helpful as well
+- https://github.com/terraform-aws-modules/terraform-aws-eks/issues/2864

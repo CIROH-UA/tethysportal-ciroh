@@ -32,7 +32,7 @@ resource "helm_release" "karpenter" {
   repository = "oci://public.ecr.aws/karpenter"
   chart      = "karpenter"
   version    = "v0.31.3"
-
+  timeout     = 600
   set {
     name  = "settings.aws.clusterName"
     value = module.eks.cluster_name
@@ -58,6 +58,12 @@ resource "helm_release" "karpenter" {
     value = module.karpenter.queue_name
   }
 
+  set {
+    name  = "replicas"
+    value = 1
+  }
+
+
 }
 resource "kubectl_manifest" "karpenter_provisioner" {
   yaml_body = <<-YAML
@@ -72,7 +78,7 @@ resource "kubectl_manifest" "karpenter_provisioner" {
       requirements:
         - key: "karpenter.k8s.aws/instance-category"
           operator: In
-          values: ["c", "m", "t" ]
+          values: ["c", "m", "t"]
 
         - key: karpenter.k8s.aws/instance-size
           operator: In
