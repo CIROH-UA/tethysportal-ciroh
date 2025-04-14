@@ -1,4 +1,11 @@
+
+
 ## Commenting out this file has the same effect as targeting module.eks (see READMED.md)
+
+data "external" "helm-secrets" {
+  program = ["helm", "secrets", "decrypt", "--terraform", "${var.helm_ci_path}/secrets.yaml"]
+}
+
 resource "kubernetes_namespace" "tethysportal" {
 
   for_each = toset([var.app_name])
@@ -33,12 +40,13 @@ resource "helm_release" "tethysportal_helm_release" {
   chart             = var.helm_chart
   repository        = var.helm_repo
   namespace         = var.app_name
-  timeout           = 900
+  timeout           = 3600
   dependency_update = true
-  # values = [
-  #   file(var.helm_values_file)
-  # ]
-  values = var.deploy_portal ? [file(var.helm_values_file)] : []
+  values = [
+    file(var.helm_values_file),
+    base64decode(data.external.helm-secrets.result.content_base64),
+  ]
+
   set {
     name  = "storageClass.parameters.fileSystemId"
     value = aws_efs_file_system.efs.id

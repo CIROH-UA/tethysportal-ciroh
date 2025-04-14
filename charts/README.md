@@ -74,3 +74,8 @@ gpg --armor --export-secret-key joe@foo.bar | xclip
 
 2. Paste your clipboard as a secret named GPG_PRIVATE_KEY for example. Create another secret with the PASSPHRASE if applicable.
 3. check the workflow called: `helm_deploy.yml` to see how is implemented
+
+
+### TroubleShooting
+
+* https://github.com/keybase/keybase-issues/issues/2798
