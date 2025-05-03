@@ -10,7 +10,7 @@ Link_Persistent_Stores_Database_Tethysdash:
 
 Run_Alembic_Migrations:
   cmd.run:
-    - name: "alembic alembic upgrade head"
+    - name: "alembic upgrade head"
     - shell: /bin/bash
 
 Flag_Tethys_Tethysdash_Setup_Complete:
