@@ -34,9 +34,9 @@
 	path = apps/tethysapp-hydrocompute
 	url = https://github.com/tethysplatform/tethysapp-hydrocompute.git
 	branch = main
-[submodule "apps/tethysapp-sweml"]
-	path = apps/tethysapp-sweml
-	url = https://github.com/karnesh/tethysapp-sweml.git
 [submodule "apps/tethysapp-tethys_dash"]
 	path = apps/tethysapp-tethys_dash
 	url = https://github.com/tethysplatform/tethysapp-tethys_dash.git
+[submodule "apps/tethysapp-sweml"]
+	path = apps/tethysapp-sweml
+	url = https://github.com/Aquaveo/tethysapp-sweml.git
