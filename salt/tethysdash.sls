@@ -8,8 +8,14 @@ Link_Persistent_Stores_Database_Tethysdash:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/tethysdash_complete" ];"
 
+Run_Alembic_Migrations:
+  cmd.run:
+    - name: "alembic alembic upgrade head"
+    - shell: /bin/bash
+
 Flag_Tethys_Tethysdash_Setup_Complete:
   cmd.run:
     - name: touch {{ TETHYS_PERSIST }}/tethysdash_complete
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethysdash_complete" ];"
+
