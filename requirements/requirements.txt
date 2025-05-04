@@ -39,8 +39,8 @@ scikit-learn
 hs_restclient
 djangorestframework
 fiona
-pynhd>=0.19*
+pynhd==0.19.3
 intake>=0.6.6
-pygeoogc>=0.19*
-pygeoutils>=0.19*
-pygeohydro>=0.19*
+pygeoogc==0.19.3
+pygeoutils==0.19.5
+pygeohydro==0.19.3
