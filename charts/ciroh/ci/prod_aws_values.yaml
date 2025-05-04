@@ -129,6 +129,9 @@ tethys:
       value: 'django.db.backends.postgresql'
     SKIP_DB_SETUP:
       value: true
+    #tethysdash env
+    TETHYSDASH_DB_NAME:
+      value: tethysdash_primary_db      
     # gwdm envs
     GWDM_WORKSPACE_NAME:
       value: 'gwdm'
@@ -215,6 +218,7 @@ tethys:
       value: 'OpenID Connect scope'
     OIDC_RSA_PRIVATE_KEY:
       value: ''
+
 
   workspace_size: '16Gi'
 

@@ -10,7 +10,10 @@ Link_Persistent_Stores_Database_Tethysdash:
 
 Run_Alembic_Migrations:
   cmd.run:
-    - name: "alembic upgrade head"
+    - name: >
+        export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
+        cd $PYTHON_SITE_PACKAGE_PATH/site-packages/tethysapp/tethysdash &&\
+        alembic upgrade head
     - shell: /bin/bash
 
 Flag_Tethys_Tethysdash_Setup_Complete:
