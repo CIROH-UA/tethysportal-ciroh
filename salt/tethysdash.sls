@@ -8,13 +8,16 @@ Link_Persistent_Stores_Database_Tethysdash:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/tethysdash_complete" ];"
 
-Run_Alembic_Migrations:
+
+Collect_Plugin_Metadata:
   cmd.run:
-    - name: >
-        export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
-        cd $PYTHON_SITE_PACKAGE_PATH/site-packages/tethysapp/tethysdash &&\
-        alembic upgrade head
-    - shell: /bin/bash
+  - name: |
+      SCRIPT_DIR=$(dirname $(python -c 'import tethysapp.tethysdash as m; print(m.__file__)'))
+      cd $SCRIPT_DIR
+      python collect_plugin_thumbnails.py
+  - shell: /bin/bash
+  - cwd: /
+
 
 Flag_Tethys_Tethysdash_Setup_Complete:
   cmd.run:

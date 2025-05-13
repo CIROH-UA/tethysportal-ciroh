@@ -1,6 +1,7 @@
 base:
   '*':
     - pre_tethys
+    - update_nginx
     - tethyscore
     - tethys_services
     - ciroh_theme
