@@ -35,8 +35,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
-    # pip install --no-deps --no-cache-dir ciroh-plugins && \
-    pip install git+https://github.com/FIRO-Tethys/nwmp_plugins.git && \
+    pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git && \
