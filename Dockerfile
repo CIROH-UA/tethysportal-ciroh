@@ -1,4 +1,4 @@
-FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as base
+FROM tethysplatform/tethys-core:dev-py3.10-dj4.2 as base
 
 ARG TETHYS_PORTAL_HOST=""
 ARG TETHYS_APP_ROOT_URL="/apps/tethysdash/"
@@ -13,7 +13,7 @@ ARG TETHYS_DEBUG_MODE="false"
 ENV TETHYS_DASH_APP_SRC_ROOT=${TETHYS_HOME}/apps/tethysapp-tethys_dash
 ENV DEV_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/development.env"
 ENV PROD_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/production.env"
-
+ENV NGINX_PORT=8080
 
 #########################
 # ADD APPLICATION FILES #
@@ -71,7 +71,7 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     find $PYTHON_SITE_PACKAGE_PATH/site-packages -name '*.pyx' -delete && \
     rm -rf $PYTHON_SITE_PACKAGE_PATH/uvloop/loop.c
 
-FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as build
+FROM tethysplatform/tethys-core:dev-py3.10-dj4.2 as build
 
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
@@ -88,6 +88,7 @@ RUN rm -Rf ~/.cache/pip && \
     pip uninstall -y pyogrio && \
     pip install --no-cache-dir --quiet pyogrio && \
     micromamba clean --all --yes
+
 
     
 EXPOSE 80
