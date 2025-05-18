@@ -35,12 +35,12 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
-    pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git && \
-    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git && \
-    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git && \
-    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git && \
-    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin-great_lakes_viewer.git && \
-    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usgs_water_services.git && \
+    pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git --no-cache-dir && \
+    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git --no-cache-dir && \
+    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git --no-cache-dir && \
+    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git --no-cache-dir && \
+    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin-great_lakes_viewer.git --no-cache-dir && \
+    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usgs_water_services.git --no-cache-dir && \
     micromamba clean --all --yes && \
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && python setup.py install && \
