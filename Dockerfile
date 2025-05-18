@@ -13,7 +13,7 @@ ARG TETHYS_DEBUG_MODE="false"
 ENV TETHYS_DASH_APP_SRC_ROOT=${TETHYS_HOME}/apps/tethysapp-tethys_dash
 ENV DEV_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/development.env"
 ENV PROD_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/production.env"
-
+ENV NGINX_PORT=8080
 
 #########################
 # ADD APPLICATION FILES #
@@ -90,7 +90,7 @@ RUN rm -Rf ~/.cache/pip && \
     pip install --no-cache-dir --quiet pyogrio && \
     micromamba clean --all --yes
 
-    
+
     
 EXPOSE 80
 
