@@ -72,6 +72,7 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     rm -rf $PYTHON_SITE_PACKAGE_PATH/uvloop/loop.c
 
 FROM tethysplatform/tethys-core:dev-py3.10-dj4.2 as build
+ENV NGINX_PORT=8080
 
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
