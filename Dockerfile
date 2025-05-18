@@ -1,4 +1,4 @@
-FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as base
+FROM tethysplatform/tethys-core:dev-py3.10-dj4.2 as base
 
 ARG TETHYS_PORTAL_HOST=""
 ARG TETHYS_APP_ROOT_URL="/apps/tethysdash/"
@@ -71,7 +71,7 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     find $PYTHON_SITE_PACKAGE_PATH/site-packages -name '*.pyx' -delete && \
     rm -rf $PYTHON_SITE_PACKAGE_PATH/uvloop/loop.c
 
-FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as build
+FROM tethysplatform/tethys-core:dev-py3.10-dj4.2 as build
 
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
