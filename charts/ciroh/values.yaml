@@ -158,7 +158,8 @@ tethys:
       value: '--production, --overwrite'
     TETHYS_PUBLIC_HOST:
       value: 'tethys.ciroh.org'
-
+    NGINX_PORT:
+      value: '8080'
 podAnnotations: {}
 
 podSecurityContext: {}
