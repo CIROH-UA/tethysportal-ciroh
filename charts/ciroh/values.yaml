@@ -229,6 +229,6 @@ namespace:
 
 hpa:
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 1
   targetCPUUtilizationPercentage: 75
   targetMemoryUtilizationPercentage: 80
