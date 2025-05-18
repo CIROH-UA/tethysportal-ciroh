@@ -75,9 +75,6 @@ FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as build
 
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
-# COPY config/tethys/asgi_supervisord.conf ${TETHYS_HOME}/asgi_supervisord.conf
-# COPY config/tethys/supervisord.conf /etc/supervisor/supervisord.conf
-# COPY config/tethys/gwdm/post_setup_gwdm.py ${TETHYS_HOME}
 
 COPY salt/ /srv/salt/
 
