@@ -6,7 +6,6 @@ namespace:
     memory: 16Gi
     ephemeral_storage: '10Gi'
   requests:
-    cpu: '8'
     memory: 16Gi
     ephemeral_storage: '20Gi'
 image:
@@ -218,7 +217,8 @@ tethys:
       value: 'OpenID Connect scope'
     OIDC_RSA_PRIVATE_KEY:
       value: ''
-
+    ASGI_PROCESSES:
+      value: '8'
 
   workspace_size: '16Gi'
 
@@ -622,13 +622,13 @@ thredds:
   storage_size: '10Gi'
   resources:
     requests:
-      memory: '4Gi'
-      cpu: '1'
+      memory: '5Gi'
+      cpu: '2'
     limits:
       memory: '5Gi'
 
 gs-cloud:
-  enabled: true
+  enabled: false
   envVariables:
     SERVICE_GATEWAY_NAME:
       value: cirohportal-prod-geoserver

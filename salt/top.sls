@@ -16,3 +16,4 @@ base:
     - oauth
     - post_app
     - nginx_patches
+    - update_asgi
