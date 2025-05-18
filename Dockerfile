@@ -76,6 +76,7 @@ FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as build
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 
+
 COPY salt/ /srv/salt/
 
 # Activate tethys conda environment during build
@@ -89,6 +90,7 @@ RUN rm -Rf ~/.cache/pip && \
     pip install --no-cache-dir --quiet pyogrio && \
     micromamba clean --all --yes
 
+    
     
 EXPOSE 80
 
