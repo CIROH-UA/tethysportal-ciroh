@@ -158,7 +158,8 @@ tethys:
       value: '--production, --overwrite'
     TETHYS_PUBLIC_HOST:
       value: 'tethys.ciroh.org'
-
+    NGINX_PORT:
+      value: '8080'
 podAnnotations: {}
 
 podSecurityContext: {}
@@ -166,7 +167,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8080
   annotations: {}
 
 # Note: The first host in the ingress field is used as TETHYS_PUBLIC_HOST, TETHYS_GS_HOST_PUB, and TETHYS_TDS_HOST_PUB.
