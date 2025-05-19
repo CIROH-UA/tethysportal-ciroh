@@ -48,7 +48,6 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     cd ${TETHYS_HOME}/apps/tethysapp-sweml && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
-    
     mv ${DEV_REACT_CONFIG} ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g" ${PROD_REACT_CONFIG}  && \
     sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" ${PROD_REACT_CONFIG} && \
@@ -90,10 +89,13 @@ RUN rm -Rf ~/.cache/pip && \
     pip install --no-cache-dir --quiet pyproj && \
     pip uninstall -y pyogrio && \
     pip install --no-cache-dir --quiet pyogrio && \
-    micromamba clean --all --yes
-
-
-    
+    micromamba clean --all --yes && \
+    export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
+    ln -s $PYTHON_SITE_PACKAGE_PATH/site-packages/daphne/twisted/plugins/fd_endpoint.py $PYTHON_SITE_PACKAGE_PATH/site-packages/twisted/plugins/fd_endpoint.py
+    # needed to fix 
+        #   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/twisted/internet/endpoints.py", line 1779, in _matchPluginToPrefix
+        #     raise ValueError(f"Unknown endpoint type: '{endpointType}'")
+        # ValueError: Unknown endpoint type: 'fd'
 EXPOSE 80
 
 
