@@ -10,6 +10,8 @@ ARG TETHYS_DEBUG_MODE="false"
 # DEFAULT ENVIRONMENT VARIABLES
 ###############################
 
+
+
 ENV TETHYS_DASH_APP_SRC_ROOT=${TETHYS_HOME}/apps/tethysapp-tethys_dash
 ENV DEV_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/development.env"
 ENV PROD_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/production.env"
@@ -21,6 +23,8 @@ ENV NGINX_PORT=8080
 COPY apps ${TETHYS_HOME}/apps
 
 COPY requirements/*.txt .
+
+
 
 ###################
 # ADD THEME FILES #
@@ -73,13 +77,20 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
 
 FROM tethysplatform/tethys-core:dev-py3.10-dj4.2 as build
 
+
+
 ENV NGINX_PORT=8080
+
+
 
 
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 
+
+
 COPY salt/ /srv/salt/
+
 
 
 # Activate tethys conda environment during build
@@ -99,7 +110,5 @@ RUN rm -Rf ~/.cache/pip && \
         #     raise ValueError(f"Unknown endpoint type: '{endpointType}'")
         # ValueError: Unknown endpoint type: 'fd'
 EXPOSE 80
-
-
 
 CMD bash run.sh
