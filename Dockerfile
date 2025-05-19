@@ -38,7 +38,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 #######################################
 
 
-RUN echo"Preparing environment..." && \
+RUN echo "Preparing environment..." && \
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
     pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git --no-cache-dir && \
@@ -79,25 +79,15 @@ RUN echo"Preparing environment..." && \
 
 FROM tethysplatform/tethys-core:dev-py3.10-dj4.2 as build
 
-
-
 ENV NGINX_PORT=8080
-
-
-
 
 # Copy Conda env from base image
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 
-
-
 COPY salt/ /srv/salt/
-
-
 
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
-
 
 RUN rm -Rf ~/.cache/pip && \
     micromamba install --yes -c conda-forge numpy==1.26.4 && \
