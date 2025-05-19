@@ -37,7 +37,9 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # INSTALL EXTENSIONS and APPLICATIONS #
 #######################################
 
-RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
+
+RUN echo"Preparing environment..." && \
+    pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
     pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git --no-cache-dir && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git --no-cache-dir && \
@@ -96,7 +98,6 @@ COPY salt/ /srv/salt/
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
-RUN echo "test"
 
 RUN rm -Rf ~/.cache/pip && \
     micromamba install --yes -c conda-forge numpy==1.26.4 && \
