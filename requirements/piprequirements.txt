@@ -6,3 +6,4 @@ pywaterml
 gstools
 hydroeval
 asyncio
+hydroserverpy
