@@ -95,6 +95,9 @@ COPY salt/ /srv/salt/
 
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
+
+RUN echo "test"
+
 RUN rm -Rf ~/.cache/pip && \
     micromamba install --yes -c conda-forge numpy==1.26.4 && \
     #important, this fixes th error of not finding pyrpoj database, it seems it is installed wiht both conda and pypi, so it has conflicting paths
