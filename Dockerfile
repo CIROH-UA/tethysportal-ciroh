@@ -49,6 +49,7 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
     mv ${DEV_REACT_CONFIG} ${PROD_REACT_CONFIG} && \
+
     sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g" ${PROD_REACT_CONFIG}  && \
     sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" ${PROD_REACT_CONFIG}  && \
@@ -80,6 +81,7 @@ COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HO
 
 COPY salt/ /srv/salt/
 
+
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN rm -Rf ~/.cache/pip && \
@@ -97,6 +99,7 @@ RUN rm -Rf ~/.cache/pip && \
         #     raise ValueError(f"Unknown endpoint type: '{endpointType}'")
         # ValueError: Unknown endpoint type: 'fd'
 EXPOSE 80
+
 
 
 CMD bash run.sh
