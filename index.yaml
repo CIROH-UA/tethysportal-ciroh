@@ -3,7 +3,7 @@ entries:
   ciroh:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-05-19T22:44:34.051631453Z"
+    created: "2025-05-20T02:22:57.183081429Z"
     dependencies:
     - name: postgis
       repository: https://romer8.github.io/misc-helm-charts
@@ -21,7 +21,7 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: '*'
     description: Tethys portal for CIROH
-    digest: 42d17b88ea64aa6f98264405a3edcc6ca60b8dc9f98ab4401b451172cb40103a
+    digest: ed39f47f323980621e4aa78492adea7477e57edcbfeb05b259a11342300ca283
     name: ciroh
     type: application
     urls:
@@ -109,4 +109,4 @@ entries:
     urls:
     - https://CIROH-UA.github.io/tethysportal-ciroh/ciroh-0.1.6.tgz
     version: 0.1.6
-generated: "2025-05-19T22:44:34.023211302Z"
+generated: "2025-05-20T02:22:57.154620276Z"
