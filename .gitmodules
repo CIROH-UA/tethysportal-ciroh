@@ -17,6 +17,7 @@
 [submodule "apps/tethysapp-sweml"]
 	path = apps/tethysapp-sweml
 	url = https://github.com/Aquaveo/tethysapp-sweml.git
+	branch = devcon
 [submodule "apps/tethysapp-tethys_dash"]
 	path = apps/tethysapp-tethys_dash
 	url = https://github.com/tethysplatform/tethysapp-tethys_dash.git
