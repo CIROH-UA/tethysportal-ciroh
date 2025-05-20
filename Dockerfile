@@ -38,7 +38,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 #######################################
 
 
-RUN echo "Preparing environment..." && \
+RUN echo "Now Preparing environment..." && \
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
     pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git --no-cache-dir && \
