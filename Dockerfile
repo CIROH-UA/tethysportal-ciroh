@@ -91,18 +91,71 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN rm -Rf ~/.cache/pip && \
     micromamba install --yes -c conda-forge numpy==1.26.4 && \
-    #important, this fixes th error of not finding pyrpoj database, it seems it is installed wiht both conda and pypi, so it has conflicting paths
+    #fix error # 3
     pip uninstall -y pyproj && \
     pip install --no-cache-dir --quiet pyproj && \
     pip uninstall -y pyogrio && \
     pip install --no-cache-dir --quiet pyogrio && \
+    #fix error # 1
+    pip uninstall -y importlib-metadata && \
+    micromamba install -c conda-forge 'importlib-metadata>=8.7' && \
     micromamba clean --all --yes && \
+    #fix error # 2
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
     ln -s $PYTHON_SITE_PACKAGE_PATH/site-packages/daphne/twisted/plugins/fd_endpoint.py $PYTHON_SITE_PACKAGE_PATH/site-packages/twisted/plugins/fd_endpoint.py
-    # needed to fix 
-        #   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/twisted/internet/endpoints.py", line 1779, in _matchPluginToPrefix
-        #     raise ValueError(f"Unknown endpoint type: '{endpointType}'")
-        # ValueError: Unknown endpoint type: 'fd'
+
 EXPOSE 80
 
 CMD bash run.sh
+
+
+# Errors notes
+
+# 1
+# Traceback (most recent call last):
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/tethysapp/tethysdash/collect_plugin_thumbnails.py", line 100, in <module>
+#     main()
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/tethysapp/tethysdash/collect_plugin_thumbnails.py", line 80, in main
+#     copy_plugin_images(plugins, static_plugin_images)
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/tethysapp/tethysdash/collect_plugin_thumbnails.py", line 20, in copy_plugin_images
+#     mod = importlib.import_module(module)
+#   File "/opt/conda/envs/tethys/lib/python3.10/importlib/__init__.py", line 126, in import_module
+#     return _bootstrap._gcd_import(name[level:], package, level)
+#   File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+#   File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+#   File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+#   File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+#   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+#   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/ciroh_plugins/nwmps/service.py", line 4, in <module>
+#     import pygeoutils as geoutils
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/pygeoutils/__init__.py", line 10, in <module>
+#     from pygeoutils._utils import get_gtiff_attrs, get_transform, transform2tuple, xd_write_crs
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/pygeoutils/_utils.py", line 14, in <module>
+#     import rioxarray._io as rxr
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/rioxarray/__init__.py", line 5, in <module>
+#     import rioxarray.raster_array  # noqa
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/rioxarray/raster_array.py", line 39, in <module>
+#     from rioxarray.raster_writer import RasterioWriter, _ensure_nodata_dtype
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/rioxarray/raster_writer.py", line 20, in <module>
+#     import dask.array
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/dask/__init__.py", line 4, in <module>
+#     from dask._expr import Expr, HLGExpr, LLGExpr, SingletonExpr
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/dask/_expr.py", line 15, in <module>
+#     from dask._task_spec import Task, convert_legacy_graph
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/dask/_task_spec.py", line 65, in <module>
+#     from dask.sizeof import sizeof
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/dask/sizeof.py", line 318, in <module>
+#     _register_entry_point_plugins()
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/dask/sizeof.py", line 308, in _register_entry_point_plugins
+#     for entry_point in importlib_metadata.entry_points(group="dask.sizeof"):
+# AttributeError: module 'importlib_metadata' has no attribute 'entry_points'
+
+#2.
+#   File "/opt/conda/envs/tethys/lib/python3.10/site-packages/twisted/internet/endpoints.py", line 1779, in _matchPluginToPrefix
+#     raise ValueError(f"Unknown endpoint type: '{endpointType}'")
+# ValueError: Unknown endpoint type: 'fd'
+
+#3.
+
+#important, this fixes th error of not finding pyrpoj database, it seems it is installed wiht both conda and pypi, so it has conflicting paths
