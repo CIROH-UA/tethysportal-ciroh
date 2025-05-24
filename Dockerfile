@@ -5,12 +5,9 @@ ARG TETHYS_APP_ROOT_URL="/apps/tethysdash/"
 ARG TETHYS_LOADER_DELAY="500"
 ARG TETHYS_DEBUG_MODE="false"
 
-
 ###############################
 # DEFAULT ENVIRONMENT VARIABLES
 ###############################
-
-
 
 ENV TETHYS_DASH_APP_SRC_ROOT=${TETHYS_HOME}/apps/tethysapp-tethys_dash
 ENV DEV_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/development.env"
@@ -24,8 +21,6 @@ COPY apps ${TETHYS_HOME}/apps
 
 COPY requirements/*.txt .
 
-
-
 ###################
 # ADD THEME FILES #
 ###################
@@ -38,8 +33,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 #######################################
 
 
-RUN echo "Now ..." && \
-    pip install --no-cache-dir --quiet -r piprequirements.txt && \
+RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
     pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git --no-cache-dir && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git --no-cache-dir && \
