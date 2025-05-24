@@ -37,7 +37,7 @@ Site_Settings_CIROH_Theme:
         --feature-3-heading "{{ FEATURE_3_HEADING }}"
         --feature-3-body "{{ FEATURE_3_BODY }}"
         --feature-3-image "/ciroh_theme/images/feature_3.png"
-        --copyright "Copyright © 2021 CIROH"
+        --copyright "Copyright © 2025 CIROH"
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/ciroh_theme_complete" ];"
 
