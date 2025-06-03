@@ -42,6 +42,7 @@ RUN echo "Start Install" && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git --no-cache-dir && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin-great_lakes_viewer.git --no-cache-dir && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usgs_water_services.git --no-cache-dir && \
+    pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git --no-cache-dir && \
     micromamba clean --all --yes && \
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && python setup.py install && \

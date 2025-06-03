@@ -4,3 +4,4 @@ gstools
 hydroeval
 asyncio
 hydroserverpy
+geoglows>=1.7.0
