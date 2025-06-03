@@ -33,7 +33,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 #######################################
 
 
-RUN echo "Start Now" && \ 
+RUN echo "Start Now 2" && \ 
     pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
     pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git --no-cache-dir && \
@@ -92,6 +92,8 @@ RUN rm -Rf ~/.cache/pip && \
     pip install --no-cache-dir --quiet pyproj && \
     pip uninstall -y pyogrio && \
     pip install --no-cache-dir --quiet pyogrio && \
+    #fix error # 4
+    pip install --upgrade dask && \
     #fix error # 1
     pip uninstall -y importlib-metadata && \
     micromamba install -c conda-forge 'importlib-metadata>=8.7' && \
@@ -155,3 +157,8 @@ CMD bash run.sh
 #3.
 
 #important, this fixes th error of not finding pyrpoj database, it seems it is installed wiht both conda and pypi, so it has conflicting paths
+
+#4.
+
+# Failed to retrieve data
+# module 'dask' has no attribute 'utils'
