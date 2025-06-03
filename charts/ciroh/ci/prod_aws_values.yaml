@@ -122,6 +122,8 @@ tethys:
       configMap:
         name: 'cirohportal-prod-configmap'
   env:
+    NGINX_USER:
+      value: 'www'
     PUBLIC_PORTAL_PROTOCOL:
       value: 'https'
     TETHYS_DB_ENGINE:
