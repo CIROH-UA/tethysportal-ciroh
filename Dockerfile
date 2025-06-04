@@ -93,6 +93,8 @@ RUN rm -Rf ~/.cache/pip && \
     pip uninstall -y pyogrio && \
     pip install --no-cache-dir --quiet pyogrio && \
     #fix error # 4
+    pip uninstall -y dask && \
+    pip install --no-cache-dir dask && \
     pip install --upgrade dask && \
     #fix error # 1
     pip uninstall -y importlib-metadata && \
