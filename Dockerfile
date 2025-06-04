@@ -98,7 +98,7 @@ RUN rm -Rf ~/.cache/pip && \
     pip install --upgrade dask && \
     #fix error # 1
     pip uninstall -y importlib-metadata && \
-    micromamba install -c conda-forge 'importlib-metadata>=8.7' && \
+    pip install --no-cache-dir --quiet importlib-metadata && \
     micromamba clean --all --yes && \
     #fix error # 2
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
