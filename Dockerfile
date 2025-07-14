@@ -99,9 +99,9 @@ RUN rm -Rf ~/.cache/pip && \
     #fix error # 1
     pip uninstall -y importlib-metadata && \
     pip install --no-cache-dir --quiet importlib-metadata && \
-    micromamba clean --all --yes && \
+    micromamba clean --all --yes
     #fix error # 2
-    export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
+    # export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-)
     # ln -s $PYTHON_SITE_PACKAGE_PATH/site-packages/daphne/twisted/plugins/fd_endpoint.py $PYTHON_SITE_PACKAGE_PATH/site-packages/twisted/plugins/fd_endpoint.py
 
 EXPOSE 80
