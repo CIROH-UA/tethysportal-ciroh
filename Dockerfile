@@ -102,7 +102,7 @@ RUN rm -Rf ~/.cache/pip && \
     micromamba clean --all --yes && \
     #fix error # 2
     export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-) &&\
-    ln -s $PYTHON_SITE_PACKAGE_PATH/site-packages/daphne/twisted/plugins/fd_endpoint.py $PYTHON_SITE_PACKAGE_PATH/site-packages/twisted/plugins/fd_endpoint.py
+    # ln -s $PYTHON_SITE_PACKAGE_PATH/site-packages/daphne/twisted/plugins/fd_endpoint.py $PYTHON_SITE_PACKAGE_PATH/site-packages/twisted/plugins/fd_endpoint.py
 
 EXPOSE 80
 
