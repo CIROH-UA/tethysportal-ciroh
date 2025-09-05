@@ -23,12 +23,7 @@ resource "aws_iam_policy" "node_efs_policy" {
     }
   )
 }
-resource "aws_eks_pod_identity_association" "efs" {
-  cluster_name    = module.eks.cluster_name
-  namespace       = "kube-system"
-  service_account = "efs-csi-controller-sa"
-  role_arn        = module.attach_efs_csi_role.arn  # the role with EFS permissions
-}
+
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -64,7 +59,7 @@ module "eks" {
 
   
   create_cloudwatch_log_group	  = false # first time, we should probably have this as true
-
+  create_node_security_group = false
 
   eks_managed_node_groups = {
     tethys-core = {
