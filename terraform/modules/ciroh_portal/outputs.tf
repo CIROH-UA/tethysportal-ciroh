@@ -7,3 +7,10 @@ output "aws_eip" {
 output "vpc_public_subnets" {
   value = module.vpc.public_subnets
 }
+
+output "karpenter_node_role_name" {
+  value = module.karpenter.node_iam_role_name
+}
+output "karpenter_instance_profile_name" {
+  value = module.karpenter.instance_profile_name
+}

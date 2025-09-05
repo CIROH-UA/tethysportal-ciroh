@@ -1,4 +1,3 @@
-# 1- Create EFS that Pods of the cluster will use
 resource "aws_efs_file_system" "efs" {
   creation_token   = "${var.app_name}-${var.environment}-efs"
   performance_mode = "generalPurpose"
@@ -9,7 +8,6 @@ resource "aws_efs_file_system" "efs" {
 
 }
 
-# 2- Set security groups for EFS
 resource "aws_security_group" "efs" {
   name        = "${var.app_name}-${var.environment}-efs-sg"
   description = "Allow inbound efs traffic from Kubernetes Subnet"
@@ -28,12 +26,8 @@ resource "aws_security_group" "efs" {
     protocol    = "-1"
   }
 
-  # depends_on = [
-  #   module.vpc
-  # ]
 }
 
-# 3- Set EFS mount target
 resource "aws_efs_mount_target" "mount" {
   file_system_id  = aws_efs_file_system.efs.id
   subnet_id       = module.vpc.private_subnets[0]
@@ -46,44 +40,53 @@ resource "aws_efs_mount_target" "mount1" {
   security_groups = [aws_security_group.efs.id]
 }
 
-module "attach_efs_csi_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
-  role_name             = "efs-csi-${var.environment}"
-  attach_efs_csi_policy = true
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
-  oidc_providers = {
-    ex = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:efs-csi-controller-sa"]
+# Trust policy built with the helper to avoid JSON/quoting glitches
+data "aws_iam_policy_document" "efs_podidentity_trust" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole", "sts:TagSession"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["pods.eks.amazonaws.com"]
+    }
+
+    # Must match the account that owns the cluster
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    # Scope to *this* cluster’s Pod Identity associations
+    # Note: use var.region (no deprecated data.aws_region.name)
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values = [
+        "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:podidentityassociation/cluster/${module.eks.cluster_name}/*"
+      ]
     }
   }
 }
 
-# 4- Set aws_efs_csi_driver
-resource "helm_release" "aws_efs_csi_driver" {
-  chart      = "aws-efs-csi-driver"
-  name       = "aws-efs-csi-driver"
-  namespace  = "kube-system"
-  repository = "https://kubernetes-sigs.github.io/aws-efs-csi-driver/"
+resource "aws_iam_role" "efs_pod_identity" {
+  name               = "EKS-PodIdentity-EFS-${var.environment}"
+  assume_role_policy = data.aws_iam_policy_document.efs_podidentity_trust.json
+}
 
-  set {
-    name  = "image.repository"
-    value = "602401143452.dkr.ecr.eu-west-3.amazonaws.com/eks/aws-efs-csi-driver"
-  }
+resource "aws_iam_role_policy_attachment" "efs_pod_identity_policy" {
+  role       = aws_iam_role.efs_pod_identity.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+}
 
-  set {
-    name  = "controller.serviceAccount.create"
-    value = true
-  }
-
-  set {
-    name  = "controller.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.attach_efs_csi_role.iam_role_arn
-  }
-
-  set {
-    name  = "controller.serviceAccount.name"
-    value = "efs-csi-controller-sa"
-  }
+resource "aws_eks_pod_identity_association" "efs" {
+  cluster_name    = module.eks.cluster_name
+  namespace       = "kube-system"
+  service_account = "efs-csi-controller-sa" # matches the managed add-on’s SA name
+  role_arn        = aws_iam_role.efs_pod_identity.arn
 }
