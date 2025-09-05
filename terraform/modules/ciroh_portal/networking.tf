@@ -9,7 +9,9 @@ data "aws_eip" "nlb" {
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   # version = "3.19.0"
-  version = "5.19.0"
+  # version = "5.19.0"
+  version = "6.0.1"
+
   # name = "${var.app_name}-ciroh-vpc"
   name = "${var.app_name}-${var.environment}-vpc"
   cidr = "10.0.0.0/16"
@@ -41,10 +43,11 @@ module "vpc" {
 
 }
 module "vpc_cni_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  # version = "~> 5.0"
+  version = "6.2.1"
 
-  role_name_prefix      = "VPC-CNI-IRSA"
+  name                  = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
 
@@ -55,6 +58,23 @@ module "vpc_cni_irsa" {
     }
   }
 }
+
+# resource "kubernetes_service_account" "service-account" {
+#  metadata {
+#      name      = "aws-load-balancer-controller"
+#      namespace = "kube-system"
+#      labels = {
+#       "app.kubernetes.io/name"      = "aws-load-balancer-controller"
+#       "app.kubernetes.io/component" = "controller"
+#      }
+#      annotations = {
+#       "eks.amazonaws.com/role-arn"               = module.vpc_cni_irsa.arn
+#       "eks.amazonaws.com/sts-regional-endpoints" = "true"
+#      }
+#   }
+#  }
+
+
 
 # Elastic IP created in the networking module
 # data "aws_eip" "nlb" {

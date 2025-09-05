@@ -1,61 +1,3 @@
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "20.35.0"
-
-  cluster_name    = var.cluster_name
-  cluster_version = "1.30"
-
-  cluster_endpoint_public_access = true
-
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
-
-  enable_irsa = true
-  # Shown just for connection between cluster and Karpenter sub-module below
-  # We will rely only on the cluster security group created by the EKS service
-  # See note below for `tags`
-  create_cluster_security_group = false
-  create_node_security_group    = false
-  
-  create_cloudwatch_log_group	  = false # first time, we should probably have this as true
-
-  eks_managed_node_group_defaults = {
-    ami_type                   = "AL2_x86_64"
-    iam_role_attach_cni_policy = true
-    iam_role_additional_policies = {
-      eks_node_efs = resource.aws_iam_policy.node_efs_policy.arn
-    }
-  }
-
-  eks_managed_node_groups = {
-    tethys-core = {
-      name           = "tethys-core-group"
-      instance_types = ["c5.large"]
-      desired_size   = 1
-      min_size       = 1
-      max_size       = 2
-      # By default, the module creates a launch template to ensure tags are propagated to instances, etc.,
-      # so we need to disable it to use the default template provided by the AWS EKS managed node group service
-      use_custom_launch_template = false
-      disk_size                  = 40
-      #   tags = {
-      #       # NOTE - if creating multiple security groups with this module, only tag the
-      #       # security group that Karpenter should utilize with the following tag
-      #       # (i.e. - at most, only one security group should have this tag in your account)
-      #       "karpenter.sh/discovery" = var.cluster_name
-      #     }
-    }
-
-
-  }
-
-  tags = {
-    # NOTE - if creating multiple security groups with this module, only tag the
-    # security group that Karpenter should utilize with the following tag
-    # (i.e. - at most, only one security group should have this tag in your account)
-    "karpenter.sh/discovery" = var.cluster_name
-  }
-}
 resource "aws_iam_policy" "node_efs_policy" {
   name        = "eks_node_efs-${var.app_name}-${var.environment}"
   path        = "/"
@@ -80,4 +22,80 @@ resource "aws_iam_policy" "node_efs_policy" {
     "Version" : "2012-10-17"
     }
   )
+}
+resource "aws_eks_pod_identity_association" "efs" {
+  cluster_name    = module.eks.cluster_name
+  namespace       = "kube-system"
+  service_account = "efs-csi-controller-sa"
+  role_arn        = module.attach_efs_csi_role.arn  # the role with EFS permissions
+}
+
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "21.1.0"
+
+  name    = var.cluster_name
+  kubernetes_version  = "1.33"
+
+  endpoint_public_access  = true
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  addons  = {
+    vpc-cni = {
+      before_compute               = true
+      most_recent                  = true
+      service_account_role_arn     = module.vpc_cni_irsa.arn
+      resolve_conflicts_on_create  = "OVERWRITE"
+    }
+    kube-proxy = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
+    coredns    = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
+    aws-ebs-csi-driver = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
+    aws-efs-csi-driver = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
+    metrics-server     = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
+    eks-pod-identity-agent = { before_compute = true, most_recent = true }
+  
+  }
+
+  node_security_group_tags = {
+    "karpenter.sh/discovery" = var.cluster_name
+  }
+
+  
+  create_cloudwatch_log_group	  = false # first time, we should probably have this as true
+
+
+  eks_managed_node_groups = {
+    tethys-core = {
+      name            = "tethys-core-group"
+      instance_types  = ["c6i.large"]
+      desired_size    = 1
+      min_size        = 1
+      max_size        = 3
+      # These used to live in eks_managed_node_group_defaults
+      # ami_type                   = "AL2023_x86_64_STANDARD"
+      ami_type       = "BOTTLEROCKET_x86_64"
+      disk_size                  = 40
+      iam_role_attach_cni_policy = false
+      iam_role_additional_policies = {
+        eks_node_efs = resource.aws_iam_policy.node_efs_policy.arn
+      }
+      labels = {
+        # Used to ensure Karpenter runs on nodes that it does not manage
+        "karpenter.sh/controller" = "true"
+      }
+    }
+    
+  }
+
+
+  tags = {
+
+    "karpenter.sh/discovery" = var.cluster_name
+    Environment              = var.environment
+    Terraform                = "true"
+  }
+
+
 }
