@@ -65,8 +65,8 @@ module "eks" {
     tethys-core = {
       name            = "tethys-core-group"
       instance_types  = ["c6i.large"]
-      desired_size    = 1
-      min_size        = 1
+      desired_size    = 2
+      min_size        = 2
       max_size        = 3
       # These used to live in eks_managed_node_group_defaults
       # ami_type                   = "AL2023_x86_64_STANDARD"
