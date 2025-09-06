@@ -47,10 +47,12 @@ resource "helm_release" "tethysportal_helm_release" {
     base64decode(data.external.helm-secrets.result.content_base64),
   ]
 
-  set {
-    name  = "storageClass.parameters.fileSystemId"
-    value = aws_efs_file_system.efs.id
-  }
+  set = [
+    {
+      name  = "storageClass.parameters.fileSystemId"
+      value = aws_efs_file_system.efs.id
+    }
+  ]
 
    depends_on = [kubernetes_annotations.default-storageclass]
 }
