@@ -199,7 +199,7 @@ resources:
     ephemeral-storage: 3Gi
   limits:
     memory: 6Gi
-    ephemeral-storage: 4Gi
+    ephemeral-storage: 6Gi
 nodeSelector: {}
 tolerations: []
 affinity: {}
