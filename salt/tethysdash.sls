@@ -14,7 +14,7 @@ Collect_Plugin_Metadata:
   - name: |
       SCRIPT_DIR=$(dirname $(python -c 'import tethysapp.tethysdash as m; print(m.__file__)'))
       cd $SCRIPT_DIR
-      python collect_plugin_thumbnails.py
+      python collect_plugin_static.py
   - shell: /bin/bash
   - cwd: /
 

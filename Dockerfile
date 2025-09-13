@@ -33,9 +33,9 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 #######################################
 
 
-RUN echo "Start Now 2" && \ 
-    pip install --no-cache-dir --quiet -r piprequirements.txt && \
+RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
+    echo "installing plugins" && \
     pip install git+https://github.com/FIRO-Tethys/ciroh_plugins.git --no-cache-dir && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git --no-cache-dir && \
     pip install git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git --no-cache-dir && \
