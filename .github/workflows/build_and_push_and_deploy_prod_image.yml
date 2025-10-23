@@ -37,7 +37,7 @@ jobs:
       - name: Set Tag
         run: |
           echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+          echo "TAG_LATEST=latest" >> $GITHUB_ENV
 
       - name: Test Tag
         run: |
@@ -52,49 +52,47 @@ jobs:
           username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
           password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
 
-      - name: Build (local only)
+      - name: Build (OCI tar for scan)
         uses: docker/build-push-action@v5
         with:
           context: .
-          load: true
-          tags: |
-            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
-            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-dev-cache:latest
-          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-dev-cache:latest,mode=max
-      
+          platforms: linux/amd64
+          outputs: type=oci,dest=/tmp/image.tar
+          tags: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Scan Image with Anchore (Grype)
         id: scan
         uses: anchore/scan-action@v5
-        env:
-          GRYPE_CONFIG: .github/security/.grype.yaml
         continue-on-error: true
         with:
-          image: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }} 
-          fail-build: true
+          image: oci-archive:/tmp/image.tar
           output-format: sarif
           output-file: anchore-results.sarif
+          fail-build: true
           severity-cutoff: medium
           only-fixed: true
-      
+
       - name: Upload Anchore Scan SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: anchore-results.sarif
           category: grype
-    
-      - name: Build and push
+
+      - name: Build & Push
         if: ${{ steps.scan.outcome == 'success' }}
-        run: |
-          # push dev_SHA tag
-          docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
-
-          # optionally gate dev_latest to main to avoid branch collisions
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-          fi
-
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # update cahrt deployment
   deploy_chart:
