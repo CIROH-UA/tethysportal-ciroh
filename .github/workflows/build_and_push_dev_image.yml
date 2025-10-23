@@ -119,6 +119,9 @@ jobs:
 
   deploy-with_dry-run:
     needs: [build]
+    permissions:
+      id-token: write
+      contents: read
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
     with:
       dry-run: true
