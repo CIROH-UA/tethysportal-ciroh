@@ -99,6 +99,9 @@ jobs:
   # update cahrt deployment
   deploy_chart:
     needs: [build]
+    permissions:
+      id-token: write
+      contents: read     
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
     with:
       dry-run: false
