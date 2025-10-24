@@ -66,6 +66,8 @@ jobs:
         id: scan
         uses: anchore/scan-action@v5
         continue-on-error: true
+        env:
+          GRYPE_CONFIG: .github/security/.grype.yaml
         with:
           image: oci-archive:/tmp/image.tar
           fail-build: true

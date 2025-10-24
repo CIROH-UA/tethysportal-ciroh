@@ -64,7 +64,7 @@ jobs:
           password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
     
       - name: Build (OCI tar for scan)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
@@ -77,6 +77,8 @@ jobs:
         id: scan
         uses: anchore/scan-action@v5
         continue-on-error: true
+        env:
+          GRYPE_CONFIG: .github/security/.grype.yaml
         with:
           image: oci-archive:/tmp/image.tar
           fail-build: true
