@@ -76,7 +76,6 @@ jobs:
       - name: Scan Image with Anchore (Grype)
         id: scan
         uses: anchore/scan-action@v5
-        continue-on-error: true
         env:
           GRYPE_CONFIG: .github/security/.grype.yaml
         with:
@@ -87,7 +86,6 @@ jobs:
           output-format: table
 
       - name: Build & Push
-        if: steps.scan.outcome == 'success'
         uses: docker/build-push-action@v5
         with:
           context: .
