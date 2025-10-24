@@ -23,4 +23,4 @@ ignore:
   - package:
       name: social-auth-app-django
       type: python
-    reason: "Fixed version not yet availble for versions of conda < 5.1"
+    reason: "Fixed version not yet available for versions of conda < 5.1"
