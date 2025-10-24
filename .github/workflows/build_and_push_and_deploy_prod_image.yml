@@ -88,7 +88,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # update cahrt deployment
+  # update chart deployment
   deploy_chart:
     needs: [build]
     permissions:
