@@ -37,7 +37,7 @@ jobs:
       - name: Set Tag
         run: |
           echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+          echo "TAG_LATEST=latest" >> $GITHUB_ENV
 
       - name: Test Tag
         run: |
@@ -52,20 +52,48 @@ jobs:
           username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
           password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
 
-      - name: Build and push
+      - name: Build (OCI tar for scan)
         uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: linux/amd64
+          outputs: type=oci,dest=/tmp/image.tar
+          tags: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan Image with Anchore (Grype)
+        id: scan
+        uses: anchore/scan-action@v5
+        continue-on-error: true
+        env:
+          GRYPE_CONFIG: .github/security/.grype.yaml
+        with:
+          image: oci-archive:/tmp/image.tar
+          fail-build: true
+          output-format: table
+          severity-cutoff: medium
+          only-fixed: true
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        if: steps.scan.outcome == 'success'
+        with:
+          context: .
           push: true
+          platforms: linux/amd64
           tags: |
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest
-          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-  # update cahrt deployment
+  # update chart deployment
   deploy_chart:
     needs: [build]
+    permissions:
+      id-token: write
+      contents: read     
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
     with:
       dry-run: false

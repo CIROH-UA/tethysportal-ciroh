@@ -86,7 +86,9 @@ COPY salt/ /srv/salt/
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN rm -Rf ~/.cache/pip && \
-    micromamba install --yes -c conda-forge numpy==1.26.4 && \
+    # micromamba install --yes -c conda-forge numpy==1.26.4 && \
+    pip uninstall -y numpy && \
+    pip install --no-cache-dir numpy==1.26.4 && \
     #fix error # 3
     pip uninstall -y pyproj && \
     pip install --no-cache-dir --quiet pyproj && \
@@ -99,6 +101,14 @@ RUN rm -Rf ~/.cache/pip && \
     #fix error # 1
     pip uninstall -y importlib-metadata && \
     pip install --no-cache-dir --quiet importlib-metadata && \
+
+    # Fix tornado version to 6.5 to avoid security issues
+    pip uninstall -y tornado && \
+    pip install --no-cache-dir --quiet tornado==6.5 && \
+
+    pip uninstall -y cryptography && \
+    pip install --no-cache-dir --quiet cryptography==44.0.1 && \
+
     micromamba clean --all --yes
     #fix error # 2
     # export PYTHON_SITE_PACKAGE_PATH=$(${CONDA_HOME}/envs/${CONDA_ENV_NAME}/bin/python -m site | grep -a -m 1 "site-packages" | head -1 | sed 's/.$//' | sed -e 's/^\s*//' -e '/^$/d'| sed 's![^/]*$!!' | cut -c2-)
