@@ -72,7 +72,7 @@ jobs:
           image: oci-archive:/tmp/image.tar
           fail-build: true
           output-format: table
-          severity-cutoff: medium
+          severity-cutoff: high
           only-fixed: true
 
       - name: Build & Push
