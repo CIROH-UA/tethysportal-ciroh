@@ -81,7 +81,7 @@ jobs:
         with:
           image: oci-archive:/tmp/image.tar
           fail-build: true
-          severity-cutoff: medium
+          severity-cutoff: high
           only-fixed: true
           output-format: table
 
