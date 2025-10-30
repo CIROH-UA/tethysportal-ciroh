@@ -8,7 +8,7 @@ Link_Persistent_Stores_Database_Tethysdash:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/tethysdash_complete" ];"
 
-Sync_App_Persistent_Stores:
+Sync_Dash_App_Persistent_Stores:
   cmd.run:
     - name: tethys syncstores tethysdash
     - shell: /bin/bash
