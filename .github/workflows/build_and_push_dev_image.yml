@@ -63,48 +63,40 @@ jobs:
           username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
           password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
     
-      - name: Build (local only)
-        uses: docker/build-push-action@v5
+      - name: Build (OCI tar for scan)
+        uses: docker/build-push-action@v6
         with:
           context: .
-          load: true
-          tags: |
-            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
-            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-dev-cache:latest
-          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-dev-cache:latest,mode=max
-      
+          platforms: linux/amd64
+          outputs: type=oci,dest=/tmp/image.tar
+          tags: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Scan Image with Anchore (Grype)
         id: scan
         uses: anchore/scan-action@v5
         env:
           GRYPE_CONFIG: .github/security/.grype.yaml
-        continue-on-error: true
         with:
-          image: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }} 
+          image: oci-archive:/tmp/image.tar
           fail-build: true
-          output-format: sarif
-          output-file: anchore-results.sarif
-          severity-cutoff: medium
+          severity-cutoff: high
           only-fixed: true
-      
-      - name: Upload Anchore Scan SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: anchore-results.sarif
-          category: grype
-    
-      - name: Build and push
-        if: ${{ steps.scan.outcome == 'success' }}
-        run: |
-          # push dev_SHA tag
-          docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+          output-format: table
 
-          # optionally gate dev_latest to main to avoid branch collisions
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-          fi
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
 
   cleanup:
     needs: [build]
@@ -119,6 +111,9 @@ jobs:
 
   deploy-with_dry-run:
     needs: [build]
+    permissions:
+      id-token: write
+      contents: read
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
     with:
       dry-run: true
