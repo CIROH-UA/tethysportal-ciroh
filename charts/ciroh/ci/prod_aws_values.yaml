@@ -794,7 +794,7 @@ gs-cloud:
 
 redis:
   enabled: true
-  global:
+  persistence:
     storageClass: 'efs-pv'
 postgis:
   image:
