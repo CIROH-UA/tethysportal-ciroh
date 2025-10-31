@@ -17,6 +17,6 @@ dependencies:
     version: '*'
     condition: thredds.enabled
   - name: 'redis'
-    repository: 'https://charts.bitnami.com/bitnami'
+    repository: 'oci://ghcr.io/cloudpirates-io/helm-charts'
     version: '*'
     condition: redis.enabled
