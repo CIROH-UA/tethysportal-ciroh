@@ -109,7 +109,9 @@ redis:
   architecture: standalone
   auth:
     enabled: false
-
+  service:
+    port: 6379
+    
 tethys:
   init_containers:
     wait_for_db: false
