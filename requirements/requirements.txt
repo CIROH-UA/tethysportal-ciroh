@@ -7,7 +7,7 @@ xarray
 rioxarray
 numpy==1.26.4 #if using > 2.0.0, the portal will break
 pygithub
-gitpython==3.1.41
+gitpython==3.1.49
 requests
 semver
 pandas
