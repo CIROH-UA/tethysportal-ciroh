@@ -79,15 +79,6 @@ spec:
             - name: THREDDS_TDS_PUBLIC_PROTOCOL
               value: "http{{ if $.Values.ingresses.external.tls }}s{{ end }}"
             {{- end }}
-            # fimbench env variables
-            - name: FIMBENCH_S3_ALLOWED_HOST
-              value: {{ .Values.fimbench.s3_allowed_host | quote }}
-            - name: FIMBENCH_S3_BUCKET_URL
-              value: {{ .Values.fimbench.s3_bucket_url | quote }}
-            - name: FIMBENCH_S3_CATALOG_KEY
-              value: {{ .Values.fimbench.s3_catalog_key | quote }}
-            - name: FIMBENCH_S3_VIZ_TILES
-              value: {{ .Values.fimbench.s3_viz_tiles | quote }}
             # extra env v
             {{- range $key, $value :=  .Values.tethys.env }}
             - name: {{ quote $key }}
