@@ -162,12 +162,6 @@ tethys:
       value: 'tethys.ciroh.org'
     NGINX_PORT:
       value: '8080'
-fimbench:
-  s3_allowed_host: 'sdmlab.s3.amazonaws.com'
-  s3_bucket_url: 'https://sdmlab.s3.amazonaws.com/FIM_Database'
-  s3_catalog_key: 'FIM_Viz/catalog_core.json'
-  s3_viz_tiles: 'https://sdmlab.s3.amazonaws.com/FIM_Database/FIM_Viz/tiles/{z}/{x}/{y}.pbf'
-
 podAnnotations: {}
 
 podSecurityContext: {}
