@@ -61,6 +61,8 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
     
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build && \
+    cd ${TETHYS_HOME}/apps/fimbench && tethys install -w -N -q && \
     rm -rf /var/lib/apt/lists/* && \
     find -name '*.a' -delete && \
     rm -rf ${CONDA_HOME}/envs/${CONDA_ENV_NAME}/conda-meta && \
