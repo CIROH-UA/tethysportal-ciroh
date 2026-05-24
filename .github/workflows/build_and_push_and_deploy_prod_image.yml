@@ -10,11 +10,9 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  #clean space, so docker image build does not get killed
   clean-space:
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
 
-  # build image
   build:
     needs: [clean-space]
     runs-on: ubuntu-latest
@@ -29,7 +27,6 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive
 
-      # Checks-out the hydrocompute extra submodule
       - name: checkout Hydrocompute submodule
         run: |
           cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --force --init --recursive --remote
@@ -89,7 +86,7 @@ jobs:
     needs: [build]
     permissions:
       id-token: write
-      contents: read     
+      contents: read
     uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
     with:
       dry-run: false
