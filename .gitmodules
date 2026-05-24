@@ -25,3 +25,7 @@
 	path = apps/Tethys-CSES
 	url = https://github.com/Aquaveo/Tethys-CSES.git
 	branch = devcon
+[submodule "fimbench"]
+	path = apps/fimbench
+	url = https://github.com/Aquaveo/fimbench-gui.git
+	branch = main

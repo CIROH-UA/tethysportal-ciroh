@@ -272,7 +272,9 @@ RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-ca
     sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} && \
     cd ${TETHYS_HOME}/apps/tethysapp-tethys_dash && npm install && npm run build && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q
+    cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build && \
+    cd ${TETHYS_HOME}/apps/fimbench && tethys install -w -N -q
 
 ###############
 # SALT CONFIG #
