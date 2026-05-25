@@ -135,10 +135,12 @@ RUN rm -rf /var/lib/apt/lists/* \
 # LAYER 2: Python venv + tethys platform (changes rarely) #
 ###########################################################
 ENV UV_PYTHON_PREFERENCE=only-managed
+ENV UV_PYTHON_INSTALL_DIR=/opt/python
 RUN uv python install 3.12
 
 RUN mkdir -p ${CONDA_HOME}/envs/${CONDA_ENV_NAME} \
   && uv venv ${CONDA_HOME}/envs/${CONDA_ENV_NAME} --python 3.12 \
+  && chmod -R a+rX ${CONDA_HOME}/envs/${CONDA_ENV_NAME} \
   && mkdir -p ${CONDA_HOME}/bin
 
 ENV VIRTUAL_ENV=${CONDA_HOME}/envs/${CONDA_ENV_NAME}
@@ -155,7 +157,7 @@ RUN uv pip install --no-cache \
     django-simple-captcha \
     django-mfa2 \
     django-recaptcha \
-    social-auth-app-django \
+    "social-auth-app-django<5.5" \
     hs-restclient \
     python-jose \
     django-oauth-toolkit \
@@ -180,6 +182,7 @@ RUN uv pip install --no-cache \
     owslib \
     siphon \
     sqlalchemy==1.* \
+  && uv pip install --no-cache "django>=4.2,<5" \
   && tethys gen portal_config
 
 ###########################################################
@@ -232,7 +235,9 @@ RUN uv pip install --no-cache -r piprequirements.txt \
     "pygeoogc==0.17.1" \
     "pygeoutils==0.17.1" \
     "pygeohydro==0.17.1" \
-    pyogrio
+    pyogrio \
+    pytz \
+    "django>=4.2,<5"
 
 #################################################
 # LAYER 4: Git-based plugins (changes rarely)   #
@@ -261,20 +266,20 @@ ADD extensions ${TETHYS_HOME}/extensions
 COPY apps ${TETHYS_HOME}/apps
 
 RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/tethysapp-sweml && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/snow-inspector && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/ggst && uv pip install --no-cache . && \
+    cd ${TETHYS_HOME}/apps/tethysapp-sweml && uv pip install --no-cache . && \
+    cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && uv pip install --no-cache . && \
+    cd ${TETHYS_HOME}/apps/snow-inspector && uv pip install --no-cache . && \
     mv ${DEV_REACT_CONFIG} ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g" ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} && \
-    cd ${TETHYS_HOME}/apps/tethysapp-tethys_dash && npm install && npm run build && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/Tethys-CSES && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/Water-Data-Explorer && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/tethysapp-tethys_dash && npm install && npm run build && uv pip install --no-cache . && \
+    cd ${TETHYS_HOME}/apps/Tethys-CSES && uv pip install --no-cache . && \
+    cd ${TETHYS_HOME}/apps/Water-Data-Explorer && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build && \
-    cd ${TETHYS_HOME}/apps/fimbench && tethys install -w -N -q
+    cd ${TETHYS_HOME}/apps/fimbench && uv pip install --no-cache .
 
 ###############
 # SALT CONFIG #
@@ -290,6 +295,10 @@ RUN git clone --depth 1 --filter=blob:none --sparse https://github.com/tethyspla
     rm -rf /tmp/tethys-src
 
 RUN chmod +x ${TETHYS_HOME}/run.sh ${TETHYS_HOME}/liveness-probe.sh 2>/dev/null || true
+
+# Ensure the www user can execute Python and all venv binaries
+RUN chmod -R a+rX ${CONDA_HOME}/envs/${CONDA_ENV_NAME} && \
+    chown -R www:www ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp/
 
 # Symlink system binaries into venv so run.sh and salt states find them
 RUN ln -sf /usr/bin/pg_isready ${VIRTUAL_ENV}/bin/pg_isready && \
