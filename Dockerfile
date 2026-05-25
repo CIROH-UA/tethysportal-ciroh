@@ -236,6 +236,7 @@ RUN uv pip install --no-cache -r piprequirements.txt \
     "pygeoutils==0.17.1" \
     "pygeohydro==0.17.1" \
     pyogrio \
+    pytz \
     "django>=4.2,<5"
 
 #################################################
@@ -263,26 +264,6 @@ RUN groupadd www \
 
 ADD extensions ${TETHYS_HOME}/extensions
 COPY apps ${TETHYS_HOME}/apps
-
-# Generate pyproject.toml for hydrocompute if missing (upstream still uses setup.py with tethys_apps import)
-RUN test -f ${TETHYS_HOME}/apps/tethysapp-hydrocompute/pyproject.toml || printf '%s\n' \
-    '[build-system]' \
-    'requires = ["setuptools>=45"]' \
-    'build-backend = "setuptools.build_meta"' \
-    '' \
-    '[project]' \
-    'name = "tethysapp-hydrocompute"' \
-    'version = "0.0.1"' \
-    'description = "Tethys app that demonstrates the capabilities of the HydroCompute library"' \
-    'requires-python = ">=3.10"' \
-    'dependencies = []' \
-    '' \
-    '[tool.setuptools.packages.find]' \
-    'include = ["tethysapp*"]' \
-    '' \
-    '[tool.setuptools.package-data]' \
-    '"*" = ["*.js", "*.css", "*.html", "*.png", "*.ico", "*.jpg", "*.gif", "*.svg", "*.json", "*.yml", "*.yaml", "*.txt", "*.xml", "*.csv", "*.wasm"]' \
-    > ${TETHYS_HOME}/apps/tethysapp-hydrocompute/pyproject.toml
 
 RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/ggst && uv pip install --no-cache . && \
