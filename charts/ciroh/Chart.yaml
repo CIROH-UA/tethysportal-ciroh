@@ -18,5 +18,5 @@ dependencies:
     condition: thredds.enabled
   - name: 'redis'
     repository: 'oci://ghcr.io/cloudpirates-io/helm-charts'
-    version: '*'
+    version: '0.28.0'
     condition: redis.enabled
