@@ -249,7 +249,8 @@ RUN uv pip install --no-cache \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin-great_lakes_viewer.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_usgs_water_services.git \
-    git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git
+    git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git \
+    git+https://github.com/FIRO-Tethys/RFC-Plugins.git
 
 ######################################################
 # LAYER 5: Extensions + apps (rebuilds on code PRs)  #
