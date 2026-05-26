@@ -11,6 +11,7 @@ base:
     - ggst
     - wde
     - mde
+    - fimbench
     - config
     - proxy_apps
     - oauth
