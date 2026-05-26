@@ -63,39 +63,35 @@ jobs:
           username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
           password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
     
-      - name: Build (OCI tar for scan)
+      - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
-          outputs: type=oci,dest=/tmp/image.tar
-          tags: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Scan Image with Anchore (Grype)
-        id: scan
-        uses: anchore/scan-action@v5
-        env:
-          GRYPE_CONFIG: .github/security/.grype.yaml
-        with:
-          image: oci-archive:/tmp/image.tar
-          fail-build: true
-          severity-cutoff: high
-          only-fixed: true
-          output-format: table
-
-      - name: Build & Push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64
+          outputs: type=docker,dest=/tmp/image.tar
           tags: |
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Scan image with Anchore (Grype)
+        id: scan
+        uses: anchore/scan-action@v5
+        env:
+          GRYPE_CONFIG: .github/security/.grype.yaml
+        with:
+          image: docker-archive:/tmp/image.tar
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          output-format: table
+
+      - name: Load and push image
+        run: |
+          docker load -i /tmp/image.tar
+          docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+          docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
 
 
   cleanup:

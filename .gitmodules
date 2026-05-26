@@ -29,7 +29,3 @@
 	path = apps/fimbench
 	url = https://github.com/Aquaveo/fimbench-gui.git
 	branch = main
-[submodule "apps/fimbench"]
-	path = apps/fimbench
-	url = https://github.com/Aquaveo/fimbench-gui.git
-	branch = main
