@@ -299,7 +299,8 @@ RUN chmod +x ${TETHYS_HOME}/run.sh ${TETHYS_HOME}/liveness-probe.sh 2>/dev/null 
 
 # Ensure the www user can execute Python and all venv binaries
 RUN chmod -R a+rX ${CONDA_HOME}/envs/${CONDA_ENV_NAME} && \
-    chown -R www:www ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp/
+    chown -R www:www ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp/ \
+                     ${VIRTUAL_ENV}/lib/python3.12/site-packages/ciroh_plugins/
 
 # Symlink system binaries into venv so run.sh and salt states find them
 RUN ln -sf /usr/bin/pg_isready ${VIRTUAL_ENV}/bin/pg_isready && \
