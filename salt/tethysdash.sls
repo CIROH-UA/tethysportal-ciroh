@@ -1,4 +1,5 @@
 {% set TETHYS_PERSIST = salt['environ.get']('TETHYS_PERSIST') %}
+{% set TETHYS_HOME = salt['environ.get']('TETHYS_HOME') %}
 {% set POSTGIS_SERVICE_NAME = 'tethys_postgis' %}
 
 
@@ -15,12 +16,9 @@ Sync_Dash_App_Persistent_Stores:
 
 Collect_Plugin_Metadata:
   cmd.run:
-  - name: |
-      SCRIPT_DIR=$(dirname $(python -c 'import tethysapp.tethysdash as m; print(m.__file__)'))
-      cd $SCRIPT_DIR
-      python collect_plugin_static.py
+  - name: python {{ TETHYS_HOME }}/apps/tethysapp-tethys_dash/tethysapp/tethysdash/collect_plugin_static.py
   - shell: /bin/bash
-  - cwd: /
+  - cwd: {{ TETHYS_HOME }}/apps/tethysapp-tethys_dash/tethysapp/tethysdash
 
 
 Flag_Tethys_Tethysdash_Setup_Complete:

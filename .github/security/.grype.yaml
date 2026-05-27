@@ -24,3 +24,10 @@ ignore:
       name: social-auth-app-django
       type: python
     reason: "Fixed version not yet available for versions of conda < 5.1"
+
+  # Transitive npm dependencies in bundled React apps (tethys_dash, etc.).
+  # These are build-time/client-side only and not exploitable server-side.
+  # The apps' package.json files should be updated upstream.
+  - package:
+      type: npm
+    reason: "Transitive npm deps in bundled React apps — not server-side exploitable. Track upstream updates separately."

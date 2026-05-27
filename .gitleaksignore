@@ -1,0 +1,3 @@
+# False positive: commit 7b91e5c only added empty FIMbench placeholder vars to env/web.env.
+# Gitleaks flagged a pre-existing credential already in the file.
+7b91e5c66a32bddf84f0470413dc1a976694acff:env/web.env:generic-api-key:102
