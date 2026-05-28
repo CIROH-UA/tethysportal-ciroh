@@ -243,7 +243,7 @@ RUN uv pip install --no-cache -r piprequirements.txt \
 # LAYER 4: Git-based plugins (changes rarely)   #
 #################################################
 RUN uv pip install --no-cache \
-    git+https://github.com/FIRO-Tethys/ciroh_plugins.git \
+    git+https://github.com/FIRO-Tethys/ciroh_plugins.git@workshop-no-drought \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git \
