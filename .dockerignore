@@ -1,0 +1,16 @@
+.git
+**/.git
+terraform/
+charts/
+.github/
+.vscode/
+config/
+env/
+static/
+*.md
+LICENSE
+docker-compose.yml
+.gitignore
+.gitmodules
+.gitleaksignore
+.dockerignore
