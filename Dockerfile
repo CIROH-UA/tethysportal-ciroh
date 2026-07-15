@@ -280,7 +280,8 @@ RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-ca
     cd ${TETHYS_HOME}/apps/Tethys-CSES && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/Water-Data-Explorer && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build && \
-    cd ${TETHYS_HOME}/apps/fimbench && uv pip install --no-cache .
+    cd ${TETHYS_HOME}/apps/fimbench && uv pip install --no-cache . && \
+    cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install --no-cache .
 
 ###############
 # SALT CONFIG #

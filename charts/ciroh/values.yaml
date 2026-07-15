@@ -122,6 +122,10 @@ tethys:
   workspace_size: ''
 
   env:
+    FIMSERV_ROOT:
+      value: /var/lib/tethys_persist/fimserve
+    FIMSERVE_CACHE_MAX_GB:
+      value: '3'
     # db-env-variables
     TETHYS_DB_NAME:
       value: tethys_platform
