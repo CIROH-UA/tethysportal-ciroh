@@ -265,6 +265,7 @@ RUN groupadd www \
 
 ADD extensions ${TETHYS_HOME}/extensions
 COPY apps ${TETHYS_HOME}/apps
+COPY requirements/overrides.txt ${TETHYS_HOME}/overrides.txt
 
 RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/ggst && uv pip install --no-cache . && \
@@ -281,7 +282,7 @@ RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-ca
     cd ${TETHYS_HOME}/apps/Water-Data-Explorer && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build && \
     cd ${TETHYS_HOME}/apps/fimbench && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install --no-cache .
+    cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install --no-cache . --overrides ${TETHYS_HOME}/overrides.txt
 
 ###############
 # SALT CONFIG #
