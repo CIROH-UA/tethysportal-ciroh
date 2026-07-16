@@ -126,6 +126,12 @@ RUN chmod -R a+rX /opt/python /opt/conda \
 
 FROM ${UVX_RUNTIME}
 
+USER root
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git \
+  && rm -rf /var/lib/apt/lists/*
+USER 1000:1000
+
 ENV POSTGIS_SERVICE_NAME="tethys_postgis"
 
 COPY --from=builder /opt/python /opt/python
