@@ -18,7 +18,7 @@ gs-cloud:
 
 
 thredds:
-  enabled: true
+  enabled: false
   fullnameOverride: 'ciroh-tds'
   thredds_tds_catalog: '/thredds/catalog/ciroh_data/thredds_data/catalog.xml'
   username: 'admin'

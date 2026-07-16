@@ -104,7 +104,6 @@ COPY apps ${TETHYS_HOME}/apps
 COPY requirements/overrides.txt ${TETHYS_HOME}/overrides.txt
 
 RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/ggst && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/tethysapp-sweml && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/snow-inspector && uv pip install --no-cache . && \
@@ -115,7 +114,6 @@ RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-ca
     sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} && \
     cd ${TETHYS_HOME}/apps/tethysapp-tethys_dash && npm install && npm run build && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/Tethys-CSES && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/Water-Data-Explorer && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build && \
     cd ${TETHYS_HOME}/apps/fimbench && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install --no-cache . --overrides ${TETHYS_HOME}/overrides.txt

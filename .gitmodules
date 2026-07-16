@@ -1,15 +1,7 @@
-[submodule "ggst"]
-	path = apps/ggst
-	url = https://github.com/Aquaveo/ggst.git
-	branch = tethys4_upgrade
 [submodule "snow-inspector"]
 	path = apps/snow-inspector
 	url = https://github.com/Aquaveo/snow-inspector
 	branch = tethys4_upgrade
-[submodule "Water-Data-Explorer"]
-	path = apps/Water-Data-Explorer
-	url = https://github.com/Aquaveo/Water-Data-Explorer
-	branch = hydroserver2-fixes
 [submodule "apps/tethysapp-hydrocompute"]
 	path = apps/tethysapp-hydrocompute
 	url = https://github.com/Aquaveo/tethysapp-hydrocompute.git
