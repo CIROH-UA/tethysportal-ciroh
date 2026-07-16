@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ -n "${AUTHENTICATION_BACKENDS:-}" ]; then
+  tethys settings --set AUTHENTICATION_BACKENDS "${AUTHENTICATION_BACKENDS}"
+  tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_KEY "${HYDROSHARE_CLIENT_ID:-}"
+  tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_HYDROSHARE_SECRET "${HYDROSHARE_SECRET_ID:-}"
+  tethys settings --set OAUTH_CONFIG.SOCIAL_AUTH_LOGIN_REDIRECT_URL "${SOCIAL_AUTH_LOGIN_REDIRECT_URL:-/apps/}"
+fi
+
+if [ -n "${OIDC_ENABLED:-}" ]; then
+  tethys settings --set OAUTH_CONFIG.OAUTH2_PROVIDER.PKCE_REQUIRED "${PKCE_REQUIRED:-}"
+  tethys settings --set OAUTH_CONFIG.OAUTH2_PROVIDER.OIDC_ENABLED "${OIDC_ENABLED}"
+  tethys settings --set OAUTH_CONFIG.OAUTH2_PROVIDER.SCOPES.openid "${SCOPES_OPENID:-}"
+  tethys settings --set OAUTH_CONFIG.OAUTH2_PROVIDER.OIDC_RSA_PRIVATE_KEY "${OIDC_RSA_PRIVATE_KEY:-}"
+fi
