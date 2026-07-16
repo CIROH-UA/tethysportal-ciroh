@@ -16,78 +16,7 @@ ENV PROD_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/production.en
 WORKDIR ${TETHYS_HOME}
 
 COPY requirements/piprequirements.txt ./piprequirements.txt
-RUN uv pip install --no-cache -r piprequirements.txt \
-    django-cors-headers \
-    django-session-security \
-    django-axes \
-    django-gravatar2 \
-    django-simple-captcha \
-    django-mfa2 \
-    django-recaptcha \
-    hs-restclient \
-    python-jose \
-    django-oauth-toolkit \
-    django-tenants \
-    arrow \
-    isodate \
-    django-analytical \
-    pyshp \
-    docker \
-    geoalchemy2 \
-    plotly \
-    bokeh \
-    dask \
-    condorpy \
-    tethys-dask-scheduler \
-    tethys-dataset-services \
-    owslib \
-    siphon \
-    see \
-    pywaterml \
-    gstools \
-    hydroeval \
-    asyncio \
-    hydroserverpy \
-    "geoglows>=1.7.0" \
-    area \
-    utm \
-    geopandas \
-    shapely \
-    xarray \
-    rioxarray \
-    "numpy==1.26.4" \
-    pygithub \
-    "gitpython==3.1.41" \
-    requests \
-    semver \
-    pandas \
-    geojson \
-    setuptools \
-    netcdf4 \
-    cfunits \
-    lxml \
-    pyproj \
-    xmltodict \
-    suds-community \
-    scipy \
-    simplejson \
-    pandarallel \
-    matplotlib \
-    pypng \
-    httpx \
-    geoserver-rest \
-    boto3 \
-    scikit-learn \
-    djangorestframework \
-    fiona \
-    "pynhd==0.17.1" \
-    "intake>=0.6.6" \
-    "pygeoogc==0.17.1" \
-    "pygeoutils==0.17.1" \
-    "pygeohydro==0.17.1" \
-    pyogrio \
-    pytz \
-    "django>=4.2,<5"
+RUN uv pip install --no-cache -r piprequirements.txt
 
 RUN uv pip install --no-cache \
     git+https://github.com/FIRO-Tethys/ciroh_plugins.git \
