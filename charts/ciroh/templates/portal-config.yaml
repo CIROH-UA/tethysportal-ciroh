@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ciroh.fullname" . }}-portal-config
+  labels:
+{{ include "ciroh.labels" . | indent 4 }}
+data:
+  portal_config.yml: |
+    version: 2.0
+    name:
+    apps: {}
+    settings:
+      DEBUG: false
+      ALLOWED_HOSTS:
+        - localhost
+        - 127.0.0.1
+      {{- range .Values.ingresses.external.hosts }}
+      {{- if .host }}
+        - {{ .host }}
+      {{- end }}
+      {{- end }}
+      CSRF_TRUSTED_ORIGINS:
+      {{- range .Values.ingresses.external.hosts }}
+      {{- if .host }}
+        - {{ $.Values.tethys.env.PUBLIC_PORTAL_PROTOCOL.value }}://{{ .host }}
+      {{- end }}
+      {{- end }}
+      STATIC_ROOT: /home/tethys/persist/static
+      MEDIA_ROOT: /home/tethys/persist/media
+      MEDIA_URL: /media/
+      TETHYS_WORKSPACES_ROOT: /home/tethys/persist/workspaces
+      DATA_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+      DATA_UPLOAD_MAX_NUMBER_FIELDS: 1073741824
+      FILE_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+      AUTHENTICATION_BACKENDS:
+        - tethys_services.backends.hydroshare.HydroShareOAuth2
+      OAUTH_CONFIG:
+        OAUTH2_PROVIDER:
+          OIDC_ENABLED: true
+          PKCE_REQUIRED: true
+          SCOPES:
+            openid: OpenID Connect scope
+        SOCIAL_AUTH_LOGIN_REDIRECT_URL: /apps/
+      DATABASES:
+        default:
+          ENGINE: django.db.backends.postgresql
+          NAME: {{ .Values.tethys.env.TETHYS_DB_NAME.value }}
+          USER: {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}
+          HOST: {{ .Values.postgis.fullnameOverride }}
+          PORT: 5432
+          CONN_MAX_AGE: 0
+      CHANNEL_LAYERS:
+        default:
+          BACKEND: channels_redis.core.RedisChannelLayer
+          CONFIG:
+            hosts:
+              - host: {{ .Values.redis.fullnameOverride }}-master
+                port: {{ .Values.redis.service.port }}
+      TETHYS_PORTAL_CONFIG:
+        ENABLE_OPEN_PORTAL: true
+        BYPASS_TETHYS_HOME_PAGE: true
+    site_settings:
+      GENERAL_SETTINGS: {}
