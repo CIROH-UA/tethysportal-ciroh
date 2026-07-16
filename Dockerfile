@@ -120,7 +120,9 @@ RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-ca
     cd ${TETHYS_HOME}/apps/fimbench && uv pip install --no-cache . && \
     cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install --no-cache . --overrides ${TETHYS_HOME}/overrides.txt
 
-RUN chmod -R a+rX /opt/python /opt/conda
+RUN chmod -R a+rX /opt/python /opt/conda \
+  && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp \
+  && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/ciroh_plugins
 
 FROM ${UVX_RUNTIME}
 
