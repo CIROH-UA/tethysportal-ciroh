@@ -31,6 +31,14 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Name of the Secret holding portal credentials: an operator-provided secret
+when secrets.existingSecretName is set, otherwise the chart-rendered one.
+*/}}
+{{- define "ciroh.secretName" -}}
+{{- .Values.secrets.existingSecretName | default (printf "%s-secrets" (include "ciroh.fullname" .)) -}}
+{{- end }}
+
+{{/*
 Common labels
 */}}
 {{- define "ciroh.labels" -}}
@@ -59,40 +67,40 @@ Environment shared by the tethys-init container and the web container.
 - name: TETHYS_SECRET_KEY
   valueFrom:
     secretKeyRef:
-      name: {{ include "ciroh.fullname" . }}-secrets
+      name: {{ include "ciroh.secretName" . }}
       key: TETHYS_SECRET_KEY
 - name: TETHYS_DB_PASSWORD
   valueFrom:
     secretKeyRef:
-      name: {{ include "ciroh.fullname" . }}-secrets
+      name: {{ include "ciroh.secretName" . }}
       key: TETHYS_DB_PASSWORD
 - name: TETHYS_PS_CONNECTION
   valueFrom:
     secretKeyRef:
-      name: {{ include "ciroh.fullname" . }}-secrets
+      name: {{ include "ciroh.secretName" . }}
       key: TETHYS_PS_CONNECTION
 - name: HYDROSHARE_CLIENT_ID
   valueFrom:
     secretKeyRef:
-      name: {{ include "ciroh.fullname" . }}-secrets
+      name: {{ include "ciroh.secretName" . }}
       key: HYDROSHARE_CLIENT_ID
       optional: true
 - name: HYDROSHARE_SECRET_ID
   valueFrom:
     secretKeyRef:
-      name: {{ include "ciroh.fullname" . }}-secrets
+      name: {{ include "ciroh.secretName" . }}
       key: HYDROSHARE_SECRET_ID
       optional: true
 - name: OIDC_RSA_PRIVATE_KEY
   valueFrom:
     secretKeyRef:
-      name: {{ include "ciroh.fullname" . }}-secrets
+      name: {{ include "ciroh.secretName" . }}
       key: OIDC_RSA_PRIVATE_KEY
       optional: true
 - name: CSES_ACCESS_KEY_ID
   valueFrom:
     secretKeyRef:
-      name: {{ include "ciroh.fullname" . }}-secrets
+      name: {{ include "ciroh.secretName" . }}
       key: CSES_ACCESS_KEY_ID
       optional: true
 - name: POSTGIS_SERVICE_NAME

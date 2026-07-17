@@ -172,6 +172,7 @@ podSecurityContext: {}
 securityContext: {}
 
 secrets:
+  existingSecretName: ''
   tethysSecretKey: ''
   tethysDbPassword: ''
   hydroshareClientId: ''
