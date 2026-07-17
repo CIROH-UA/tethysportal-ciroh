@@ -171,6 +171,28 @@ podAnnotations: {}
 podSecurityContext: {}
 securityContext: {}
 
+portalConfig:
+  settings:
+    DEBUG: false
+    MEDIA_URL: /media/
+    DATA_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+    DATA_UPLOAD_MAX_NUMBER_FIELDS: 1073741824
+    FILE_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+    AUTHENTICATION_BACKENDS:
+      - tethys_services.backends.hydroshare.HydroShareOAuth2
+    OAUTH_CONFIG:
+      OAUTH2_PROVIDER:
+        OIDC_ENABLED: true
+        PKCE_REQUIRED: true
+        SCOPES:
+          openid: OpenID Connect scope
+      SOCIAL_AUTH_LOGIN_REDIRECT_URL: /apps/
+    TETHYS_PORTAL_CONFIG:
+      ENABLE_OPEN_PORTAL: true
+      BYPASS_TETHYS_HOME_PAGE: true
+  siteSettings:
+    GENERAL_SETTINGS: {}
+
 secrets:
   existingSecretName: ''
   tethysSecretKey: ''

@@ -126,3 +126,43 @@ Environment shared by the tethys-init container and the web container.
   value: {{ quote $value.value }}
 {{- end }}
 {{- end }}
+
+{{/*
+Django settings derived from other chart values (ingress hosts, subchart
+service names). Everything an operator tunes lives in .Values.portalConfig
+and is deep-merged over these.
+*/}}
+{{- define "ciroh.portalConfigDerived" -}}
+ALLOWED_HOSTS:
+  - localhost
+  - 127.0.0.1
+{{- range .Values.ingresses.external.hosts }}
+{{- if .host }}
+  - {{ .host }}
+{{- end }}
+{{- end }}
+CSRF_TRUSTED_ORIGINS:
+{{- range .Values.ingresses.external.hosts }}
+{{- if .host }}
+  - {{ $.Values.tethys.env.PUBLIC_PORTAL_PROTOCOL.value }}://{{ .host }}
+{{- end }}
+{{- end }}
+STATIC_ROOT: /home/tethys/persist/static
+MEDIA_ROOT: /home/tethys/persist/media
+TETHYS_WORKSPACES_ROOT: /home/tethys/persist/workspaces
+DATABASES:
+  default:
+    ENGINE: django.db.backends.postgresql
+    NAME: {{ .Values.tethys.env.TETHYS_DB_NAME.value }}
+    USER: {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}
+    HOST: {{ .Values.postgis.fullnameOverride }}
+    PORT: 5432
+    CONN_MAX_AGE: 0
+CHANNEL_LAYERS:
+  default:
+    BACKEND: channels_redis.core.RedisChannelLayer
+    CONFIG:
+      hosts:
+        - host: {{ .Values.redis.fullnameOverride }}-master
+          port: {{ .Values.redis.service.port }}
+{{- end }}
