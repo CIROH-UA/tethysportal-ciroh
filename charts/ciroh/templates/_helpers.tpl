@@ -188,3 +188,17 @@ CHANNEL_LAYERS:
         - host: {{ .Values.redis.fullnameOverride }}-master
           port: {{ .Values.redis.service.port }}
 {{- end }}
+
+{{/*
+Full portal_config.yml content, rendered once here and consumed by both the
+release ConfigMap and the hooked init ConfigMap so the two cannot drift.
+*/}}
+{{- define "ciroh.portalConfigContent" -}}
+version: 2.0
+name:
+apps: {}
+settings:
+{{ mergeOverwrite (include "ciroh.portalConfigDerived" . | fromYaml) (.Values.portalConfig.settings | default dict) | toYaml | indent 2 }}
+site_settings:
+{{ .Values.portalConfig.siteSettings | default dict | toYaml | indent 2 }}
+{{- end }}

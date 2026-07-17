@@ -198,6 +198,10 @@ namespace:
     # memory: 8Gi
     ephemeral_storage: '5Gi'
 
+pdb:
+  enabled: false
+  minAvailable: 1
+
 hpa:
   enabled: false
   minReplicas: 1

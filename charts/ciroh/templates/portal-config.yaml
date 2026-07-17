@@ -6,10 +6,4 @@ metadata:
 {{ include "ciroh.labels" . | indent 4 }}
 data:
   portal_config.yml: |
-    version: 2.0
-    name:
-    apps: {}
-    settings:
-{{ mergeOverwrite (include "ciroh.portalConfigDerived" . | fromYaml) (.Values.portalConfig.settings | default dict) | toYaml | indent 6 }}
-    site_settings:
-{{ .Values.portalConfig.siteSettings | default dict | toYaml | indent 6 }}
+{{ include "ciroh.portalConfigContent" . | indent 4 }}

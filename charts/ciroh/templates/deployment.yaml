@@ -9,6 +9,11 @@ spec:
   replicas: {{ .Values.replicaCount }}
   strategy:
     type: {{ .Values.strategy }}
+    {{- if eq .Values.strategy "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+    {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "ciroh.name" . }}
@@ -25,61 +30,6 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      initContainers:
-        - name: wait-tethys-postgresdb
-          image: postgis/postgis:16-3.4
-          env:
-            - name: PGHOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: PGUSER
-              value: {{ .Values.postgis.postgres_user | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.postgis.postgres_password | quote }}
-            - name: PGDATABASE
-              value: postgres
-          args:
-            - /bin/bash
-            - -c
-            - |
-              while ! psql -c 'select 1' > /dev/null 2>&1; do
-                echo "waiting for the database server to be ready"
-                sleep 2
-              done
-              echo "database server is ready"
-        - name: provision-store-dbs
-          image: postgis/postgis:16-3.4
-          env:
-            - name: PGHOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: PGUSER
-              value: {{ .Values.postgis.postgres_user | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.postgis.postgres_password | quote }}
-          args:
-            - /bin/bash
-            - -c
-            - |
-              psql -d postgres -v ON_ERROR_STOP=1 <<'SQL'
-              SELECT 'CREATE DATABASE {{ .Values.tethys.env.TETHYS_DB_NAME.value }} OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
-              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.tethys.env.TETHYS_DB_NAME.value }}')\gexec
-              SELECT 'CREATE DATABASE tethysdash_primary_db OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
-              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'tethysdash_primary_db')\gexec
-              SQL
-              echo "databases provisioned"
-        - name: tethys-init
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/usr/local/bin/init-tethys.sh"]
-          env:
-            {{- include "ciroh.tethysEnv" . | nindent 12 }}
-          volumeMounts:
-            - name: tethys-persist
-              mountPath: /home/tethys/persist
-            - name: portal-config
-              mountPath: /config
-              readOnly: true
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
