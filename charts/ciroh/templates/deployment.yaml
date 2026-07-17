@@ -8,7 +8,7 @@ metadata:
 spec:
   replicas: {{ .Values.replicaCount }}
   strategy:
-    type: {{ .Values.strategy }}  # Use the Recreate update strategy
+    type: {{ .Values.strategy }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "ciroh.name" . }}
@@ -18,79 +18,96 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "ciroh.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/portal-config: {{ include (print $.Template.BasePath "/portal-config.yaml") . | sha256sum }}
     spec:
     {{- with .Values.imagePullSecrets }}
-        imagePullSecrets:
-          {{- toYaml . | nindent 8 }}
-      {{- end }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      initContainers:
+        - name: wait-tethys-postgresdb
+          image: postgis/postgis:16-3.4
+          env:
+            - name: PGHOST
+              value: {{ .Values.postgis.fullnameOverride | quote }}
+            - name: PGUSER
+              value: {{ .Values.postgis.postgres_user | quote }}
+            - name: PGPASSWORD
+              value: {{ .Values.postgis.postgres_password | quote }}
+            - name: PGDATABASE
+              value: postgres
+          args:
+            - /bin/bash
+            - -c
+            - |
+              while ! psql -c 'select 1' > /dev/null 2>&1; do
+                echo "waiting for the database server to be ready"
+                sleep 2
+              done
+              echo "database server is ready"
+        - name: provision-store-dbs
+          image: postgis/postgis:16-3.4
+          env:
+            - name: PGHOST
+              value: {{ .Values.postgis.fullnameOverride | quote }}
+            - name: PGUSER
+              value: {{ .Values.postgis.postgres_user | quote }}
+            - name: PGPASSWORD
+              value: {{ .Values.postgis.postgres_password | quote }}
+          args:
+            - /bin/bash
+            - -c
+            - |
+              psql -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+              SELECT 'CREATE DATABASE {{ .Values.tethys.env.TETHYS_DB_NAME.value }} OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
+              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.tethys.env.TETHYS_DB_NAME.value }}')\gexec
+              SELECT 'CREATE DATABASE tethysdash_primary_db OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
+              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'tethysdash_primary_db')\gexec
+              SQL
+              echo "databases provisioned"
+        - name: tethys-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/local/bin/init-tethys.sh"]
+          env:
+            {{- include "ciroh.tethysEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: tethys-persist
+              mountPath: /home/tethys/persist
+            - name: portal-config
+              mountPath: /config
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            # db values defined with postgis chart
-            - name: APP_DB_HOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: TETHYS_DB_HOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: POSTGRES_USER
-              value: {{ .Values.postgis.postgres_user | quote }}
-            - name: POSTGRES_PASSWORD
-              value: {{ .Values.postgis.postgres_password | quote }}             
-            # Tethys settings defined outside the env
-            - name: ALLOWED_HOSTS
-              value: "\"[{{- range .Values.ingresses.external.hosts }}{{ .host }},{{- end }}]\""
-            - name: CSRF_TRUSTED_ORIGINS
-              value: "\"[{{- range $index, $host := .Values.ingresses.external.hosts }}{{ if $index }},{{ end }}{{ $.Values.tethys.env.PUBLIC_PORTAL_PROTOCOL.value }}://{{ $host.host }}{{- end }}]\""
-            # redis values
-            - name: CHANNEL_LAYERS_CONFIG 
-              value: "\"{'hosts':[{'host':\ {{ .Values.redis.fullnameOverride }}-master,\ 'port':\ {{ .Values.redis.service.port }}}]}\""
-            # gs-cloud env variables
-            {{- if index .Values "gs-cloud" "enabled" }}
-            - name: TETHYS_GS_USERNAME
-              value: {{ index .Values "gs-cloud" "adminCredentials" "userKey" | quote }}
-            - name: TETHYS_GS_PASSWORD
-              value: {{ index .Values "gs-cloud" "adminCredentials" "passKey" | quote }}
-            - name: TETHYS_GS_PROTOCOL
-              value: 'http'
-            - name: TETHYS_GS_HOST
-              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "name" | quote }}
-            - name: TETHYS_GS_PORT
-              value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "ports" 0 "port" | quote }}            
-            {{- end }}
-            # thredds env variables
-            {{- if .Values.thredds.enabled }}
-            - name: THREDDS_TDS_USERNAME
-              value: {{ .Values.thredds.username | quote }}
-            - name: THREDDS_TDS_PASSWORD
-              value: {{ .Values.thredds.password | quote }}
-            - name: THREDDS_TDS_CATALOG
-              value: {{ .Values.thredds.thredds_tds_catalog | quote }}
-            - name: THREDDS_TDS_PRIVATE_PROTOCOL
-              value: 'http'
-            - name: THREDDS_TDS_PRIVATE_HOST
-              value: {{ .Values.thredds.fullnameOverride | quote }}
-            - name: THREDDS_TDS_PRIVATE_PORT
-              value: {{ index .Values.thredds.service.ports 0 "port" | quote }}
-            - name: THREDDS_TDS_PUBLIC_HOST
-              value: {{ .Values.thredds.fullnameOverride | quote }}
-            - name: THREDDS_TDS_PUBLIC_PORT
-              value: "{{ if $.Values.ingresses.external.tls }}443{{else}}80{{ end }}"
-            - name: THREDDS_TDS_PUBLIC_PROTOCOL
-              value: "http{{ if $.Values.ingresses.external.tls }}s{{ end }}"
-            {{- end }}
-            # extra env v
-            {{- range $key, $value :=  .Values.tethys.env }}
-            - name: {{ quote $key }}
-              value: {{ quote $value.value }}
-            {{- end }}
+            {{- include "ciroh.tethysEnv" . | nindent 12 }}
           ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
+            - name: asgi
+              containerPort: 8000
               protocol: TCP
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
           volumeMounts:
+            - name: tethys-persist
+              mountPath: /home/tethys/persist
+            - name: portal-config
+              mountPath: /config
+              readOnly: true
           {{- range .Values.tethys.volumeMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
@@ -98,52 +115,32 @@ spec:
               subPath: {{ . }}
               {{- end }}
           {{- end }}
-
-      {{- $init_scripts := .Files.Glob "extra_config/**.sh" }}
-      
-      {{ if $init_scripts }}
-      initContainers:
-        {{- if .Values.tethys.init_containers.wait_for_db }}
-        - name: wait-tethys-postgresdb
-          image: postgis/postgis:16-3.4
-          env:
-            - name: PGHOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: PGUSER
-              value: {{ .Values.tethys.env.TETHYS_DB_USERNAME.value | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.tethys.env.TETHYS_DB_SUPERUSER_PASS.value | quote }}
-            - name: PGDATABASE
-              value: {{ .Values.tethys.env.TETHYS_DB_NAME.value | quote }}
-          args:
-            - /bin/bash
-            - -c
-            - |
-              while ! psql -c 'select 1' > /dev/null 2>&1; do
-                echo "waiting for tethys-postgresdb database to be ready"
-                sleep 1
-              done
-              echo "tethys-postgresdb database is ready!"
-        {{- end }}
-        {{- range $path, $_ :=  .Files.Glob  "extra_config/**.sh" }}    
-        - name: {{ $path | trimPrefix "extra_config/" | trimSuffix ".sh" }}
-          image: python:3.12.1-slim-bullseye
-          command: ["/bin/sh","/etc/mount/{{ $path | trimPrefix "extra_config/" }}"]
-          
-          env: 
-          {{- range $key, $value :=  $.Values.tethys.init_containers.env }}
-            - name: {{ quote $key }}
-              value: {{ quote $value.value }}
-          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:stable-alpine
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
           volumeMounts:
-          - name: init-config-volume
-            mountPath: /etc/mount/{{ $path | trimPrefix "extra_config/" }}
-            subPath: {{ $path | trimPrefix "extra_config/" }}
-          imagePullPolicy: IfNotPresent
-        {{ end }}
-      {{- end }}
-
+            - name: tethys-persist
+              mountPath: /persist
+              readOnly: true
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
       volumes:
+        - name: tethys-persist
+          persistentVolumeClaim:
+            claimName: tethys-persist-pvc
+        - name: portal-config
+          configMap:
+            name: {{ include "ciroh.fullname" . }}-portal-config
+        - name: nginx-config
+          configMap:
+            name: {{ include "ciroh.fullname" . }}-nginx-config
         {{- range .Values.tethys.volumes }}
           - name: {{ .name }}
             {{- with .persistentVolumeClaim }}
@@ -154,12 +151,6 @@ spec:
             configMap:
               name: {{ .name }}
             {{- end }}
-        {{- end }}
-        {{- $init_scripts := .Files.Glob "extra_config/**.sh" }}
-        {{ if $init_scripts }}        
-          - name: init-config-volume
-            configMap:
-              name: "{{ include "ciroh.fullname" . }}-init-config"
         {{- end }}
 
       {{- with .Values.nodeSelector }}

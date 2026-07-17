@@ -50,3 +50,71 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
     {{- tpl (.value | toYaml) .context }}     
   {{- end }}
 {{- end }}
+{{/*
+Environment shared by the tethys-init container and the web container.
+*/}}
+{{- define "ciroh.tethysEnv" -}}
+- name: TETHYS_DB_HOST
+  value: {{ .Values.postgis.fullnameOverride | quote }}
+- name: TETHYS_SECRET_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.fullname" . }}-secrets
+      key: TETHYS_SECRET_KEY
+- name: TETHYS_DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.fullname" . }}-secrets
+      key: TETHYS_DB_PASSWORD
+- name: TETHYS_PS_CONNECTION
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.fullname" . }}-secrets
+      key: TETHYS_PS_CONNECTION
+- name: HYDROSHARE_CLIENT_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.fullname" . }}-secrets
+      key: HYDROSHARE_CLIENT_ID
+      optional: true
+- name: HYDROSHARE_SECRET_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.fullname" . }}-secrets
+      key: HYDROSHARE_SECRET_ID
+      optional: true
+- name: OIDC_RSA_PRIVATE_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.fullname" . }}-secrets
+      key: OIDC_RSA_PRIVATE_KEY
+      optional: true
+- name: CSES_ACCESS_KEY_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.fullname" . }}-secrets
+      key: CSES_ACCESS_KEY_ID
+      optional: true
+- name: POSTGIS_SERVICE_NAME
+  value: "tethys_postgis"
+- name: PORTAL_ALLOWED_HOSTS
+  valueFrom:
+    fieldRef:
+      fieldPath: status.podIP
+{{- if index .Values "gs-cloud" "enabled" }}
+- name: TETHYS_GS_USERNAME
+  value: {{ index .Values "gs-cloud" "adminCredentials" "userKey" | quote }}
+- name: TETHYS_GS_PASSWORD
+  value: {{ index .Values "gs-cloud" "adminCredentials" "passKey" | quote }}
+- name: TETHYS_GS_PROTOCOL
+  value: 'http'
+- name: TETHYS_GS_HOST
+  value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "name" | quote }}
+- name: TETHYS_GS_PORT
+  value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "ports" 0 "port" | quote }}
+{{- end }}
+{{- range $key, $value := omit .Values.tethys.env "TETHYS_DB_HOST" "TETHYS_DB_PASSWORD" }}
+- name: {{ quote $key }}
+  value: {{ quote $value.value }}
+{{- end }}
+{{- end }}

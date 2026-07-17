@@ -123,7 +123,7 @@ tethys:
 
   env:
     FIMSERV_ROOT:
-      value: /var/lib/tethys_persist/fimserve
+      value: /home/tethys/persist/fimserve
     FIMSERVE_CACHE_MAX_GB:
       value: '3'
     # db-env-variables
@@ -170,6 +170,14 @@ podAnnotations: {}
 
 podSecurityContext: {}
 securityContext: {}
+
+secrets:
+  tethysSecretKey: ''
+  tethysDbPassword: ''
+  hydroshareClientId: ''
+  hydroshareSecretId: ''
+  oidcRsaPrivateKey: ''
+  csesAccessKeyId: ''
 
 service:
   type: ClusterIP
