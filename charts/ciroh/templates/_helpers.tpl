@@ -31,11 +31,11 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Name of the Secret holding portal credentials: an operator-provided secret
-when secrets.existingSecretName is set, otherwise the chart-rendered one.
+Name of the operator-created Secret holding portal credentials. The chart
+never renders secret material; create the Secret before installing.
 */}}
 {{- define "ciroh.secretName" -}}
-{{- .Values.secrets.existingSecretName | default (printf "%s-secrets" (include "ciroh.fullname" .)) -}}
+{{- required "secrets.existingSecretName is required" .Values.secrets.existingSecretName -}}
 {{- end }}
 
 {{/*

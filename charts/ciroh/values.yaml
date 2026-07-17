@@ -134,15 +134,7 @@ s3Static:
   cloudfrontDomain: ''
 
 secrets:
-  existingSecretName: ''
-  tethysSecretKey: ''
-  tethysDbPassword: ''
-  hydroshareClientId: ''
-  hydroshareSecretId: ''
-  oidcRsaPrivateKey: ''
-  csesAccessKeyId: ''
-  awsAccessKeyId: ''
-  awsSecretAccessKey: ''
+  existingSecretName: ciroh-portal-secrets
 
 service:
   type: ClusterIP
