@@ -12,14 +12,12 @@
 * 🌍 **Users** → **AWS Application Load Balancer** (managed by the *AWS Load Balancer Controller*).
 * 📦 The ALB forwards HTTP :`8080` to:
   * 🖥️ `portal` Service → CIROH web app.
-  * 📈 `tds` Service → THREDDS Data Server for large-file downloads.
 
 Inside the namespace:
 
 | Layer | Kubernetes Object | Purpose |
 |-------|-------------------|---------|
 | 🖥️ **CIROH Portal** | Deployment → Pod(s) | Django/Tethys web stack |
-| 📈 **THREDDS** | Deployment → Pod | Catalog + OPeNDAP downloads |
 | 🐘 **PostgreSQL** | Deployment → Service :`5432` | User data & configuration |
 | ⚡ **Redis** | StatefulSet → Service :`6379` | Session & cache data |
 

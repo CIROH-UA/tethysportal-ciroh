@@ -12,10 +12,6 @@ dependencies:
     repository: 'https://romer8.github.io/misc-helm-charts'
     version: '0.1.3'
     condition: gs-cloud.enabled
-  - name: 'thredds'
-    repository: 'https://romer8.github.io/misc-helm-charts'
-    version: '*'
-    condition: thredds.enabled
   - name: 'redis'
     repository: 'oci://ghcr.io/cloudpirates-io/helm-charts'
     version: '*'
