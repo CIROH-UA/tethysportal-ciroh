@@ -1,35 +1,31 @@
-# a good reference: https://aws.plainenglish.io/the-ultimate-guide-to-streamlining-cloud-development-mastering-aws-eks-with-helm-terraform-and-02159d7dfb39
-
-on: # Specifies the event triggering the workflow
-  workflow_call: # Indicates that this is a reusable workflow
-    inputs: # Defines the inputs that can be passed from the caller workflow
-      dry-run: # Name of the input
-        required: true # Specifies that this input is mandatory
-        type: boolean # Specifies the type of the input
+on:
+  workflow_call:
+    inputs:
+      dry-run:
+        required: true
+        type: boolean
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      GPG_PRIVATE_KEY:
-        required: true
-      PASSPHRASE:
-        required: true
       FILE_SYSTEM_ID:
         required: true
-      # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+
 jobs:
   deploy-to-eks:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read # This is required for actions/checkout
+      id-token: write
+      contents: read
     env:
       AWS_REGION: us-east-1
       CLUSTER_NAME: ciroh-portal-prod
+      NAMESPACE: cirohportal
+      PORTAL_SECRET_NAME: ciroh-portal-secrets
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -47,33 +43,40 @@ jobs:
       - name: Setup Kubernetes context
         run: aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
-      - name: Set Tag
+      - name: Verify the portal secret exists
         run: |
-          echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "TAG_LATEST=dev_latest" >> $GITHUB_ENV
+          if ! kubectl get secret "${PORTAL_SECRET_NAME}" -n "${NAMESPACE}" > /dev/null 2>&1; then
+            echo "::error::Secret ${PORTAL_SECRET_NAME} not found in namespace ${NAMESPACE}."
+            echo "Create it once with the portal credentials before deploying:"
+            echo "  kubectl create secret generic ${PORTAL_SECRET_NAME} -n ${NAMESPACE} \\"
+            echo "    --from-literal=TETHYS_SECRET_KEY=... \\"
+            echo "    --from-literal=TETHYS_DB_PASSWORD=... \\"
+            echo "    --from-literal=TETHYS_PS_CONNECTION=user:pass@host:5432 \\"
+            echo "    --from-literal=HYDROSHARE_CLIENT_ID=... \\"
+            echo "    --from-literal=HYDROSHARE_SECRET_ID=... \\"
+            echo "    --from-file=OIDC_RSA_PRIVATE_KEY=key.pem \\"
+            echo "    --from-literal=CSES_ACCESS_KEY_ID=..."
+            exit 1
+          fi
 
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
+      - name: Set Tag
+        run: echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Install helm
         uses: azure/setup-helm@v3
         with:
-          version: 'v3.11.1' # default is latest (stable)
-          token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
-        id: install-helm
+          version: 'v3.14.0'
 
-      - name: Install Mozilla Sops
-        uses: mdgreenwald/mozilla-sops-action@v1.6.0
-        id: install-sops
-
-      - name: Install helm secrets
-        run: |
-          helm plugin install https://github.com/jkroepke/helm-secrets
+      - name: Build chart dependencies
+        run: helm dependency build charts/ciroh
 
       - name: Deploy Helm chart to EKS
         run: |
-          helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh
-          helm secrets upgrade cirohportal-prod tethysportal-ciroh/ciroh --install ${{ inputs.dry-run && '--dry-run' || '' }} --timeout=3600s -f charts/ciroh/ci/prod_aws_values.yaml -f charts/ciroh/ci/secrets.yaml --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} --set image.tag=${{ env.TAG }} --namespace cirohportal
+          helm upgrade cirohportal-prod charts/ciroh --install \
+            ${{ inputs.dry-run && '--dry-run' || '' }} \
+            --timeout=3600s \
+            -f charts/ciroh/ci/prod_aws_values.yaml \
+            --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
+            --set storageClass.parameters.fileSystemId=${{ secrets.FILE_SYSTEM_ID }} \
+            --set image.tag=${{ env.TAG }} \
+            --namespace ${{ env.NAMESPACE }}

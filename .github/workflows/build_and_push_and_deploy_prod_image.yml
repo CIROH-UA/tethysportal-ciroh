@@ -87,7 +87,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
+    uses: ./.github/workflows/helm_deploy.yml
     with:
       dry-run: false
     secrets: inherit
