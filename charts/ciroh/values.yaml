@@ -200,6 +200,7 @@ namespace:
     ephemeral_storage: '5Gi'
 
 hpa:
+  enabled: false
   minReplicas: 1
   maxReplicas: 1
   targetCPUUtilizationPercentage: 75
