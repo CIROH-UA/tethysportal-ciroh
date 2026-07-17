@@ -109,6 +109,28 @@ Environment shared by the tethys-init container and the web container.
   valueFrom:
     fieldRef:
       fieldPath: status.podIP
+{{- if .Values.s3Static.bucket }}
+- name: STATIC_S3_BUCKET
+  value: {{ .Values.s3Static.bucket | quote }}
+- name: AWS_REGION
+  value: {{ .Values.s3Static.region | quote }}
+{{- with .Values.s3Static.cloudfrontDomain }}
+- name: STATIC_CLOUDFRONT_DOMAIN
+  value: {{ . | quote }}
+{{- end }}
+- name: AWS_ACCESS_KEY_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: AWS_ACCESS_KEY_ID
+      optional: true
+- name: AWS_SECRET_ACCESS_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: AWS_SECRET_ACCESS_KEY
+      optional: true
+{{- end }}
 {{- if index .Values "gs-cloud" "enabled" }}
 - name: TETHYS_GS_USERNAME
   value: {{ index .Values "gs-cloud" "adminCredentials" "userKey" | quote }}

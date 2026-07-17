@@ -128,6 +128,11 @@ portalConfig:
   siteSettings:
     GENERAL_SETTINGS: {}
 
+s3Static:
+  bucket: ''
+  region: us-east-1
+  cloudfrontDomain: ''
+
 secrets:
   existingSecretName: ''
   tethysSecretKey: ''
@@ -136,6 +141,8 @@ secrets:
   hydroshareSecretId: ''
   oidcRsaPrivateKey: ''
   csesAccessKeyId: ''
+  awsAccessKeyId: ''
+  awsSecretAccessKey: ''
 
 service:
   type: ClusterIP
