@@ -8,6 +8,7 @@ dependencies:
   - name: 'postgis'
     repository: 'https://romer8.github.io/misc-helm-charts'
     version: '*'
+    condition: postgis.enabled
   - name: 'gs-cloud'
     repository: 'https://romer8.github.io/misc-helm-charts'
     version: '0.1.3'

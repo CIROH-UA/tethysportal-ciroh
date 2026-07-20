@@ -17,6 +17,7 @@ gs-cloud:
   enabled: false
 
 postgis:
+  enabled: true
   fullnameOverride: 'ciroh-db'
   postgres_user: 'postgres'
   postgres_password: 'please_dont_use_default_passwords'
@@ -137,6 +138,11 @@ s3Static:
 serviceAccount:
   name: ''
   roleArn: ''
+
+externalDatabase:
+  host: ''
+  port: 5432
+  adminUser: ''
 
 secrets:
   existingSecretName: ciroh-portal-secrets

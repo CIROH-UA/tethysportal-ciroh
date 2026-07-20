@@ -58,12 +58,50 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
     {{- tpl (.value | toYaml) .context }}     
   {{- end }}
 {{- end }}
+{{- define "ciroh.dbHost" -}}
+{{- .Values.externalDatabase.host | default .Values.postgis.fullnameOverride -}}
+{{- end }}
+
+{{- define "ciroh.dbPort" -}}
+{{- if .Values.externalDatabase.host -}}
+{{- .Values.externalDatabase.port -}}
+{{- else -}}
+5432
+{{- end -}}
+{{- end }}
+
+{{- define "ciroh.dbAdminEnv" -}}
+- name: PGHOST
+  value: {{ include "ciroh.dbHost" . | quote }}
+- name: PGPORT
+  value: {{ include "ciroh.dbPort" . | quote }}
+{{- if .Values.externalDatabase.host }}
+- name: PGUSER
+  value: {{ .Values.externalDatabase.adminUser | quote }}
+- name: PGPASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: DB_ADMIN_PASSWORD
+{{- else }}
+- name: PGUSER
+  value: {{ .Values.postgis.postgres_user | quote }}
+- name: PGPASSWORD
+  value: {{ .Values.postgis.postgres_password | quote }}
+{{- end }}
+- name: APP_DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: TETHYS_DB_PASSWORD
+{{- end }}
+
 {{/*
 Environment shared by the tethys-init container and the web container.
 */}}
 {{- define "ciroh.tethysEnv" -}}
 - name: TETHYS_DB_HOST
-  value: {{ .Values.postgis.fullnameOverride | quote }}
+  value: {{ include "ciroh.dbHost" . | quote }}
 - name: TETHYS_SECRET_KEY
   valueFrom:
     secretKeyRef:
@@ -183,8 +221,8 @@ DATABASES:
     ENGINE: django.db.backends.postgresql
     NAME: {{ .Values.tethys.env.TETHYS_DB_NAME.value }}
     USER: {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}
-    HOST: {{ .Values.postgis.fullnameOverride }}
-    PORT: 5432
+    HOST: {{ include "ciroh.dbHost" . }}
+    PORT: {{ include "ciroh.dbPort" . }}
     CONN_MAX_AGE: 0
 CHANNEL_LAYERS:
   default:

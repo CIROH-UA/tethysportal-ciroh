@@ -35,12 +35,7 @@ spec:
         - name: wait-tethys-postgresdb
           image: postgis/postgis:16-3.4
           env:
-            - name: PGHOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: PGUSER
-              value: {{ .Values.postgis.postgres_user | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.postgis.postgres_password | quote }}
+            {{- include "ciroh.dbAdminEnv" . | nindent 12 }}
             - name: PGDATABASE
               value: postgres
           args:
@@ -55,17 +50,16 @@ spec:
         - name: provision-store-dbs
           image: postgis/postgis:16-3.4
           env:
-            - name: PGHOST
-              value: {{ .Values.postgis.fullnameOverride | quote }}
-            - name: PGUSER
-              value: {{ .Values.postgis.postgres_user | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.postgis.postgres_password | quote }}
+            {{- include "ciroh.dbAdminEnv" . | nindent 12 }}
           args:
             - /bin/bash
             - -c
             - |
-              psql -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+              psql -d postgres -v ON_ERROR_STOP=1 -v app_pw="$APP_DB_PASSWORD" <<'SQL'
+              SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}', :'app_pw')
+              WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}')\gexec
+              SELECT format('GRANT %I TO %I', '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}', CURRENT_USER)
+              WHERE CURRENT_USER <> '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'\gexec
               SELECT 'CREATE DATABASE {{ .Values.tethys.env.TETHYS_DB_NAME.value }} OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
               WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.tethys.env.TETHYS_DB_NAME.value }}')\gexec
               SELECT 'CREATE DATABASE tethysdash_primary_db OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
