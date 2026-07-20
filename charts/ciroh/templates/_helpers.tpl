@@ -105,6 +105,8 @@ Environment shared by the tethys-init container and the web container.
       optional: true
 - name: POSTGIS_SERVICE_NAME
   value: "tethys_postgis"
+- name: INIT_VERSION
+  value: {{ .Values.image.tag | quote }}
 - name: PORTAL_ALLOWED_HOSTS
   valueFrom:
     fieldRef:
