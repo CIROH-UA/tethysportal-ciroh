@@ -23,6 +23,10 @@ s3Static:
   cloudfrontDomain: ciroh-portal-assets.s3.us-east-1.amazonaws.com
   endpointUrl: ''
 
+serviceAccount:
+  name: ciroh-portal
+  roleArn: arn:aws:iam::456531024327:role/ciroh-portal-irsa
+
 ingresses:
   enabled: true
   external:

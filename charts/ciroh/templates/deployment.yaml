@@ -26,6 +26,9 @@ spec:
       annotations:
         checksum/portal-config: {{ include (print $.Template.BasePath "/portal-config.yaml") . | sha256sum }}
     spec:
+    {{- with .Values.serviceAccount.name }}
+      serviceAccountName: {{ . }}
+    {{- end }}
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

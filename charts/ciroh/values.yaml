@@ -134,6 +134,10 @@ s3Static:
   cloudfrontDomain: ''
   endpointUrl: ''
 
+serviceAccount:
+  name: ''
+  roleArn: ''
+
 secrets:
   existingSecretName: ciroh-portal-secrets
 

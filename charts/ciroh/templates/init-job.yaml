@@ -27,6 +27,9 @@ spec:
   ttlSecondsAfterFinished: 600
   template:
     spec:
+    {{- with .Values.serviceAccount.name }}
+      serviceAccountName: {{ . }}
+    {{- end }}
       restartPolicy: OnFailure
       initContainers:
         - name: wait-tethys-postgresdb
