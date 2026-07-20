@@ -23,5 +23,5 @@
 	branch = main
 [submodule "apps/tethysapp-fimserve_viewer"]
 	path = apps/tethysapp-fimserve_viewer
-	url = /home/aquagio/tethysdev/ciroh/apps/tethysapp-fimserve_viewer
-	branch = pip-install-and-cache
+	url = https://github.com/Aquaveo/tethysapp-fimserve_viewer.git
+	branch = main
