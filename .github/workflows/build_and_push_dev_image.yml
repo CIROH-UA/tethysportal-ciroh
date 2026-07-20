@@ -15,7 +15,7 @@ on:
   pull_request:
 
 env:
-  DOCKER_HUB_ORG: awiciroh
+  DOCKER_HUB_ORG: gioelkin
   DOCKER_REPO: tethysapp-ciroh-portal
 
 permissions:
