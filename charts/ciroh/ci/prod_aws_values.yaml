@@ -17,6 +17,12 @@ image:
 secrets:
   existingSecretName: ciroh-portal-secrets
 
+s3Static:
+  bucket: ciroh-portal-assets
+  region: us-east-1
+  cloudfrontDomain: ciroh-portal-assets.s3.us-east-1.amazonaws.com
+  endpointUrl: ''
+
 ingresses:
   enabled: true
   external:
