@@ -120,6 +120,10 @@ Environment shared by the tethys-init container and the web container.
 - name: STATIC_CLOUDFRONT_DOMAIN
   value: {{ . | quote }}
 {{- end }}
+{{- with .Values.s3Static.endpointUrl }}
+- name: AWS_ENDPOINT_URL
+  value: {{ . | quote }}
+{{- end }}
 - name: AWS_ACCESS_KEY_ID
   valueFrom:
     secretKeyRef:

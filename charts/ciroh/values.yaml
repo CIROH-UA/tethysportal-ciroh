@@ -132,6 +132,7 @@ s3Static:
   bucket: ''
   region: us-east-1
   cloudfrontDomain: ''
+  endpointUrl: ''
 
 secrets:
   existingSecretName: ciroh-portal-secrets
