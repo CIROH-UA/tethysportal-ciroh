@@ -72,7 +72,7 @@ tethys:
     FIMSERVE_CACHE_MAX_GB:
       value: '3'
     ASGI_PROCESSES:
-      value: '4'
+      value: '1'
     CLIENT_MAX_BODY_SIZE:
       value: 1024M
     HERO_TEXT:
