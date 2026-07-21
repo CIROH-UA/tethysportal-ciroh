@@ -51,7 +51,6 @@ tethys:
   volumeMounts: []
   volumes: []
   configMaps: {}
-  workspace_size: ''
 
   env:
     FIMSERV_ROOT:
@@ -96,8 +95,6 @@ tethys:
       value: '--production, --overwrite'
     TETHYS_PUBLIC_HOST:
       value: 'tethys.ciroh.org'
-    NGINX_PORT:
-      value: '8080'
 podAnnotations: {}
 
 podSecurityContext: {}
@@ -161,14 +158,6 @@ ingresses:
       - host: ''
         paths: []
     tls: []
-  static:
-    enabled: true
-    className: ''
-    annotations: {}
-    hosts:
-      - host: ''
-        paths: []
-    tls: []
 
 resources:
   requests:
@@ -182,16 +171,9 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
-storageClass:
-  provisioner: ''
-  enable: false
-  storageClassName: 'ciroh-storage'
-  annotations: {}
-  reclaimPolicy: Delete
-  parameters: {}
-  volumeBindingMode: ''
-  allowVolumeExpansion: ''
-  mountOptions: []
+ephemeralStorage:
+  className: ''
+  size: 10Gi
 
 namespace:
   enabled: false

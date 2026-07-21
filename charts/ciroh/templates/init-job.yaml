@@ -65,8 +65,17 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
         - name: tethys-persist
-          persistentVolumeClaim:
-            claimName: tethys-persist-pvc
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                {{- with .Values.ephemeralStorage.className }}
+                storageClassName: {{ . | quote }}
+                {{- end }}
+                resources:
+                  requests:
+                    storage: {{ .Values.ephemeralStorage.size | quote }}
         - name: portal-config
           configMap:
             name: {{ include "ciroh.fullname" . }}-init-config

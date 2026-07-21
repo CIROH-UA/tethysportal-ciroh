@@ -57,7 +57,6 @@ ingresses:
     tls: []
 
 tethys:
-  workspace_size: '16Gi'
   env:
     PUBLIC_PORTAL_PROTOCOL:
       value: 'https'
@@ -117,17 +116,14 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
-storageClass:
-  provisioner: 'efs.csi.aws.com'
+ephemeralStorage:
+  className: gp2
+  size: 10Gi
+
+strategy: RollingUpdate
+
+hpa:
   enabled: true
-  storageClassName: 'efs-pv'
-  annotations:
-    storageclass.kubernetes.io/is-default-class: 'true'
-  reclaimPolicy: Delete
-  volumeBindingMode: Immediate
-  allowVolumeExpansion: true
-  parameters:
-    provisioningMode: efs-ap
-    directoryPerms: '777'
-    gid: '0'
-    uid: '0'
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 75
