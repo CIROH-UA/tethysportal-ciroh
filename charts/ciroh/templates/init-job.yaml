@@ -70,7 +70,7 @@ spec:
         - name: tethys-init
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/usr/local/bin/init-tethys.sh"]
+          command: ["/bin/bash", "-c", "/usr/local/bin/init-tethys.sh && /usr/local/bin/run-init-hooks.sh"]
           env:
             {{- include "ciroh.tethysEnv" . | nindent 12 }}
           volumeMounts:
