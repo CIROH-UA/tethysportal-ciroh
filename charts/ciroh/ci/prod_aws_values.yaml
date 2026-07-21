@@ -111,6 +111,13 @@ redis:
 postgis:
   enabled: false
 
+resources:
+  requests:
+    cpu: 500m
+    memory: 2Gi
+  limits:
+    memory: 6Gi
+
 nodeSelector: {}
 tolerations: []
 affinity: {}
