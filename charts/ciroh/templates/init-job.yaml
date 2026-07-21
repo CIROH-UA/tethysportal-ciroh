@@ -60,6 +60,8 @@ spec:
               WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}')\gexec
               SELECT format('GRANT %I TO %I', '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}', CURRENT_USER)
               WHERE CURRENT_USER <> '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'\gexec
+              SELECT format('CREATE DATABASE %I OWNER %I', CURRENT_USER, CURRENT_USER)
+              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = CURRENT_USER::text)\gexec
               SELECT 'CREATE DATABASE {{ .Values.tethys.env.TETHYS_DB_NAME.value }} OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
               WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.tethys.env.TETHYS_DB_NAME.value }}')\gexec
               SELECT 'CREATE DATABASE tethysdash_primary_db OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
