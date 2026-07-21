@@ -175,18 +175,6 @@ Environment shared by the tethys-init container and the web container.
       key: AWS_SECRET_ACCESS_KEY
       optional: true
 {{- end }}
-{{- if index .Values "gs-cloud" "enabled" }}
-- name: TETHYS_GS_USERNAME
-  value: {{ index .Values "gs-cloud" "adminCredentials" "userKey" | quote }}
-- name: TETHYS_GS_PASSWORD
-  value: {{ index .Values "gs-cloud" "adminCredentials" "passKey" | quote }}
-- name: TETHYS_GS_PROTOCOL
-  value: 'http'
-- name: TETHYS_GS_HOST
-  value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "name" | quote }}
-- name: TETHYS_GS_PORT
-  value: {{ index .Values "gs-cloud" "geoservercloud" "geoserver" "services" "gateway" "service" "ports" 0 "port" | quote }}
-{{- end }}
 {{- range $key, $value := omit .Values.tethys.env "TETHYS_DB_HOST" "TETHYS_DB_PASSWORD" }}
 - name: {{ quote $key }}
   value: {{ quote $value.value }}

@@ -13,9 +13,6 @@ imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
 
-gs-cloud:
-  enabled: false
-
 postgis:
   enabled: true
   fullnameOverride: 'ciroh-db'
@@ -151,7 +148,7 @@ service:
   port: 8080
   annotations: {}
 
-# Note: The first host in the ingress field is used as TETHYS_PUBLIC_HOST, TETHYS_GS_HOST_PUB, and TETHYS_TDS_HOST_PUB.
+# Note: The first host in the ingress field is used as TETHYS_PUBLIC_HOST.
 # This is true EVEN IF the ingress is not enabled!
 
 ingresses:

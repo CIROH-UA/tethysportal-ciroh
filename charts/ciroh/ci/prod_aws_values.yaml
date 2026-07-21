@@ -100,9 +100,6 @@ tethys:
     FIMBENCH_S3_VIZ_TILES:
       value: 'https://sdmlab.s3.amazonaws.com/FIM_Database/FIM_Viz/tiles/{z}/{x}/{y}.pbf'
 
-gs-cloud:
-  enabled: false
-
 valkey:
   enabled: true
 
