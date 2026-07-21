@@ -98,6 +98,22 @@ use_elastic_ips     = true
 eips                = ["...", "..."]
 ```
 
+### 2.5 · Database bootstrap (one time) 🗄️
+
+The portal expects its roles and core databases to exist BEFORE the first
+deploy. Run the bootstrap script once against a fresh database server as the
+admin (works for RDS, a local PostgreSQL, or the in-cluster dev database);
+it is idempotent:
+
+```bash
+DB_HOST=<host> ADMIN_USER=tethys_super PGPASSWORD=<admin-password> \
+APP_PASSWORD=<app-role-password> ./scripts/bootstrap-database.sh
+```
+
+It creates the application role, the admin's default database, and the core
+portal databases. App persistent stores added later are created at deploy
+time by the portal init hooks (`init.d/`), not by this script.
+
 ### 3 · Deploy 📦
 
 In order to deploy the following commands can needs to be run:

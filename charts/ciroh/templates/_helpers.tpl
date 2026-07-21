@@ -89,11 +89,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 - name: PGPASSWORD
   value: {{ .Values.postgis.postgres_password | quote }}
 {{- end }}
-- name: APP_DB_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "ciroh.secretName" . }}
-      key: TETHYS_DB_PASSWORD
 {{- end }}
 
 {{/*

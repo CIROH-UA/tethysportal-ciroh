@@ -47,26 +47,6 @@ spec:
                 sleep 2
               done
               echo "database server is ready"
-        - name: provision-store-dbs
-          image: postgis/postgis:16-3.4
-          env:
-            {{- include "ciroh.dbAdminEnv" . | nindent 12 }}
-          args:
-            - /bin/bash
-            - -c
-            - |
-              psql -d postgres -v ON_ERROR_STOP=1 -v app_pw="$APP_DB_PASSWORD" <<'SQL'
-              SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}', :'app_pw')
-              WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}')\gexec
-              SELECT format('GRANT %I TO %I', '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}', CURRENT_USER)
-              WHERE CURRENT_USER <> '{{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'\gexec
-              SELECT format('CREATE DATABASE %I OWNER %I', CURRENT_USER, CURRENT_USER)
-              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = CURRENT_USER::text)\gexec
-              SELECT 'CREATE DATABASE {{ .Values.tethys.env.TETHYS_DB_NAME.value }} OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
-              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.tethys.env.TETHYS_DB_NAME.value }}')\gexec
-              SELECT 'CREATE DATABASE tethysdash_primary_db OWNER {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}'
-              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'tethysdash_primary_db')\gexec
-              SQL
               echo "databases provisioned"
       containers:
         - name: tethys-init
