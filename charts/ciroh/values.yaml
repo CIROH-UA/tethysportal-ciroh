@@ -39,10 +39,9 @@ postgis:
       memory: 4Gi
   storageClass:
     storageClassName: ''
-redis:
+valkey:
   enabled: true
-  fullnameOverride: 'ciroh-redis'
-  architecture: standalone
+  fullnameOverride: 'ciroh-valkey'
   auth:
     enabled: false
   service:

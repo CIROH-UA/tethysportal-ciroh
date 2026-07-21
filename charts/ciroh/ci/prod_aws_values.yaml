@@ -103,10 +103,8 @@ tethys:
 gs-cloud:
   enabled: false
 
-redis:
+valkey:
   enabled: true
-  persistence:
-    storageClass: 'efs-pv'
 
 postgis:
   enabled: false

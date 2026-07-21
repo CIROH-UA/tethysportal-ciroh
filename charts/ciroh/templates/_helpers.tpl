@@ -229,8 +229,8 @@ CHANNEL_LAYERS:
     BACKEND: channels_redis.core.RedisChannelLayer
     CONFIG:
       hosts:
-        - host: {{ .Values.redis.fullnameOverride }}-master
-          port: {{ .Values.redis.service.port }}
+        - host: {{ .Values.valkey.fullnameOverride }}
+          port: {{ .Values.valkey.service.port }}
 {{- end }}
 
 {{/*
