@@ -30,6 +30,10 @@ spec:
     {{- with .Values.serviceAccount.name }}
       serviceAccountName: {{ . }}
     {{- end }}
+    {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
       restartPolicy: OnFailure
       initContainers:
         - name: wait-tethys-postgresdb
