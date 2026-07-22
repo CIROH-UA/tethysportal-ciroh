@@ -72,6 +72,8 @@ tethys:
       value: '3'
     ASGI_PROCESSES:
       value: '1'
+    RUN_STORE_SETUP:
+      value: 'false'
     CLIENT_MAX_BODY_SIZE:
       value: 1024M
     HERO_TEXT:

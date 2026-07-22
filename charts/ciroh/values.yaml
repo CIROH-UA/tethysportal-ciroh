@@ -178,6 +178,12 @@ ephemeralStorage:
   className: ''
   size: 10Gi
 
+provisionJob:
+  enabled: false
+  storeLinks:
+    - {service: tethys_postgis, app: tethysdash, setting: primary_db}
+    - {service: tethys_postgis, app: fimserve_viewer, setting: jobs_db}
+
 namespace:
   enabled: false
   name: cirohportal

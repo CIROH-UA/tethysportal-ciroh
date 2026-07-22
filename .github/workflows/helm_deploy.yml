@@ -74,6 +74,22 @@ jobs:
       - name: Build chart dependencies
         run: helm dependency build charts/ciroh
 
+      - name: Provision database (migrate + link + syncstores)
+        if: ${{ !inputs.dry-run }}
+        run: |
+          helm template cirohportal-prod charts/ciroh \
+            -f charts/ciroh/ci/prod_aws_values.yaml \
+            --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
+            --set image.tag=${{ env.TAG }} \
+            --set provisionJob.enabled=true \
+            --namespace ${{ env.NAMESPACE }} \
+            --show-only templates/provision-job.yaml > /tmp/provision.yaml
+          kubectl delete job cirohportal-prod-provision -n ${{ env.NAMESPACE }} --ignore-not-found
+          kubectl apply -f /tmp/provision.yaml -n ${{ env.NAMESPACE }}
+          kubectl wait --for=condition=complete job/cirohportal-prod-provision -n ${{ env.NAMESPACE }} --timeout=900s \
+            || { kubectl logs job/cirohportal-prod-provision -n ${{ env.NAMESPACE }} --all-containers --tail=100; exit 1; }
+          kubectl logs job/cirohportal-prod-provision -n ${{ env.NAMESPACE }} -c provision --tail=30
+
       - name: Deploy Helm chart to EKS
         run: |
           helm upgrade cirohportal-prod charts/ciroh --install \
