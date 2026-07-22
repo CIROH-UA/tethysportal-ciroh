@@ -179,7 +179,8 @@ ephemeralStorage:
   size: 10Gi
 
 provisionJob:
-  enabled: false
+  enabled: true
+  asHook: true
   storeLinks:
     - {service: tethys_postgis, app: tethysdash, setting: primary_db}
     - {service: tethys_postgis, app: fimserve_viewer, setting: jobs_db}

@@ -1,10 +1,17 @@
 {{- if .Values.provisionJob.enabled }}
+{{- $hook := .Values.provisionJob.asHook }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "ciroh.fullname" . }}-provision-config
   labels:
 {{ include "ciroh.labels" . | indent 4 }}
+  {{- if $hook }}
+  annotations:
+    helm.sh/hook: post-install,pre-upgrade
+    helm.sh/hook-weight: "2"
+    helm.sh/hook-delete-policy: before-hook-creation
+  {{- end }}
 data:
   portal_config.yml: |
 {{ include "ciroh.portalConfigContent" . | indent 4 }}
@@ -15,8 +22,17 @@ metadata:
   name: {{ include "ciroh.fullname" . }}-provision
   labels:
 {{ include "ciroh.labels" . | indent 4 }}
+  {{- if $hook }}
+  annotations:
+    helm.sh/hook: post-install,pre-upgrade
+    helm.sh/hook-weight: "3"
+    helm.sh/hook-delete-policy: before-hook-creation
+  {{- end }}
 spec:
   backoffLimit: 2
+  {{- if $hook }}
+  ttlSecondsAfterFinished: 600
+  {{- end }}
   template:
     spec:
     {{- with .Values.serviceAccount.name }}

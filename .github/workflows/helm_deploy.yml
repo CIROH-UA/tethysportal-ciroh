@@ -82,6 +82,7 @@ jobs:
             --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
             --set image.tag=${{ env.TAG }} \
             --set provisionJob.enabled=true \
+            --set provisionJob.asHook=false \
             --namespace ${{ env.NAMESPACE }} \
             --show-only templates/provision-job.yaml > /tmp/provision.yaml
           kubectl delete job cirohportal-prod-provision -n ${{ env.NAMESPACE }} --ignore-not-found
