@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-ARG UVX_BUILDER=ghcr.io/aquaveo/tethys-uvx:builder@sha256:7fb5b1846d1fb0a66306a9480fc6eaa1f1a1b3ca97813960ed875e27a395dc99
-ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base@sha256:90c46e9e63675d56f5bef35c26907bada37b47cf2bc526bf986d655781b05d7e
+ARG UVX_BUILDER=ghcr.io/aquaveo/tethys-uvx:builder@sha256:d4f5472977a9afeb014f012c2c1a1e607eb7519c8bd004f3fe2a57c98d8027eb
+ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base@sha256:542cbda6f0fd6eed0df5596875122e79cb2829591b5c65a1a8134c62b30d6700
 
 FROM ${UVX_BUILDER} AS builder
 
