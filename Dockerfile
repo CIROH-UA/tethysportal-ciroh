@@ -65,7 +65,6 @@ COPY --from=builder /opt/python /opt/python
 COPY --from=builder /opt/conda /opt/conda
 COPY --chmod=0755 init.d/ /opt/portal/init.d/
 COPY --chmod=0755 conf/portal-start.sh /usr/local/bin/portal-start.sh
-COPY --chmod=0755 conf/run-init-hooks.sh /usr/local/bin/run-init-hooks.sh
 COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
 
 CMD ["/usr/local/bin/portal-start.sh"]
