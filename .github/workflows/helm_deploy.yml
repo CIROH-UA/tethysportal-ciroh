@@ -100,4 +100,5 @@ jobs:
             -f charts/ciroh/ci/prod_aws_values.yaml \
             --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
             --set image.tag=${{ env.TAG }} \
+            --set provisionJob.enabled=false \
             --namespace ${{ env.NAMESPACE }}

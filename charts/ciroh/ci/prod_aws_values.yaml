@@ -27,8 +27,14 @@ serviceAccount:
   name: ciroh-portal
   roleArn: arn:aws:iam::456531024327:role/ciroh-portal-irsa
 
+# Run the provision job as a pre-upgrade hook so a local `helm upgrade` is
+# self-contained (migrate -> publish-static -> link -> syncstores). The CI
+# helm_deploy path applies the provision job separately and passes
+# `--set provisionJob.enabled=false` on its own `helm upgrade` to avoid
+# double-running it.
 provisionJob:
-  enabled: false
+  enabled: true
+  asHook: true
 
 externalDatabase:
   host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
