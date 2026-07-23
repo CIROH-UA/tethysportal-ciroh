@@ -95,14 +95,6 @@ tethys:
       value: 'Terms of Use'
     FEATURE_3_BODY:
       value: 'The use of the portal will be carried out under the sole and exclusive responsibility of the user.'
-    FIMBENCH_S3_ALLOWED_HOST:
-      value: 'sdmlab.s3.amazonaws.com'
-    FIMBENCH_S3_BUCKET_URL:
-      value: 'https://sdmlab.s3.amazonaws.com/FIM_Database'
-    FIMBENCH_S3_CATALOG_KEY:
-      value: 'FIM_Viz/catalog_core.json'
-    FIMBENCH_S3_VIZ_TILES:
-      value: 'https://sdmlab.s3.amazonaws.com/FIM_Database/FIM_Viz/tiles/{z}/{x}/{y}.pbf'
 
 valkey:
   enabled: true
