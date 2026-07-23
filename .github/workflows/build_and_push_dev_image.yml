@@ -24,16 +24,25 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  clean-space:
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
-
   build:
-    needs: [clean-space]
     runs-on: ubuntu-latest
     steps:
+      # Free disk space ON THIS runner before building. The old `clean-space`
+      # reusable workflow ran as a separate job on a different runner, so it
+      # never freed space for this build (the image build then died on
+      # "No space left on device"). This step runs in-job so it actually helps.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.0
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          docker-images: true
+          tool-cache: true
+
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           submodules: 'false'
 
       - name: Update submodules recursively
@@ -68,7 +77,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64
-          outputs: type=docker,dest=/tmp/image.tar
+          load: true
           tags: |
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
@@ -81,15 +90,14 @@ jobs:
         env:
           GRYPE_CONFIG: .github/security/.grype.yaml
         with:
-          image: docker-archive:/tmp/image.tar
+          image: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
           fail-build: true
           severity-cutoff: high
           only-fixed: true
           output-format: table
 
-      - name: Load and push image
+      - name: Push image
         run: |
-          docker load -i /tmp/image.tar
           docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
           docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
 
