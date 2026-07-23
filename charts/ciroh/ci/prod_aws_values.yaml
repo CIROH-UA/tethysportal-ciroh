@@ -44,17 +44,11 @@ ingresses:
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
       alb.ingress.kubernetes.io/ssl-redirect: '443'
       alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=4000
-      alb.ingress.kubernetes.io/actions.static-redirect: '{"type":"redirect","redirectConfig":{"host":"ciroh-portal-assets.s3.us-east-1.amazonaws.com","protocol":"HTTPS","port":"443","statusCode":"HTTP_301"}}'
+    staticRedirect:
+      enabled: true
     hosts:
       - host: tethys.ciroh.org
         paths:
-          - path: '/static'
-            pathType: Prefix
-            backend:
-              service:
-                name: static-redirect
-                port:
-                  name: use-annotation
           - path: '/'
             pathType: Prefix
             backend:

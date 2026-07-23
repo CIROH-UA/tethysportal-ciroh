@@ -157,6 +157,11 @@ ingresses:
     enabled: true
     className: ''
     annotations: {}
+    # Redirect /static to the S3 assets host (s3Static.cloudfrontDomain) at the
+    # load balancer, for apps whose frontend hardcodes /static/ URLs. ALB only.
+    staticRedirect:
+      enabled: false
+      path: /static
     hosts:
       - host: ''
         paths: []
