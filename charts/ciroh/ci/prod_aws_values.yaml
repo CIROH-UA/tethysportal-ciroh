@@ -79,22 +79,6 @@ tethys:
       value: '1'
     CLIENT_MAX_BODY_SIZE:
       value: 1024M
-    HERO_TEXT:
-      value: 'Welcome to the CIROH Portal'
-    BLURB_TEXT:
-      value: 'CIROH Tethys platform provides access to a suite of pre-built applications commonly used by the Cooperative Institute for Research to Operations in Hydrology (CIROH) research community. CIROH is a national consortium of science and services partnered with the National Oceanic and Atmospheric Administration''s (NOAA) National Water Center. It aims to advance water prediction - the forecasting of streamflow, extreme events such as floods and droughts, and water quality - and enhance the communitys ability to deal with water-related challenges. This platform works through Amazon Web Services'
-    FEATURE_1_HEADING:
-      value: 'Tethys Platform'
-    FEATURE_1_BODY:
-      value: 'Tethys was piloted by implementing web portals for partners of the CIROH and Brigham Young University (BYU). It includes a suite of free, open-source software and is powered by the Django Python web framework.'
-    FEATURE_2_HEADING:
-      value: Applications
-    FEATURE_2_BODY:
-      value: 'Tethys is a mega-platform that hosts applications for hydrological and meteorological forecasting, discovery, visualization and download of data related to hydrometeorological variables.'
-    FEATURE_3_HEADING:
-      value: 'Terms of Use'
-    FEATURE_3_BODY:
-      value: 'The use of the portal will be carried out under the sole and exclusive responsibility of the user.'
 
 valkey:
   enabled: true
