@@ -27,6 +27,7 @@ jobs:
       CLUSTER_NAME: ciroh-portal-prod
       NAMESPACE: cirohportal
       PORTAL_SECRET_NAME: ciroh-portal-secrets
+      RELEASE_NAME: cirohportal-prod
 
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +56,7 @@ jobs:
             echo "  kubectl create secret generic ${PORTAL_SECRET_NAME} -n ${NAMESPACE} \\"
             echo "    --from-literal=TETHYS_SECRET_KEY=... \\"
             echo "    --from-literal=TETHYS_DB_PASSWORD=... \\"
-            echo "    --from-literal=TETHYS_PS_CONNECTION=user:pass@host:5432 \\"
+            echo "    --from-literal=TETHYS_PS_CONNECTION=user:pass@host:port \\"
             echo "    --from-literal=HYDROSHARE_CLIENT_ID=... \\"
             echo "    --from-literal=HYDROSHARE_SECRET_ID=... \\"
             echo "    --from-file=OIDC_RSA_PRIVATE_KEY=key.pem \\"
@@ -77,7 +78,7 @@ jobs:
       - name: Provision database (migrate + link + syncstores)
         if: ${{ !inputs.dry-run }}
         run: |
-          helm template cirohportal-prod charts/ciroh \
+          helm template ${{ env.RELEASE_NAME }} charts/ciroh \
             -f charts/ciroh/ci/prod_aws_values.yaml \
             --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
             --set image.tag=${{ env.TAG }} \
@@ -85,15 +86,15 @@ jobs:
             --set provisionJob.asHook=false \
             --namespace ${{ env.NAMESPACE }} \
             --show-only templates/provision-job.yaml > /tmp/provision.yaml
-          kubectl delete job cirohportal-prod-provision -n ${{ env.NAMESPACE }} --ignore-not-found
+          kubectl delete job ${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} --ignore-not-found
           kubectl apply -f /tmp/provision.yaml -n ${{ env.NAMESPACE }}
-          kubectl wait --for=condition=complete job/cirohportal-prod-provision -n ${{ env.NAMESPACE }} --timeout=900s \
-            || { kubectl logs job/cirohportal-prod-provision -n ${{ env.NAMESPACE }} --all-containers --tail=100; exit 1; }
-          kubectl logs job/cirohportal-prod-provision -n ${{ env.NAMESPACE }} -c provision --tail=30
+          kubectl wait --for=condition=complete job/${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} --timeout=900s \
+            || { kubectl logs job/${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} --all-containers --tail=100; exit 1; }
+          kubectl logs job/${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} -c provision --tail=30
 
       - name: Deploy Helm chart to EKS
         run: |
-          helm upgrade cirohportal-prod charts/ciroh --install \
+          helm upgrade ${{ env.RELEASE_NAME }} charts/ciroh --install \
             ${{ inputs.dry-run && '--dry-run' || '' }} \
             --timeout=3600s \
             -f charts/ciroh/ci/prod_aws_values.yaml \
