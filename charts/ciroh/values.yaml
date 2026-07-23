@@ -99,6 +99,11 @@ tethys:
     # the init job. Keep false so the base image skips its tethysdash store step.
     RUN_STORE_SETUP:
       value: 'false'
+    # Static publishing (collectstatic -> S3) is likewise owned by the provision
+    # job, not the init job. Keep false so the base image skips its static step
+    # (requires a tethys-uvx base that honors RUN_STATIC).
+    RUN_STATIC:
+      value: 'false'
 podAnnotations: {}
 
 podSecurityContext:

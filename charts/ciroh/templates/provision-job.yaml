@@ -67,8 +67,10 @@ spec:
             - /bin/bash
             - -c
             - |
+              set -euo pipefail
               /usr/local/bin/portal-config.sh
               tethys db migrate
+              /usr/local/bin/publish-static.sh
               {{- range .Values.provisionJob.storeLinks }}
               tethys link "persistent:{{ .service }}" "{{ .app }}:ps_database:{{ .setting }}" || echo "(link {{ .app }}:{{ .setting }} may already exist)"
               {{- end }}
