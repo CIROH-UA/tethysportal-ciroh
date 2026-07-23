@@ -27,6 +27,9 @@ serviceAccount:
   name: ciroh-portal
   roleArn: arn:aws:iam::456531024327:role/ciroh-portal-irsa
 
+provisionJob:
+  enabled: false
+
 externalDatabase:
   host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
   port: 5432
