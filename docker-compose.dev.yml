@@ -40,20 +40,18 @@ services:
     ports:
       - '8000:8000'
     volumes:
-      # bootstrap-database.sh isn't baked into the image; mount it to seed the
-      # role + databases that the uvx image assumes are pre-provisioned.
-      - ./scripts:/scripts:ro
       - ciroh_dev_persist:/home/tethys/persist
     # Compose has no init job, so the web container seeds the DB (role + dbs),
     # runs the portal init (migrate + superuser), then starts the dev server.
-    # bootstrap-database.sh + the init scripts read their DB env vars directly
-    # from env/web.dev.env, so no ${...} interpolation is needed here.
+    # These scripts read their DB env vars directly from env/web.dev.env.
+    # App stores + branding + proxy apps are NOT set up here — run the one-time
+    # seed after the stack is up:  docker compose -f docker-compose.dev.yml exec web portal-seed.sh
     command:
       - /bin/bash
       - -c
       - |
         set -euo pipefail
-        /scripts/bootstrap-database.sh
+        /usr/local/bin/bootstrap-database.sh
         /usr/local/bin/init-tethys.sh
         exec /usr/local/bin/portal-start.sh
 
