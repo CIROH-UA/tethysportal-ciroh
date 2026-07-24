@@ -197,8 +197,14 @@ ephemeralStorage:
   className: ''
   size: 10Gi
 
+# Disabled by default (local/k3d dev): dev provisions stores + branding + proxy
+# apps via the explicit, idempotent scripts/portal-seed.sh, not this hook — the
+# provision hook was failing fresh k3d installs. prod_aws_values.yaml sets
+# enabled: true (asHook) so prod self-provisions on `helm upgrade`; the CI
+# helm_deploy path passes --set provisionJob.enabled=false since it applies the
+# provision job as a standalone step.
 provisionJob:
-  enabled: true
+  enabled: false
   asHook: true
   storeLinks:
     - {service: tethys_postgis, app: tethysdash, setting: primary_db}
