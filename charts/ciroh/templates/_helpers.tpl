@@ -190,6 +190,9 @@ CSRF_TRUSTED_ORIGINS:
   - {{ $.Values.tethys.env.PUBLIC_PORTAL_PROTOCOL.value }}://{{ .host }}
 {{- end }}
 {{- end }}
+SECURE_PROXY_SSL_HEADER:
+  - HTTP_X_FORWARDED_PROTO
+  - https
 STATIC_ROOT: /home/tethys/persist/static
 MEDIA_ROOT: /home/tethys/persist/media
 TETHYS_WORKSPACES_ROOT: /home/tethys/persist/workspaces
@@ -201,6 +204,7 @@ DATABASES:
     HOST: {{ include "ciroh.dbHost" . }}
     PORT: {{ include "ciroh.dbPort" . }}
     CONN_MAX_AGE: 0
+    DISABLE_SERVER_SIDE_CURSORS: false
 CHANNEL_LAYERS:
   default:
     BACKEND: channels_redis.core.RedisChannelLayer
