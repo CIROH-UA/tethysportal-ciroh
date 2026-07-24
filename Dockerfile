@@ -13,12 +13,18 @@ ENV TETHYS_DASH_APP_SRC_ROOT=${TETHYS_HOME}/apps/tethysapp-tethys_dash
 ENV DEV_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/development.env"
 ENV PROD_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/production.env"
 
+# Point uv + npm at fixed cache dirs that are backed by BuildKit cache mounts
+# on the RUNs below, so downloaded wheels/tarballs (incl. the ~434 MB pyspark)
+# persist across builds instead of being re-fetched every time.
+ENV UV_CACHE_DIR=/cache/uv
+ENV npm_config_cache=/cache/npm
+
 WORKDIR ${TETHYS_HOME}
 
 COPY requirements/piprequirements.txt ./piprequirements.txt
-RUN uv pip install --no-cache -r piprequirements.txt
+RUN --mount=type=cache,target=/cache/uv uv pip install -r piprequirements.txt
 
-RUN uv pip install --no-cache \
+RUN --mount=type=cache,target=/cache/uv uv pip install \
     git+https://github.com/FIRO-Tethys/ciroh_plugins.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git \
@@ -28,24 +34,55 @@ RUN uv pip install --no-cache \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git \
     git+https://github.com/FIRO-Tethys/RFC-Plugins.git
 
-COPY extensions ${TETHYS_HOME}/extensions
-COPY apps ${TETHYS_HOME}/apps
-COPY requirements/overrides.txt ${TETHYS_HOME}/overrides.txt
+# The extension and each app are copied + installed in their own layer (instead
+# of one monolithic COPY+RUN) so that changing one app's submodule — or just
+# overrides.txt — only rebuilds that layer and the ones after it, not all seven.
+# Combined with the uv/npm cache mounts, even a cache-busting change reinstalls
+# from cache without re-downloading. Install order is preserved; fimserve_viewer
+# stays last so its --overrides pins win in the final environment.
 
-RUN cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/tethysapp-sweml && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/snow-inspector && uv pip install --no-cache . && \
+COPY extensions ${TETHYS_HOME}/extensions
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install .
+
+COPY apps/tethysapp-sweml ${TETHYS_HOME}/apps/tethysapp-sweml
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/tethysapp-sweml && uv pip install .
+
+COPY apps/tethysapp-hydrocompute ${TETHYS_HOME}/apps/tethysapp-hydrocompute
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/tethysapp-hydrocompute && uv pip install .
+
+COPY apps/snow-inspector ${TETHYS_HOME}/apps/snow-inspector
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/snow-inspector && uv pip install .
+
+COPY apps/tethysapp-tethys_dash ${TETHYS_HOME}/apps/tethysapp-tethys_dash
+RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
     mv ${DEV_REACT_CONFIG} ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g" ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" ${PROD_REACT_CONFIG} && \
     sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} && \
-    cd ${TETHYS_HOME}/apps/tethysapp-tethys_dash && npm install && npm run build && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/Tethys-CSES && uv pip install --no-cache . && \
+    cd ${TETHYS_HOME}/apps/tethysapp-tethys_dash && npm install && npm run build && uv pip install .
+
+COPY apps/Tethys-CSES ${TETHYS_HOME}/apps/Tethys-CSES
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/Tethys-CSES && uv pip install .
+
+COPY apps/fimbench ${TETHYS_HOME}/apps/fimbench
+RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
     cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build && \
-    cd ${TETHYS_HOME}/apps/fimbench && uv pip install --no-cache . && \
-    cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install --no-cache . --overrides ${TETHYS_HOME}/overrides.txt
+    cd ${TETHYS_HOME}/apps/fimbench && uv pip install .
+
+COPY apps/tethysapp-fimserve_viewer ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer
+COPY requirements/overrides.txt ${TETHYS_HOME}/overrides.txt
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
+    # FIMserv declares nodejs-bin (an abandoned package stuck at node 18.4.0a4,
+    # ~20 High + 2 Critical CVEs) but never imports/execs node. Remove the
+    # unused binary so it isn't shipped. Re-add + bump if FIMserv ever uses it.
+    uv pip uninstall nodejs-bin
 
 RUN chmod -R a+rX /opt/python /opt/conda \
   && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp \
