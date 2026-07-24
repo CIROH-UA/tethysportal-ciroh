@@ -33,14 +33,6 @@ RUN --mount=type=cache,target=/cache/uv uv pip install \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_usgs_water_services.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git \
     git+https://github.com/FIRO-Tethys/RFC-Plugins.git
-
-# The extension and each app are copied + installed in their own layer (instead
-# of one monolithic COPY+RUN) so that changing one app's submodule — or just
-# overrides.txt — only rebuilds that layer and the ones after it, not all seven.
-# Combined with the uv/npm cache mounts, even a cache-busting change reinstalls
-# from cache without re-downloading. Install order is preserved; fimserve_viewer
-# stays last so its --overrides pins win in the final environment.
-
 COPY extensions ${TETHYS_HOME}/extensions
 RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install .
@@ -79,9 +71,6 @@ COPY apps/tethysapp-fimserve_viewer ${TETHYS_HOME}/apps/tethysapp-fimserve_viewe
 COPY requirements/overrides.txt ${TETHYS_HOME}/overrides.txt
 RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
-    # FIMserv declares nodejs-bin (an abandoned package stuck at node 18.4.0a4,
-    # ~20 High + 2 Critical CVEs) but never imports/execs node. Remove the
-    # unused binary so it isn't shipped. Re-add + bump if FIMserv ever uses it.
     uv pip uninstall nodejs-bin
 
 RUN chmod -R a+rX /opt/python /opt/conda \
