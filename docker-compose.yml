@@ -38,7 +38,10 @@ services:
       - 'internal'
       - 'external'
     ports:
-      - '80:80'
+      # The uvx portal (uvicorn / dev runserver) listens on 8000 inside the
+      # container; map host 80 -> container 8000. (Was 80:80, which never
+      # reached the app.)
+      - '80:8000'
     env_file:
       - ./env/web.env
     volumes:

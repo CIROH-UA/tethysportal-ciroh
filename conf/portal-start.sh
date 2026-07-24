@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Single-container setups (docker-compose) have no separate init Job, so run the
+# full portal init (migrate + config + services + bootstrap) here before serving.
+# Opt-in via RUN_INIT_ON_START=true. k8s/k3d leaves this false: its init Job
+# (and provision hook) already do setup, so web pods must not re-run it.
+if [ "${RUN_INIT_ON_START:-false}" = "true" ]; then
+  echo "RUN_INIT_ON_START=true -> running init-tethys.sh (migrate/bootstrap) before serving"
+  /usr/local/bin/init-tethys.sh
+fi
+
 /usr/local/bin/portal-config.sh
 
 if [ -n "${HYDROSHARE_CLIENT_ID:-}" ]; then
