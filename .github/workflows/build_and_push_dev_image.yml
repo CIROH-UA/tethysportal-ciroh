@@ -118,7 +118,11 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
+    # Use this branch's helm_deploy (relative path), not @main. main's older
+    # helm_deploy requires GPG_PRIVATE_KEY/PASSPHRASE/FILE_SYSTEM_ID secrets that
+    # no longer exist, which made `secrets: inherit` fail at evaluation. The
+    # current workflow only needs the AWS creds. Matches the prod build workflow.
+    uses: ./.github/workflows/helm_deploy.yml
     with:
       dry-run: true
     secrets: inherit
