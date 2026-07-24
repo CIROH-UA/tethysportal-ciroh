@@ -18,5 +18,20 @@ PORT="${PORT:-${TETHYS_PORT:-8000}}"
 WORKERS="${ASGI_PROCESSES:-1}"
 FWD="${FORWARDED_ALLOW_IPS:-*}"
 
+# Dev mode: run Django's development server instead of uvicorn. With DEBUG on,
+# runserver serves /static/ directly from each app's static dir (via the
+# staticfiles finders), so a local portal needs no S3/CDN and no collectstatic.
+# Enabled by TETHYS_DEV_SERVER=true (docker-compose env or the k3d dev values).
+# Never enable in production: runserver is single-threaded and DEBUG leaks info.
+if [ "${TETHYS_DEV_SERVER:-false}" = "true" ]; then
+  echo "Starting in DEV mode: DEBUG=True + runserver (static served locally, no CDN)"
+  tethys settings --set DEBUG True
+  # Use the `start` command (not `runserver -p ...`): only `start` forwards the
+  # port to manage.py runserver, and passing HOST:PORT binds all interfaces so
+  # the dev server is reachable from outside the container. Plain
+  # `tethys manage runserver -p ...` drops the port and binds 127.0.0.1 only.
+  exec tethys manage -p "${HOST}:${PORT}" start
+fi
+
 exec uvicorn "$APP" --host "$HOST" --port "$PORT" --workers "$WORKERS" \
   --forwarded-allow-ips "$FWD" --proxy-headers

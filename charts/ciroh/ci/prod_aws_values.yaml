@@ -85,6 +85,10 @@ tethys:
       value: '1'
     CLIENT_MAX_BODY_SIZE:
       value: 1024M
+    # Prod runs uvicorn with static served from S3 — never the dev server.
+    # (values.yaml defaults this to 'true' for local/k3d; override to 'false' here.)
+    TETHYS_DEV_SERVER:
+      value: 'false'
 
 valkey:
   enabled: true

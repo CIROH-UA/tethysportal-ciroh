@@ -1,0 +1,62 @@
+# Minimal local dev stack for the uvx CIROH portal.
+#
+# Runs the Django development server (runserver + DEBUG, via TETHYS_DEV_SERVER)
+# so /static/ is served locally by the app — no S3/CDN needed. Channels use the
+# in-memory backend (portal_config default), so no Redis/Valkey is required.
+#
+#   docker compose -f docker-compose.dev.yml up --build
+#   -> http://localhost:8000   (login: admin / see env/web.dev.env)
+#
+# NOTE: the legacy docker-compose.yml (geoserver-cloud + GGST stack) predates the
+# tethys-uvx migration and is unrelated to this dev stack.
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_USER: tethys_super
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - ciroh_dev_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tethys_super -d postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: awiciroh/tethysapp-ciroh-portal:dev
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - env/web.dev.env
+    ports:
+      - '8000:8000'
+    volumes:
+      # bootstrap-database.sh isn't baked into the image; mount it to seed the
+      # role + databases that the uvx image assumes are pre-provisioned.
+      - ./scripts:/scripts:ro
+      - ciroh_dev_persist:/home/tethys/persist
+    # Compose has no init job, so the web container seeds the DB (role + dbs),
+    # runs the portal init (migrate + superuser), then starts the dev server.
+    # bootstrap-database.sh + the init scripts read their DB env vars directly
+    # from env/web.dev.env, so no ${...} interpolation is needed here.
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -euo pipefail
+        /scripts/bootstrap-database.sh
+        /usr/local/bin/init-tethys.sh
+        exec /usr/local/bin/portal-start.sh
+
+volumes:
+  ciroh_dev_db: {}
+  ciroh_dev_persist: {}

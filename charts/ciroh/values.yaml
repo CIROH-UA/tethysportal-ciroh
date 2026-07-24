@@ -104,6 +104,11 @@ tethys:
     # (requires a tethys-uvx base that honors RUN_STATIC).
     RUN_STATIC:
       value: 'false'
+    # Local/dev default (k3d): run the Django dev server so the container serves
+    # its own static locally (no S3/CDN needed). prod_aws_values.yaml overrides
+    # this to 'false' to keep prod on uvicorn with static served from S3.
+    TETHYS_DEV_SERVER:
+      value: 'true'
 podAnnotations: {}
 
 podSecurityContext:
