@@ -81,8 +81,11 @@ jobs:
           tags: |
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Registry-backed layer cache on Docker Hub (persists across runs, no
+          # 10 GB GHA-cache eviction). CI's builder creds can push to awiciroh;
+          # the 'buildcache' tag is ignored by the dev_* cleanup script.
+          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
 
       - name: Scan image with Anchore (Grype)
         id: scan
