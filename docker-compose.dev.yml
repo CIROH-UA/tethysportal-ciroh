@@ -1,6 +1,6 @@
 # Minimal local dev stack for the uvx CIROH portal.
 #
-# Runs the Django development server (runserver + DEBUG, via TETHYS_DEV_SERVER)
+# Runs the Django development server (runserver + DEBUG, via TETHYS_DEBUG=true)
 # so /static/ is served locally by the app — no S3/CDN needed. Channels use the
 # in-memory backend (portal_config default), so no Redis/Valkey is required.
 #
@@ -53,7 +53,7 @@ services:
         set -euo pipefail
         /usr/local/bin/bootstrap-database.sh
         /usr/local/bin/init-tethys.sh
-        exec /usr/local/bin/portal-start.sh
+        exec /usr/local/bin/start-server.sh
 
 volumes:
   ciroh_dev_db: {}

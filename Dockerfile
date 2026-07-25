@@ -89,12 +89,13 @@ ENV POSTGIS_SERVICE_NAME="tethys_postgis"
 
 COPY --from=builder /opt/python /opt/python
 COPY --from=builder /opt/conda /opt/conda
-COPY --chmod=0755 conf/portal-start.sh /usr/local/bin/portal-start.sh
 COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
 # Portal-owned S3 storage backend (base no longer ships it); on PYTHONPATH=/opt/portal.
 COPY conf/portal_storage.py /opt/portal/portal_storage.py
+# Portal-owned config hook: OAuth secrets from env (base portal-config.sh runs it).
+COPY --chmod=0755 conf/portal-config.d/ /opt/portal/portal-config.d/
 # Operational scripts (DB bootstrap + one-time portal seed) on PATH so they can
 # be run in any environment (docker-compose command / `kubectl exec`).
 COPY --chmod=0755 scripts/bootstrap-database.sh scripts/portal-seed.sh /usr/local/bin/
 
-CMD ["/usr/local/bin/portal-start.sh"]
+# CMD (start-server.sh: DEBUG -> dev server, else uvicorn) is inherited from base.

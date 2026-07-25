@@ -95,11 +95,6 @@ tethys:
       value: '--production, --overwrite'
     TETHYS_PUBLIC_HOST:
       value: 'tethys.ciroh.org'
-    # Local/dev default (k3d): run the Django dev server so the container serves
-    # its own static locally (no S3/CDN needed). prod_aws_values.yaml overrides
-    # this to 'false' to keep prod on uvicorn with static served from S3.
-    TETHYS_DEV_SERVER:
-      value: 'true'
 podAnnotations: {}
 
 podSecurityContext:
@@ -110,7 +105,9 @@ securityContext: {}
 
 portalConfig:
   settings:
-    DEBUG: false
+    # Dev/k3d default: DEBUG on -> start-server.sh runs the Django dev server, which serves /static/
+    # locally (no S3/CDN). prod_aws_values.yaml overrides to false (uvicorn + static from S3).
+    DEBUG: true
     MEDIA_URL: /media/
     DATA_UPLOAD_MAX_MEMORY_SIZE: 1073741824
     DATA_UPLOAD_MAX_NUMBER_FIELDS: 1073741824
