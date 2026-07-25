@@ -212,6 +212,39 @@ CHANNEL_LAYERS:
       hosts:
         - host: {{ .Values.valkey.fullnameOverride }}
           port: {{ .Values.valkey.service.port }}
+{{- if .Values.s3Static.bucket }}
+STORAGES:
+  staticfiles:
+    BACKEND: portal_storage.PortalStaticS3Storage
+    OPTIONS:
+      bucket_name: {{ .Values.s3Static.bucket }}
+      region_name: {{ .Values.s3Static.region }}
+      location: static
+      querystring_auth: false
+      {{- with .Values.s3Static.cloudfrontDomain }}
+      custom_domain: {{ . }}
+      {{- end }}
+      {{- with .Values.s3Static.endpointUrl }}
+      endpoint_url: {{ . }}
+      {{- end }}
+  default:
+    BACKEND: storages.backends.s3.S3Storage
+    OPTIONS:
+      bucket_name: {{ .Values.s3Static.bucket }}
+      region_name: {{ .Values.s3Static.region }}
+      location: media
+      querystring_auth: false
+      {{- with .Values.s3Static.cloudfrontDomain }}
+      custom_domain: {{ . }}
+      {{- end }}
+      {{- with .Values.s3Static.endpointUrl }}
+      endpoint_url: {{ . }}
+      {{- end }}
+{{- with .Values.s3Static.cloudfrontDomain }}
+STATIC_URL: https://{{ . }}/static/
+MEDIA_URL: https://{{ . }}/media/
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/*
