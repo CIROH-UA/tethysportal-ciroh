@@ -33,6 +33,7 @@ shapely
 pyproj
 requests
 boto3
+django-storages
 hydroeval
 tqdm
 pypng

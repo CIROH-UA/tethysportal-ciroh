@@ -91,6 +91,8 @@ COPY --from=builder /opt/python /opt/python
 COPY --from=builder /opt/conda /opt/conda
 COPY --chmod=0755 conf/portal-start.sh /usr/local/bin/portal-start.sh
 COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
+# Portal-owned S3 storage backend (base no longer ships it); on PYTHONPATH=/opt/portal.
+COPY conf/portal_storage.py /opt/portal/portal_storage.py
 # Operational scripts (DB bootstrap + one-time portal seed) on PATH so they can
 # be run in any environment (docker-compose command / `kubectl exec`).
 COPY --chmod=0755 scripts/bootstrap-database.sh scripts/portal-seed.sh /usr/local/bin/
