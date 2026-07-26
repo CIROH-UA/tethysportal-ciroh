@@ -20,13 +20,12 @@ set -euo pipefail
 # production set; override via env (e.g. PROXY_APP_ORIGIN for a local back-URL).
 
 POSTGIS_SERVICE_NAME="${POSTGIS_SERVICE_NAME:-tethys_postgis}"
-# Persistent-store connection: prefer TETHYS_PS_CONNECTION, else build it from
-# the SUPERUSER env (user:pass@host:port). Must be the superuser, not the app
-# role: the store service needs CREATEDB to make each app's store database, and
-# Tethys' store handlers connect with no dbname (libpq then defaults it to the
-# username) — so the username must match the landing database that
-# bootstrap-database.sh creates (named after the admin role).
-PS_CONN="${TETHYS_PS_CONNECTION:-${TETHYS_DB_SUPERUSER}:${TETHYS_DB_SUPERUSER_PASS}@${TETHYS_DB_HOST}:${TETHYS_DB_PORT}}"
+# Persistent-store connection: prefer TETHYS_PS_CONNECTION, else build it from the
+# least-privilege STORE role (user:pass@host:port) — NOT the superuser (workshop §10).
+# The store role has CREATEDB to make each app's store database, and Tethys' store
+# handlers connect with no dbname (libpq defaults it to the username), so the username
+# must match the landing database bootstrap-database.sh creates for the store role.
+PS_CONN="${TETHYS_PS_CONNECTION:-${STORE_USER:-tethys_app}:${STORE_PASSWORD:?STORE_PASSWORD required (or set TETHYS_PS_CONNECTION)}@${TETHYS_DB_HOST}:${TETHYS_DB_PORT}}"
 PROXY_APP_ORIGIN="${PROXY_APP_ORIGIN:-https://tethys.ciroh.org/t}"
 
 echo "==> [1/6] PostGIS persistent-store service '${POSTGIS_SERVICE_NAME}'"
