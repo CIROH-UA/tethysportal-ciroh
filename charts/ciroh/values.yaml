@@ -105,7 +105,7 @@ securityContext: {}
 
 portalConfig:
   settings:
-    # Dev/k3d default: DEBUG on -> start-server.sh runs the Django dev server, which serves /static/
+    # Dev/k3d default: DEBUG on -> serve.sh runs the Django dev server, which serves /static/
     # locally (no S3/CDN). prod_aws_values.yaml overrides to false (uvicorn + static from S3).
     DEBUG: true
     MEDIA_URL: /media/
@@ -185,18 +185,9 @@ ephemeralStorage:
   className: ''
   size: 10Gi
 
-# Disabled by default (local/k3d dev): dev provisions stores + branding + proxy
-# apps via the explicit, idempotent dev/portal-seed.sh, not this hook — the
-# provision hook was failing fresh k3d installs. prod_aws_values.yaml sets
-# enabled: true (asHook) so prod self-provisions on `helm upgrade`; the CI
-# helm_deploy path passes --set provisionJob.enabled=false since it applies the
-# provision job as a standalone step.
-provisionJob:
-  enabled: false
-  asHook: true
-  storeLinks:
-    - {service: tethys_postgis, app: tethysdash, setting: primary_db}
-    - {service: tethys_postgis, app: fimserve_viewer, setting: jobs_db}
+# §4.1: provisioning is one hook Job that runs provision.sh (migrate + services + static +
+# bootstrap + init.d hooks incl. store link + syncstores) — see templates/init-job.yaml. There is
+# no longer a separate provisionJob or storeLinks; app-store links live in conf/init.d/50-app-stores.sh.
 
 namespace:
   enabled: false

@@ -54,8 +54,8 @@ services:
       - |
         set -euo pipefail
         bash /dev-scripts/bootstrap-database.sh
-        /usr/local/bin/init-tethys.sh
-        exec /usr/local/bin/start-server.sh
+        /usr/local/bin/provision.sh
+        exec /usr/local/bin/serve.sh
 
 volumes:
   ciroh_dev_db: {}

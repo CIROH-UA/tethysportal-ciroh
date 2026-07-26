@@ -94,8 +94,10 @@ COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
 COPY conf/portal_storage.py /opt/portal/portal_storage.py
 # Portal-owned config hook: OAuth secrets from env (base portal-config.sh runs it).
 COPY --chmod=0755 conf/portal-config.d/ /opt/portal/portal-config.d/
+# Portal-owned provision hook: link app stores + syncstores (base provision.sh runs it).
+COPY --chmod=0755 conf/init.d/ /opt/portal/init.d/
 
 # NOTE: the DB bootstrap + portal seed are DEV-ONLY tools and live in dev/ — they are
 # deliberately NOT baked into this image. The docker-compose dev stack mounts dev/ and
 # runs them; prod provisioning is migrate + syncstores (chart hooks) + DBA SQL on RDS
-# (README §2.5). CMD (start-server.sh) is inherited from base.
+# (README §2.5). CMD (serve.sh) is inherited from base.

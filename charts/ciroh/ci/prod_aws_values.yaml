@@ -27,14 +27,9 @@ serviceAccount:
   name: ciroh-portal
   roleArn: arn:aws:iam::456531024327:role/ciroh-portal-irsa
 
-# Run the provision job as a pre-upgrade hook so a local `helm upgrade` is
-# self-contained (migrate -> publish-static -> link -> syncstores). The CI
-# helm_deploy path applies the provision job separately and passes
-# `--set provisionJob.enabled=false` on its own `helm upgrade` to avoid
-# double-running it.
-provisionJob:
-  enabled: true
-  asHook: true
+# §4.1: provisioning is a single pre-upgrade hook Job running provision.sh (migrate +
+# services + static + bootstrap + init.d hooks incl. store link + syncstores). No separate
+# provisionJob / no --set flags needed on `helm upgrade`.
 
 externalDatabase:
   host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
@@ -86,7 +81,7 @@ tethys:
     CLIENT_MAX_BODY_SIZE:
       value: 1024M
 
-# Prod: DEBUG off -> start-server.sh runs uvicorn (static served from S3, not the dev server).
+# Prod: DEBUG off -> serve.sh runs uvicorn (static served from S3, not the dev server).
 # values.yaml defaults DEBUG to true for local/k3d; this deep-merge override flips it for prod.
 portalConfig:
   settings:

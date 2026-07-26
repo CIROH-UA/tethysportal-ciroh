@@ -75,23 +75,9 @@ jobs:
       - name: Build chart dependencies
         run: helm dependency build charts/ciroh
 
-      - name: Provision database (migrate + link + syncstores)
-        if: ${{ !inputs.dry-run }}
-        run: |
-          helm template ${{ env.RELEASE_NAME }} charts/ciroh \
-            -f charts/ciroh/ci/prod_aws_values.yaml \
-            --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
-            --set image.tag=${{ env.TAG }} \
-            --set provisionJob.enabled=true \
-            --set provisionJob.asHook=false \
-            --namespace ${{ env.NAMESPACE }} \
-            --show-only templates/provision-job.yaml > /tmp/provision.yaml
-          kubectl delete job ${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} --ignore-not-found
-          kubectl apply -f /tmp/provision.yaml -n ${{ env.NAMESPACE }}
-          kubectl wait --for=condition=complete job/${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} --timeout=900s \
-            || { kubectl logs job/${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} --all-containers --tail=100; exit 1; }
-          kubectl logs job/${{ env.RELEASE_NAME }}-provision -n ${{ env.NAMESPACE }} -c provision --tail=30
-
+      # §4.1: provisioning is a single pre-upgrade hook Job that runs provision.sh (migrate +
+      # services + static + bootstrap + init.d hooks incl. store link + syncstores). The helm
+      # upgrade below runs it as part of the release — no separate provision step is needed.
       - name: Deploy Helm chart to EKS
         run: |
           helm upgrade ${{ env.RELEASE_NAME }} charts/ciroh --install \
@@ -100,5 +86,4 @@ jobs:
             -f charts/ciroh/ci/prod_aws_values.yaml \
             --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
             --set image.tag=${{ env.TAG }} \
-            --set provisionJob.enabled=false \
             --namespace ${{ env.NAMESPACE }}
