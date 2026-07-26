@@ -41,17 +41,19 @@ services:
       - '8000:8000'
     volumes:
       - ciroh_dev_persist:/home/tethys/persist
-    # Compose has no init job, so the web container seeds the DB (role + dbs),
-    # runs the portal init (migrate + superuser), then starts the dev server.
-    # These scripts read their DB env vars directly from env/web.dev.env.
-    # App stores + branding + proxy apps are NOT set up here — run the one-time
-    # seed after the stack is up:  docker compose -f docker-compose.dev.yml exec web portal-seed.sh
+      # dev-only DB tools (NOT in the image) — mounted just for the dev stack
+      - ./dev:/dev-scripts:ro
+    # Compose has no init job, so the web container seeds the DB (role + dbs) with the
+    # dev-only dev/bootstrap-database.sh, runs the portal init (migrate + superuser),
+    # then starts the dev server. These read their DB env vars from env/web.dev.env.
+    # App stores + branding + proxy apps are NOT set up here — run the one-time seed
+    # after the stack is up:  docker compose -f docker-compose.dev.yml exec web bash /dev-scripts/portal-seed.sh
     command:
       - /bin/bash
       - -c
       - |
         set -euo pipefail
-        /usr/local/bin/bootstrap-database.sh
+        bash /dev-scripts/bootstrap-database.sh
         /usr/local/bin/init-tethys.sh
         exec /usr/local/bin/start-server.sh
 

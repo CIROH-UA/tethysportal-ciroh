@@ -98,21 +98,35 @@ use_elastic_ips     = true
 eips                = ["...", "..."]
 ```
 
-### 2.5 · Database bootstrap (one time) 🗄️
+### 2.5 · Database roles & bootstrap 🗄️
 
-The portal expects its roles and core databases to exist BEFORE the first
-deploy. Run the bootstrap script once against a fresh database server as the
-admin (works for RDS, a local PostgreSQL, or the in-cluster dev database);
-it is idempotent:
+The portal needs its roles and core databases to exist BEFORE the first deploy:
 
-```bash
-DB_HOST=<host> ADMIN_USER=tethys_super PGPASSWORD=<admin-password> \
-APP_PASSWORD=<app-role-password> ./scripts/bootstrap-database.sh
+- **`tethys_default`** — the application role; owns the portal core DB (`tethys_platform`).
+- **`tethys_app`** — a least-privilege store role (`LOGIN CREATEDB`, **not** superuser) that owns the
+  app persistent stores, plus a same-named landing database. The persistent-store service connects as
+  this role, so store creation/sync never runs as a superuser.
+
+**On RDS this is DBA work, run by the admin directly on the instance** — the chart and CI never
+provision the database. The app/CI only ever run `tethys db migrate` + `tethys syncstores` (as
+`tethys_app`). Reference SQL for the DBA (mirrors `dev/bootstrap-database.sh`):
+
+```sql
+CREATE ROLE tethys_default LOGIN PASSWORD '<app_pw>';
+CREATE ROLE tethys_app     LOGIN CREATEDB PASSWORD '<store_pw>';
+CREATE DATABASE tethys_app            OWNER tethys_app;      -- landing DB (store handlers use no dbname)
+CREATE DATABASE tethys_platform       OWNER tethys_default;
+CREATE DATABASE tethysdash_primary_db OWNER tethys_app;
 ```
 
-It creates the application role, the admin's default database, and the core
-portal databases. App persistent stores added later are created at deploy
-time by the portal init hooks (`init.d/`), not by this script.
+Migrating **existing** superuser-owned stores onto `tethys_app` is also a DBA step: `ALTER DATABASE
+<store> OWNER TO tethys_app`, then per-object `ALTER TABLE/SEQUENCE … OWNER TO tethys_app` inside each
+store (`REASSIGN OWNED` refuses superuser-owned objects). CIROH's stores are non-spatial, so no
+superuser is needed.
+
+> **Local dev** does none of this by hand — the docker-compose stack runs the **dev-only**
+> `dev/bootstrap-database.sh` against the throwaway Postgres. Those scripts live in `dev/` and are
+> deliberately **not** baked into the image.
 
 ### 3 · Deploy 📦
 

@@ -5,8 +5,8 @@ set -euo pipefail
 #
 # LOCAL DEV convenience: the compose/k3d stack has no DBA, so this creates the roles
 # and core databases against the throwaway Postgres. On PROD (RDS) these are privileged,
-# admin-side tasks the DBA runs directly on the instance -- see docs/rds-database-admin.md
-# (this script is the reference for those steps). The chart/CI never run it.
+# admin-side tasks the DBA runs directly on the instance -- see README §2.5 (this script
+# is the reference for those steps). The chart/CI never run it.
 #
 # Creates:
 #   - the application role (owns the portal core DB: tethys_platform)
@@ -22,7 +22,7 @@ set -euo pipefail
 #
 # App stores added later (e.g. fimserve_viewer jobs_db) are created by
 # `tethys syncstores` as the store role and do NOT belong here. Re-owning EXISTING
-# superuser-owned stores onto the store role is a DBA task -- see docs/rds-database-admin.md §2.
+# superuser-owned stores onto the store role is a DBA task -- see README §2.5.
 #
 # Required env:
 #   DB_HOST            database server hostname

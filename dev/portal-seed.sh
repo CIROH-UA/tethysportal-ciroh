@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# portal-seed.sh — one-time, idempotent configuration of a FRESH portal database.
+# portal-seed.sh — DEV-ONLY. one-time, idempotent configuration of a FRESH portal database.
+# Lives in dev/ and is NOT baked into the image; the docker-compose dev stack mounts it.
+# In prod the provision Job does link + syncstores; branding/settings are managed there.
 #
 # Consolidates what the removed init.d hooks did (recovered from git history):
 #   - PostGIS persistent-store service + app store links + syncstores

@@ -94,8 +94,8 @@ COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
 COPY conf/portal_storage.py /opt/portal/portal_storage.py
 # Portal-owned config hook: OAuth secrets from env (base portal-config.sh runs it).
 COPY --chmod=0755 conf/portal-config.d/ /opt/portal/portal-config.d/
-# Operational scripts (DB bootstrap + one-time portal seed) on PATH so they can
-# be run in any environment (docker-compose command / `kubectl exec`).
-COPY --chmod=0755 scripts/bootstrap-database.sh scripts/portal-seed.sh /usr/local/bin/
 
-# CMD (start-server.sh: DEBUG -> dev server, else uvicorn) is inherited from base.
+# NOTE: the DB bootstrap + portal seed are DEV-ONLY tools and live in dev/ — they are
+# deliberately NOT baked into this image. The docker-compose dev stack mounts dev/ and
+# runs them; prod provisioning is migrate + syncstores (chart hooks) + DBA SQL on RDS
+# (README §2.5). CMD (start-server.sh) is inherited from base.
