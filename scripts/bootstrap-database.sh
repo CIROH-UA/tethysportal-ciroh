@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One-time database bootstrap for the CIROH portal. Run as the database admin
-# BEFORE the first deploy against a fresh PostgreSQL server (RDS, local, or the
-# in-cluster dev database). Idempotent: safe to re-run.
+# One-time database bootstrap for the CIROH portal. Idempotent: safe to re-run.
+#
+# LOCAL DEV convenience: the compose/k3d stack has no DBA, so this creates the roles
+# and core databases against the throwaway Postgres. On PROD (RDS) these are privileged,
+# admin-side tasks the DBA runs directly on the instance -- see docs/rds-database-admin.md
+# (this script is the reference for those steps). The chart/CI never run it.
 #
 # Creates:
 #   - the application role (owns the portal core DB: tethys_platform)
@@ -18,8 +21,8 @@ set -euo pipefail
 #   - tethysdash_primary_db (tethysdash store, owned by the STORE role)
 #
 # App stores added later (e.g. fimserve_viewer jobs_db) are created by
-# `tethys syncstores` as the store role and do NOT belong here. To move EXISTING
-# superuser-owned stores onto the store role, use scripts/migrate-stores-to-app.sh.
+# `tethys syncstores` as the store role and do NOT belong here. Re-owning EXISTING
+# superuser-owned stores onto the store role is a DBA task -- see docs/rds-database-admin.md §2.
 #
 # Required env:
 #   DB_HOST            database server hostname
