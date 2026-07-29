@@ -1,20 +1,28 @@
 {{- if .Values.ingresses.enabled -}}
 {{- $fullName := include "ciroh.fullname" . -}}
+{{- $ext := .Values.ingresses.external -}}
+{{- $redirectHost := .Values.s3Static.cloudfrontDomain -}}
+{{- $redirectOn := and $ext.staticRedirect.enabled $redirectHost -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
     {{- include "ciroh.labels" . | nindent 4 }}
-  {{- with .Values.ingresses.external.annotations }}
+  {{- if or $ext.annotations $redirectOn }}
   annotations:
+    {{- with $ext.annotations }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if $redirectOn }}
+    alb.ingress.kubernetes.io/actions.static-redirect: '{"type":"redirect","redirectConfig":{"host":"{{ $redirectHost }}","protocol":"HTTPS","port":"443","statusCode":"HTTP_301"}}'
+    {{- end }}
   {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingresses.external.className | default "nginx" | quote }}
-  {{- if .Values.ingresses.external.tls }}
+  ingressClassName: {{ $ext.className | default "nginx" | quote }}
+  {{- if $ext.tls }}
   tls:
-    {{- range .Values.ingress.external.tls }}
+    {{- range $ext.tls }}
     - hosts:
         {{- range .hosts }}
         - {{ . | quote }}
@@ -23,10 +31,19 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-  {{- range .Values.ingresses.external.hosts }}
+  {{- range $ext.hosts }}
     - host: {{ .host | quote }}
       http:
-        paths: 
+        paths:
+          {{- if $redirectOn }}
+            - path: {{ $ext.staticRedirect.path | default "/static" }}
+              pathType: Prefix
+              backend:
+                service:
+                  name: static-redirect
+                  port:
+                    name: use-annotation
+          {{- end }}
           {{- range .paths }}
             - path: {{ .path }}
               pathType: {{ .pathType }}
@@ -39,53 +56,6 @@ spec:
                     {{- else }}
                     number: {{ .backend.service.port.number }}
                     {{- end }}
-          {{- end }}               
-
-
-  {{- end }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ $fullName }}-static
-  labels:
-{{ include "ciroh.labels" . | indent 4 }}
-  {{- with .Values.ingresses.static.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  ingressClassName: {{ .Values.ingresses.static.className | default "nginx" | quote }}
-
-{{- if .Values.ingresses.static.tls }}
-  tls:
-  {{- range .Values.ingresses.static.tls }}
-    - hosts:
-      {{- range .hosts }}
-        - {{ . | quote }}
-      {{- end }}
-      secretName: {{ .secretName }}
-  {{- end }}
-{{- end }}
-  rules:
-  {{- range .Values.ingresses.static.hosts }}
-    - host: {{ .host | quote }}
-      http:
-        paths:
-        {{- range .paths }}
-
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
-            backend:
-              service:
-                name: {{ .backend.service.name }}
-                port:
-                  {{- with .backend.service.port.name }}
-                  name: {{ . }}
-                  {{- else }}
-                  number: {{ .backend.service.port.number }}
-                  {{- end }}
-        {{- end }}               
-        
+          {{- end }}
   {{- end }}
 {{- end }}

@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ciroh.fullname" . }}-init-config
+  labels:
+{{ include "ciroh.labels" . | indent 4 }}
+  annotations:
+    helm.sh/hook: post-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation
+data:
+  portal_config.yml: |
+{{ include "ciroh.portalConfigContent" . | indent 4 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ciroh.fullname" . }}-init
+  labels:
+{{ include "ciroh.labels" . | indent 4 }}
+  annotations:
+    helm.sh/hook: post-install,pre-upgrade
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+    {{- with .Values.serviceAccount.name }}
+      serviceAccountName: {{ . }}
+    {{- end }}
+    {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-tethys-postgresdb
+          image: postgis/postgis:16-3.4
+          env:
+            {{- include "ciroh.dbAdminEnv" . | nindent 12 }}
+            - name: PGDATABASE
+              value: postgres
+          args:
+            - /bin/bash
+            - -c
+            - |
+              while ! psql -c 'select 1' > /dev/null 2>&1; do
+                echo "waiting for the database server to be ready"
+                sleep 2
+              done
+              echo "database server is ready"
+              echo "databases provisioned"
+      containers:
+        - name: tethys-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/local/bin/provision.sh"]
+          env:
+            {{- include "ciroh.tethysEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: tethys-persist
+              mountPath: /home/tethys/persist
+            - name: portal-config
+              mountPath: /config
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: tethys-persist
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                {{- with .Values.ephemeralStorage.className }}
+                storageClassName: {{ . | quote }}
+                {{- end }}
+                resources:
+                  requests:
+                    storage: {{ .Values.ephemeralStorage.size | quote }}
+        - name: portal-config
+          configMap:
+            name: {{ include "ciroh.fullname" . }}-init-config

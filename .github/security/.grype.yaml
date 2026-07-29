@@ -4,10 +4,6 @@
 
 fail-on-severity: high
 
-exclude:
-  # Salt’s vendored Python tree contains known CVEs that we do not ship.
-  - /opt/saltstack/**
-
 ignore:
   # We intentionally pin an older CPython in the conda environment while we
   # wait on conda-build support for the latest release. Track the waiver here
@@ -30,4 +26,16 @@ ignore:
   # The apps' package.json files should be updated upstream.
   - package:
       type: npm
-    reason: "Transitive npm deps in bundled React apps — not server-side exploitable. Track upstream updates separately."
+    reason: "Transitive npm deps in bundled React apps - not server-side exploitable. Track upstream updates separately."
+
+  # PySpark (pinned pyspark==4.0.3, required by teehr for the hydrograph
+  # feature) bundles a full Spark distribution under site-packages/pyspark/jars/.
+  # Those JARs (avro, hive-exec, jackson-core, netty-*, jetty-*, zookeeper,
+  # log4j-core, commons-*, vertx-core, nimbus-jose-jwt) carry CVEs - including
+  # avro 1.9.2 embedded in hive-exec - with no fix in the pinned Spark, and they
+  # cannot be patched without replacing Spark itself. They execute only in local
+  # batch compute, never on a network-facing request path. Revisit when
+  # teehr/pyspark ship a Spark build with updated jars.
+  - package:
+      type: java-archive
+    reason: "JARs bundled inside PySpark's Spark distribution (required by teehr); no upstream fix in the pinned Spark, batch-compute only, not server-exposed."

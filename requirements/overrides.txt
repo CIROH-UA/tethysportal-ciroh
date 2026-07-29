@@ -1,0 +1,13 @@
+# pip/uv install overrides applied to the fimserve_viewer install (see Dockerfile).
+# These force versions regardless of what transitive deps request.
+
+numpy==1.26.4
+
+# Security pins - bump transitive deps off versions flagged High by the Grype
+# scan (GHSA/CVE fixes). Capped to the fix's major line so the resolver can't
+# overshoot into an incompatible major (e.g. protobuf 7.x breaks google libs).
+aiohttp>=3.13.3        # GHSA-6mq8-rvhq-8wgg (High) + others; aiobotocore/s3fs/gcsfs take it unbounded
+protobuf>=5.29.6,<6    # GHSA-8qvm-5x2c-j2w7 / GHSA-7gcm-g887-7qv7 (High); google libs require <6
+urllib3>=2.6.3,<3      # GHSA-gm62/38jv/2xpw (High); only 2.x carries the fixes
+pyarrow>=23.0.1,<24    # GHSA-rgxp-2hwp-jwgg (High); no fix before 23.x
+lxml>=6.1.0,<7         # GHSA-vfmq-68hx-4jfw (High); no fix before 6.x

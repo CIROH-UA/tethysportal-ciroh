@@ -10,16 +10,23 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  clean-space:
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/clean_space.yml@main
-
   build:
-    needs: [clean-space]
     runs-on: ubuntu-latest
     steps:
+      # Free disk space ON THIS runner before building (see build_and_push_dev_image.yml).
+      # The old clean-space job ran on a different runner, so it never helped here.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.0
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          docker-images: true
+          tool-cache: true
+
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           submodules: 'false'
 
       - name: Update submodules recursively
@@ -54,12 +61,15 @@ jobs:
         with:
           context: .
           platforms: linux/amd64
-          outputs: type=docker,dest=/tmp/image.tar
+          load: true
           tags: |
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Registry-backed layer cache on Docker Hub (persists across runs, no
+          # 10 GB GHA-cache eviction). Shared with the dev build so both reuse
+          # the same 'buildcache' tag; ignored by the dev_* cleanup script.
+          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
 
       - name: Scan image with Anchore (Grype)
         id: scan
@@ -68,16 +78,15 @@ jobs:
         env:
           GRYPE_CONFIG: .github/security/.grype.yaml
         with:
-          image: docker-archive:/tmp/image.tar
+          image: ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
           fail-build: true
           output-format: table
           severity-cutoff: high
           only-fixed: true
 
-      - name: Load and push image
+      - name: Push image
         if: steps.scan.outcome == 'success'
         run: |
-          docker load -i /tmp/image.tar
           docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
           docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
 
@@ -87,7 +96,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: CIROH-UA/tethysportal-ciroh/.github/workflows/helm_deploy.yml@main
+    uses: ./.github/workflows/helm_deploy.yml
     with:
       dry-run: false
     secrets: inherit

@@ -31,6 +31,14 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Name of the operator-created Secret holding portal credentials. The chart
+never renders secret material; create the Secret before installing.
+*/}}
+{{- define "ciroh.secretName" -}}
+{{- required "secrets.existingSecretName is required" .Values.secrets.existingSecretName -}}
+{{- end }}
+
+{{/*
 Common labels
 */}}
 {{- define "ciroh.labels" -}}
@@ -49,4 +57,206 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   {{- else }}
     {{- tpl (.value | toYaml) .context }}     
   {{- end }}
+{{- end }}
+{{- define "ciroh.dbHost" -}}
+{{- .Values.externalDatabase.host | default .Values.postgis.fullnameOverride -}}
+{{- end }}
+
+{{- define "ciroh.dbPort" -}}
+{{- if .Values.externalDatabase.host -}}
+{{- .Values.externalDatabase.port -}}
+{{- else -}}
+5432
+{{- end -}}
+{{- end }}
+
+{{- define "ciroh.dbAdminEnv" -}}
+- name: PGHOST
+  value: {{ include "ciroh.dbHost" . | quote }}
+- name: PGPORT
+  value: {{ include "ciroh.dbPort" . | quote }}
+{{- if .Values.externalDatabase.host }}
+- name: PGUSER
+  value: {{ .Values.externalDatabase.adminUser | quote }}
+- name: PGPASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: DB_ADMIN_PASSWORD
+{{- else }}
+- name: PGUSER
+  value: {{ .Values.postgis.postgres_user | quote }}
+- name: PGPASSWORD
+  value: {{ .Values.postgis.postgres_password | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
+Environment shared by the tethys-init container and the web container.
+*/}}
+{{- define "ciroh.tethysEnv" -}}
+- name: TETHYS_DB_HOST
+  value: {{ include "ciroh.dbHost" . | quote }}
+- name: TETHYS_SECRET_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: TETHYS_SECRET_KEY
+- name: TETHYS_DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: TETHYS_DB_PASSWORD
+- name: TETHYS_PS_CONNECTION
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: TETHYS_PS_CONNECTION
+- name: HYDROSHARE_CLIENT_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: HYDROSHARE_CLIENT_ID
+      optional: true
+- name: HYDROSHARE_SECRET_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: HYDROSHARE_SECRET_ID
+      optional: true
+- name: OIDC_RSA_PRIVATE_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: OIDC_RSA_PRIVATE_KEY
+      optional: true
+- name: POSTGIS_SERVICE_NAME
+  value: "tethys_postgis"
+- name: INIT_VERSION
+  value: {{ .Values.image.tag | quote }}
+- name: PORTAL_ALLOWED_HOSTS
+  valueFrom:
+    fieldRef:
+      fieldPath: status.podIP
+{{- if .Values.s3Static.bucket }}
+- name: STATIC_S3_BUCKET
+  value: {{ .Values.s3Static.bucket | quote }}
+- name: AWS_REGION
+  value: {{ .Values.s3Static.region | quote }}
+{{- with .Values.s3Static.cloudfrontDomain }}
+- name: STATIC_CLOUDFRONT_DOMAIN
+  value: {{ . | quote }}
+{{- end }}
+{{- with .Values.s3Static.endpointUrl }}
+- name: AWS_ENDPOINT_URL
+  value: {{ . | quote }}
+{{- end }}
+- name: AWS_ACCESS_KEY_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: AWS_ACCESS_KEY_ID
+      optional: true
+- name: AWS_SECRET_ACCESS_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: AWS_SECRET_ACCESS_KEY
+      optional: true
+{{- end }}
+{{- range $key, $value := omit .Values.tethys.env "TETHYS_DB_HOST" "TETHYS_DB_PASSWORD" }}
+- name: {{ quote $key }}
+  value: {{ quote $value.value }}
+{{- end }}
+{{- end }}
+
+{{/*
+Django settings derived from other chart values (ingress hosts, subchart
+service names). Everything an operator tunes lives in .Values.portalConfig
+and is deep-merged over these.
+*/}}
+{{- define "ciroh.portalConfigDerived" -}}
+ALLOWED_HOSTS:
+  - localhost
+  - 127.0.0.1
+{{- range .Values.ingresses.external.hosts }}
+{{- if .host }}
+  - {{ .host }}
+{{- end }}
+{{- end }}
+CSRF_TRUSTED_ORIGINS:
+{{- range .Values.ingresses.external.hosts }}
+{{- if .host }}
+  - {{ $.Values.tethys.env.PUBLIC_PORTAL_PROTOCOL.value }}://{{ .host }}
+{{- end }}
+{{- end }}
+SECURE_PROXY_SSL_HEADER:
+  - HTTP_X_FORWARDED_PROTO
+  - https
+STATIC_ROOT: /home/tethys/persist/static
+MEDIA_ROOT: /home/tethys/persist/media
+TETHYS_WORKSPACES_ROOT: /home/tethys/persist/workspaces
+DATABASES:
+  default:
+    ENGINE: django.db.backends.postgresql
+    NAME: {{ .Values.tethys.env.TETHYS_DB_NAME.value }}
+    USER: {{ .Values.tethys.env.TETHYS_DB_USERNAME.value }}
+    HOST: {{ include "ciroh.dbHost" . }}
+    PORT: {{ include "ciroh.dbPort" . }}
+    CONN_MAX_AGE: 0
+    DISABLE_SERVER_SIDE_CURSORS: false
+CHANNEL_LAYERS:
+  default:
+    BACKEND: channels_redis.core.RedisChannelLayer
+    CONFIG:
+      hosts:
+        - host: {{ .Values.valkey.fullnameOverride }}
+          port: {{ .Values.valkey.service.port }}
+{{- if .Values.s3Static.bucket }}
+STORAGES:
+  staticfiles:
+    BACKEND: portal_storage.PortalStaticS3Storage
+    OPTIONS:
+      bucket_name: {{ .Values.s3Static.bucket }}
+      region_name: {{ .Values.s3Static.region }}
+      location: static
+      querystring_auth: false
+      {{- with .Values.s3Static.cloudfrontDomain }}
+      custom_domain: {{ . }}
+      {{- end }}
+      {{- with .Values.s3Static.endpointUrl }}
+      endpoint_url: {{ . }}
+      {{- end }}
+  default:
+    BACKEND: storages.backends.s3.S3Storage
+    OPTIONS:
+      bucket_name: {{ .Values.s3Static.bucket }}
+      region_name: {{ .Values.s3Static.region }}
+      location: media
+      querystring_auth: false
+      {{- with .Values.s3Static.cloudfrontDomain }}
+      custom_domain: {{ . }}
+      {{- end }}
+      {{- with .Values.s3Static.endpointUrl }}
+      endpoint_url: {{ . }}
+      {{- end }}
+{{- with .Values.s3Static.cloudfrontDomain }}
+STATIC_URL: https://{{ . }}/static/
+MEDIA_URL: https://{{ . }}/media/
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Full portal_config.yml content, rendered once here and consumed by both the
+release ConfigMap and the hooked init ConfigMap so the two cannot drift.
+*/}}
+{{- define "ciroh.portalConfigContent" -}}
+version: 2.0
+name:
+apps: {}
+settings:
+{{ mergeOverwrite (include "ciroh.portalConfigDerived" . | fromYaml) (.Values.portalConfig.settings | default dict) | toYaml | indent 2 }}
+site_settings:
+{{ .Values.portalConfig.siteSettings | default dict | toYaml | indent 2 }}
 {{- end }}

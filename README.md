@@ -12,14 +12,12 @@
 * 🌍 **Users** → **AWS Application Load Balancer** (managed by the *AWS Load Balancer Controller*).
 * 📦 The ALB forwards HTTP :`8080` to:
   * 🖥️ `portal` Service → CIROH web app.
-  * 📈 `tds` Service → THREDDS Data Server for large-file downloads.
 
 Inside the namespace:
 
 | Layer | Kubernetes Object | Purpose |
 |-------|-------------------|---------|
 | 🖥️ **CIROH Portal** | Deployment → Pod(s) | Django/Tethys web stack |
-| 📈 **THREDDS** | Deployment → Pod | Catalog + OPeNDAP downloads |
 | 🐘 **PostgreSQL** | Deployment → Service :`5432` | User data & configuration |
 | ⚡ **Redis** | StatefulSet → Service :`6379` | Session & cache data |
 
@@ -99,6 +97,36 @@ single_nat_gate_way = false
 use_elastic_ips     = true
 eips                = ["...", "..."]
 ```
+
+### 2.5 · Database roles & bootstrap 🗄️
+
+The portal needs its roles and core databases to exist BEFORE the first deploy:
+
+- **`tethys_default`** — the application role; owns the portal core DB (`tethys_platform`).
+- **`tethys_app`** — a least-privilege store role (`LOGIN CREATEDB`, **not** superuser) that owns the
+  app persistent stores, plus a same-named landing database. The persistent-store service connects as
+  this role, so store creation/sync never runs as a superuser.
+
+**On RDS this is DBA work, run by the admin directly on the instance** — the chart and CI never
+provision the database. The app/CI only ever run `tethys db migrate` + `tethys syncstores` (as
+`tethys_app`). Reference SQL for the DBA (mirrors `dev/bootstrap-database.sh`):
+
+```sql
+CREATE ROLE tethys_default LOGIN PASSWORD '<app_pw>';
+CREATE ROLE tethys_app     LOGIN CREATEDB PASSWORD '<store_pw>';
+CREATE DATABASE tethys_app            OWNER tethys_app;      -- landing DB (store handlers use no dbname)
+CREATE DATABASE tethys_platform       OWNER tethys_default;
+CREATE DATABASE tethysdash_primary_db OWNER tethys_app;
+```
+
+Migrating **existing** superuser-owned stores onto `tethys_app` is also a DBA step: `ALTER DATABASE
+<store> OWNER TO tethys_app`, then per-object `ALTER TABLE/SEQUENCE … OWNER TO tethys_app` inside each
+store (`REASSIGN OWNED` refuses superuser-owned objects). CIROH's stores are non-spatial, so no
+superuser is needed.
+
+> **Local dev** does none of this by hand — the docker-compose stack runs the **dev-only**
+> `dev/bootstrap-database.sh` against the throwaway Postgres. Those scripts live in `dev/` and are
+> deliberately **not** baked into the image.
 
 ### 3 · Deploy 📦
 

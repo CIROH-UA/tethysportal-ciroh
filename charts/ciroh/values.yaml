@@ -13,75 +13,8 @@ imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
 
-gs-cloud:
-  enabled: false
-
-
-thredds:
-  enabled: true
-  fullnameOverride: 'ciroh-tds'
-  thredds_tds_catalog: '/thredds/catalog/ciroh_data/thredds_data/catalog.xml'
-  username: 'admin'
-  password: 'tdm_pass'
-  config_files:
-    init_default_config: false
-    catalog:
-      init_file: false
-      file_content: ''
-    thredds_config:
-      init_file: false
-      file_content: ''
-    wms_config:
-      init_file: false
-      file_content: ''
-    tomcat_users:
-      init_file: false
-      file_content: ''
-  # Data to be used for the public folder and also for the wms palettes
-  data:
-    init_default_config: false
-    # an example of a data archive is the following https://example.com/some/web/thredds_data.tgz
-    public:
-      init_data: false
-      data_archive: ''
-      subpath: 'ggst_thredds_directory'
-    wms_palettes:
-      # an example of a wmsPalettes archive is the following https://example.com/some/web/wmsPalettes.tgz
-      init_data: false
-      data_archive:
-      subpath: 'wmsPalettes'
-  storageClass:
-    createClass: false
-    storageClassName: ''
-  persistentVolumeClaim:
-    name: 'thredds-pv-claim'
-  env:
-    - name: TDM_PW
-      value: 'tdm_pass'
-    - name: TDS_HOST
-      value: 'ciroh-tds'
-    - name: THREDDS_XMX_SIZE
-      value: '4G'
-    - name: THREDDS_XMS_SIZE
-      value: '4G'
-    - name: TDM_XMX_SIZE
-      value: '6G'
-    - name: TDM_XMS_SIZE
-      value: '1G'
-    # - name: 'TOMCAT_USER_ID'
-    #   value: '1000'
-    # - name: TOMCAT_GROUP_ID
-    #   value: '1000'
-
-  storage_size: 2Gi
-  resources:
-    requests:
-      memory: '8Gi'
-      cpu: '2'
-    limits:
-      memory: '8Gi'
-
 postgis:
+  enabled: true
   fullnameOverride: 'ciroh-db'
   postgres_user: 'postgres'
   postgres_password: 'please_dont_use_default_passwords'
@@ -103,10 +36,9 @@ postgis:
       memory: 4Gi
   storageClass:
     storageClassName: ''
-redis:
+valkey:
   enabled: true
-  fullnameOverride: 'ciroh-redis'
-  architecture: standalone
+  fullnameOverride: 'ciroh-valkey'
   auth:
     enabled: false
   service:
@@ -119,9 +51,12 @@ tethys:
   volumeMounts: []
   volumes: []
   configMaps: {}
-  workspace_size: ''
 
   env:
+    FIMSERV_ROOT:
+      value: /home/tethys/persist/fimserve
+    FIMSERVE_CACHE_MAX_GB:
+      value: '3'
     # db-env-variables
     TETHYS_DB_NAME:
       value: tethys_platform
@@ -160,19 +95,62 @@ tethys:
       value: '--production, --overwrite'
     TETHYS_PUBLIC_HOST:
       value: 'tethys.ciroh.org'
-    NGINX_PORT:
-      value: '8080'
 podAnnotations: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
 securityContext: {}
+
+portalConfig:
+  settings:
+    # Dev/k3d default: DEBUG on -> serve.sh runs the Django dev server, which serves /static/
+    # locally (no S3/CDN). prod_aws_values.yaml overrides to false (uvicorn + static from S3).
+    DEBUG: true
+    MEDIA_URL: /media/
+    DATA_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+    DATA_UPLOAD_MAX_NUMBER_FIELDS: 1073741824
+    FILE_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+    AUTHENTICATION_BACKENDS:
+      - tethys_services.backends.hydroshare.HydroShareOAuth2
+    OAUTH_CONFIG:
+      OAUTH2_PROVIDER:
+        OIDC_ENABLED: true
+        PKCE_REQUIRED: true
+        SCOPES:
+          openid: OpenID Connect scope
+      SOCIAL_AUTH_LOGIN_REDIRECT_URL: /apps/
+    TETHYS_PORTAL_CONFIG:
+      ENABLE_OPEN_PORTAL: true
+      BYPASS_TETHYS_HOME_PAGE: true
+  siteSettings:
+    GENERAL_SETTINGS: {}
+
+s3Static:
+  bucket: ''
+  region: us-east-1
+  cloudfrontDomain: ''
+  endpointUrl: ''
+
+serviceAccount:
+  name: ''
+  roleArn: ''
+
+externalDatabase:
+  host: ''
+  port: 5432
+  adminUser: ''
+
+secrets:
+  existingSecretName: ciroh-portal-secrets
 
 service:
   type: ClusterIP
   port: 8080
   annotations: {}
 
-# Note: The first host in the ingress field is used as TETHYS_PUBLIC_HOST, TETHYS_GS_HOST_PUB, and TETHYS_TDS_HOST_PUB.
+# Note: The first host in the ingress field is used as TETHYS_PUBLIC_HOST.
 # This is true EVEN IF the ingress is not enabled!
 
 ingresses:
@@ -181,14 +159,11 @@ ingresses:
     enabled: true
     className: ''
     annotations: {}
-    hosts:
-      - host: ''
-        paths: []
-    tls: []
-  static:
-    enabled: true
-    className: ''
-    annotations: {}
+    # Redirect /static to the S3 assets host (s3Static.cloudfrontDomain) at the
+    # load balancer, for apps whose frontend hardcodes /static/ URLs. ALB only.
+    staticRedirect:
+      enabled: false
+      path: /static
     hosts:
       - host: ''
         paths: []
@@ -206,16 +181,13 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
-storageClass:
-  provisioner: ''
-  enable: false
-  storageClassName: 'ciroh-storage'
-  annotations: {}
-  reclaimPolicy: Delete
-  parameters: {}
-  volumeBindingMode: ''
-  allowVolumeExpansion: ''
-  mountOptions: []
+ephemeralStorage:
+  className: ''
+  size: 10Gi
+
+# §4.1: provisioning is one hook Job that runs provision.sh (migrate + services + static +
+# bootstrap + init.d hooks incl. store link + syncstores) — see templates/init-job.yaml. There is
+# no longer a separate provisionJob or storeLinks; app-store links live in conf/init.d/50-app-stores.sh.
 
 namespace:
   enabled: false
@@ -229,7 +201,12 @@ namespace:
     # memory: 8Gi
     ephemeral_storage: '5Gi'
 
+pdb:
+  enabled: false
+  minAvailable: 1
+
 hpa:
+  enabled: false
   minReplicas: 1
   maxReplicas: 1
   targetCPUUtilizationPercentage: 75

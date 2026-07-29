@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ciroh.fullname" . }}-portal-config
+  labels:
+{{ include "ciroh.labels" . | indent 4 }}
+data:
+  portal_config.yml: |
+{{ include "ciroh.portalConfigContent" . | indent 4 }}
