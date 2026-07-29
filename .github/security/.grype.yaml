@@ -4,10 +4,6 @@
 
 fail-on-severity: high
 
-exclude:
-  # Salt's vendored Python tree contains known CVEs that we do not ship.
-  - /opt/saltstack/**
-
 ignore:
   # We intentionally pin an older CPython in the conda environment while we
   # wait on conda-build support for the latest release. Track the waiver here
