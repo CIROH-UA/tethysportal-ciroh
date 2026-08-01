@@ -86,6 +86,16 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
     uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
 
+# GDAL (osgeo) for the USGS-MRMS flood-alert step, which reads MRMS GRIB2 grids.
+# Build the Python binding against the distro libgdal, pinned to gdal-config so its
+# ABI matches the libgdal the runtime stage installs. numpy stays 1.26.4 via overrides.
+USER root
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends libgdal-dev gdal-bin g++ \
+  && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/cache/uv \
+    uv pip install --overrides ${TETHYS_HOME}/overrides.txt "gdal==$(gdal-config --version)"
+
 RUN chmod -R a+rX /opt/python /opt/conda \
   && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp \
   && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/ciroh_plugins
@@ -93,8 +103,10 @@ RUN chmod -R a+rX /opt/python /opt/conda \
 FROM ${UVX_RUNTIME}
 
 USER root
+# git for submodule installs; gdal-bin provides the libgdal .so + GRIB2 driver the
+# flood-alert osgeo binding loads at runtime (must match the builder's libgdal).
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git \
+  && apt-get install -y --no-install-recommends git gdal-bin \
   && rm -rf /var/lib/apt/lists/*
 USER 1000:1000
 
