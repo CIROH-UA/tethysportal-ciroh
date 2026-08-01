@@ -1,7 +1,12 @@
-# pip/uv install overrides applied to the fimserve_viewer install (see Dockerfile).
-# These force versions regardless of what transitive deps request.
+# pip/uv install overrides applied to the fimserve_viewer and USGS-MRMS installs
+# (see Dockerfile). These force versions regardless of what transitive deps request.
 
 numpy==1.26.4
+
+# zarr v3 requires numpy>=2 (uses np.dtypes.StringDType) and can't import under the
+# numpy 1.26.4 pin above. Force the zarr v2 line: it is numpy-1.26 compatible and is
+# the format the USGS-MRMS rain_zarr data is written in (.zarray/.zgroup, not zarr.json).
+zarr>=2.18,<3
 
 # Security pins - bump transitive deps off versions flagged High by the Grype
 # scan (GHSA/CVE fixes). Capped to the fix's major line so the resolver can't

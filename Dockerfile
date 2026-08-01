@@ -73,6 +73,19 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
     uv pip uninstall nodejs-bin
 
+# USGS-MRMS: runtime lib (EWS path only -- Hydro-Event-Detector excluded via the fork
+# branch) then the app. The app's pyproject declares no deps (they live in its
+# install.yml), so its runtime deps are installed explicitly. numpy stays 1.26.4 via
+# overrides.txt. Reads S3 from ciroh-portal-assets/usgs-mrms via IRSA (env-configured).
+COPY apps/mrms_usgs_events ${TETHYS_HOME}/apps/mrms_usgs_events
+COPY apps/usgs_mrms_tethys_app ${TETHYS_HOME}/apps/usgs_mrms_tethys_app
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/mrms_usgs_events && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
+    uv pip install --overrides ${TETHYS_HOME}/overrides.txt \
+      plotly mercantile boto3 pillow python-dotenv xarray zarr && \
+    cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
+    uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
+
 RUN chmod -R a+rX /opt/python /opt/conda \
   && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp \
   && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/ciroh_plugins
