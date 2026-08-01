@@ -73,10 +73,6 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
     uv pip uninstall nodejs-bin
 
-# USGS-MRMS: runtime lib (EWS path only -- Hydro-Event-Detector excluded via the fork
-# branch) then the app. The app's pyproject declares no deps (they live in its
-# install.yml), so its runtime deps are installed explicitly. numpy stays 1.26.4 via
-# overrides.txt. Reads S3 from ciroh-portal-assets/usgs-mrms via IRSA (env-configured).
 COPY apps/mrms_usgs_events ${TETHYS_HOME}/apps/mrms_usgs_events
 COPY apps/usgs_mrms_tethys_app ${TETHYS_HOME}/apps/usgs_mrms_tethys_app
 RUN --mount=type=cache,target=/cache/uv \
@@ -86,9 +82,6 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
     uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
 
-# GDAL (osgeo) for the USGS-MRMS flood-alert step, which reads MRMS GRIB2 grids.
-# Build the Python binding against the distro libgdal, pinned to gdal-config so its
-# ABI matches the libgdal the runtime stage installs. numpy stays 1.26.4 via overrides.
 USER root
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libgdal-dev gdal-bin g++ \
@@ -103,8 +96,6 @@ RUN chmod -R a+rX /opt/python /opt/conda \
 FROM ${UVX_RUNTIME}
 
 USER root
-# git for submodule installs; gdal-bin provides the libgdal .so + GRIB2 driver the
-# flood-alert osgeo binding loads at runtime (must match the builder's libgdal).
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git gdal-bin \
   && rm -rf /var/lib/apt/lists/*
