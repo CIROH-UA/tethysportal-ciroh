@@ -13,8 +13,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Free disk space ON THIS runner before building (see build_and_push_dev_image.yml).
-      # The old clean-space job ran on a different runner, so it never helped here.
       - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.0
         with:
