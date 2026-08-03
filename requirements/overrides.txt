@@ -3,7 +3,7 @@
 
 numpy==1.26.4
 
-zarr>=2.18,<3
+zarr>=3,<3.1
 
 # Security pins - bump transitive deps off versions flagged High by the Grype
 # scan (GHSA/CVE fixes). Capped to the fix's major line so the resolver can't
