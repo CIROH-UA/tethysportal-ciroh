@@ -77,7 +77,7 @@ jobs:
 
       # §4.1: provisioning is a single pre-upgrade hook Job that runs provision.sh (migrate +
       # services + static + bootstrap + init.d hooks incl. store link + syncstores). The helm
-      # upgrade below runs it as part of the release — no separate provision step is needed.
+      # upgrade below runs it as part of the release - no separate provision step is needed.
       - name: Deploy Helm chart to EKS
         run: |
           helm upgrade ${{ env.RELEASE_NAME }} charts/ciroh --install \

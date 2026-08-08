@@ -73,6 +73,22 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/tethysapp-fimserve_viewer && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
     uv pip uninstall nodejs-bin
 
+COPY apps/mrms_usgs_events ${TETHYS_HOME}/apps/mrms_usgs_events
+COPY apps/usgs_mrms_tethys_app ${TETHYS_HOME}/apps/usgs_mrms_tethys_app
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/mrms_usgs_events && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
+    uv pip install --overrides ${TETHYS_HOME}/overrides.txt \
+      plotly mercantile boto3 pillow python-dotenv xarray zarr && \
+    cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
+    uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
+
+USER root
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends libgdal-dev gdal-bin g++ \
+  && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/cache/uv \
+    uv pip install --overrides ${TETHYS_HOME}/overrides.txt "gdal==$(gdal-config --version)"
+
 RUN chmod -R a+rX /opt/python /opt/conda \
   && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/tethysapp \
   && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/ciroh_plugins
@@ -81,7 +97,7 @@ FROM ${UVX_RUNTIME}
 
 USER root
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git \
+  && apt-get install -y --no-install-recommends git gdal-bin \
   && rm -rf /var/lib/apt/lists/*
 USER 1000:1000
 

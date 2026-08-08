@@ -25,3 +25,11 @@
 	path = apps/tethysapp-fimserve_viewer
 	url = https://github.com/Aquaveo/tethysapp-fimserve_viewer.git
 	branch = main
+[submodule "apps/usgs_mrms_tethys_app"]
+	path = apps/usgs_mrms_tethys_app
+	url = https://github.com/Aquaveo/usgs_mrms_tethys_app.git
+	branch = feat/ciroh-s3
+[submodule "apps/mrms_usgs_events"]
+	path = apps/mrms_usgs_events
+	url = https://github.com/Aquaveo/mrms_usgs_events.git
+	branch = feat/ciroh-optional-hed

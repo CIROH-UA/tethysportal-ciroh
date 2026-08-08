@@ -39,6 +39,8 @@ tethys link "persistent:${POSTGIS_SERVICE_NAME}" "tethysdash:ps_database:primary
   || echo "    (tethysdash link may already exist)"
 tethys link "persistent:${POSTGIS_SERVICE_NAME}" "fimserve_viewer:ps_database:jobs_db" \
   || echo "    (fimserve_viewer link may already exist)"
+tethys link "persistent:${POSTGIS_SERVICE_NAME}" "usgs_mrms:ps_database:jobs_db" \
+  || echo "    (usgs_mrms link may already exist)"
 
 echo "==> [3/6] sync stores"
 tethys db sync
