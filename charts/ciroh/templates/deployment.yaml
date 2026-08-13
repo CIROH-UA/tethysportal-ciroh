@@ -47,18 +47,27 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
+          # Probes hit the Django-rendered "/", which is slow under load. The
+          # k8s defaults (timeoutSeconds 1, failureThreshold 3) let a pod that
+          # is merely busy with a heavy flood-generation job get depooled and
+          # (worse) liveness-killed mid-job. Give generous timeouts, and make
+          # liveness very tolerant so a working-but-busy pod is never restarted.
           readinessProbe:
             httpGet:
               path: /
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
           volumeMounts:
             - name: tethys-persist
               mountPath: /home/tethys/persist
