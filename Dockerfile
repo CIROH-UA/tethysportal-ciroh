@@ -82,6 +82,15 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
     uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
 
+# hydro-correlation-tool declares its runtime deps in install.yml (not
+# pyproject), so `uv pip install .` won't pull them — add them explicitly.
+# geopandas/pyarrow/requests are already in the image via other apps.
+COPY apps/hydro-correlation-tool ${TETHYS_HOME}/apps/hydro-correlation-tool
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/hydro-correlation-tool && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
+    uv pip install --overrides ${TETHYS_HOME}/overrides.txt \
+      geoglows dataretrieval geoalchemy2 hydroeval
+
 USER root
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libgdal-dev gdal-bin g++ \
