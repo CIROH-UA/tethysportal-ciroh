@@ -93,12 +93,15 @@ valkey:
 postgis:
   enabled: false
 
+# Flood-map generation runs the HAND pipeline (GDAL mosaic + streamflow labels)
+# in-process on the serving pod. It OOMKilled at the 6Gi limit, taking the whole
+# pod down (exit 137). Give headroom until execution is moved off the web pods.
 resources:
   requests:
     cpu: 500m
-    memory: 2Gi
+    memory: 4Gi
   limits:
-    memory: 6Gi
+    memory: 12Gi
 
 nodeSelector: {}
 tolerations: []

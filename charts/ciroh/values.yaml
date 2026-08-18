@@ -67,6 +67,10 @@ tethys:
       value: us-east-1
     HYDRO_HISTORY_S3_PREFIX:
       value: experiments/hydro_history_3mm_all_stage
+    # Reference/GRIB2 cache on the per-pod persist volume (not /tmp), so it reuses
+    # the sized volume and is skipped on repeat runs for a state on the same pod.
+    USGS_MRMS_WORKDIR:
+      value: /home/tethys/persist/usgs_mrms
     # db-env-variables
     TETHYS_DB_NAME:
       value: tethys_platform
