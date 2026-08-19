@@ -6,7 +6,11 @@ metadata:
   labels:
 {{ include "ciroh.labels" . | indent 4 }}
 spec:
+  {{- if .Values.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  {{- else }}
   minAvailable: {{ .Values.pdb.minAvailable }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "ciroh.name" . }}

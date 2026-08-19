@@ -216,7 +216,10 @@ namespace:
     ephemeral_storage: '5Gi'
 
 pdb:
-  enabled: false
+  enabled: true
+  # Prefer maxUnavailable: with HPA minReplicas 1, minAvailable:1 would block
+  # draining the sole web pod and deadlock Karpenter consolidation / spot reclaims.
+  maxUnavailable: 1
   minAvailable: 1
 
 hpa:
