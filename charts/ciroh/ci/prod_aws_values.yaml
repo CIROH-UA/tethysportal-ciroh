@@ -115,6 +115,9 @@ strategy: RollingUpdate
 
 hpa:
   enabled: true
-  minReplicas: 1
+  # minReplicas 2 (not 1): keeps a ready pod during rollouts/consolidation so
+  # the ALB always has a healthy target — avoids the brief 502/503 flap when a
+  # single-replica surge drains the old pod before the new one is Ready.
+  minReplicas: 2
   maxReplicas: 3
   targetCPUUtilizationPercentage: 75
