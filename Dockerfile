@@ -82,6 +82,19 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
     uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
 
+# nrds: Tethys app with a webpack/React (deck.gl) frontend — same build shape as
+# tethys_dash. Swap dev->prod react config (only DEBUG differs; root URL is
+# already /apps/nrds/), webpack build, then install. Its Python deps (pyarrow,
+# xarray, s3fs, ...) are already satisfied by the image. setuptools_scm needs git
+# for the version, but .dockerignore strips .git — so pin a pretend version.
+COPY apps/nrds-client ${TETHYS_HOME}/apps/nrds-client
+RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
+    cd ${TETHYS_HOME}/apps/nrds-client && \
+    mv reactapp/config/development.env reactapp/config/production.env && \
+    sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = false#g" reactapp/config/production.env && \
+    npm install && npm run build && \
+    SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0 uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
+
 USER root
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libgdal-dev gdal-bin g++ \
