@@ -16,6 +16,8 @@ DEEP_DEPS = {
     "community_streamflow_evaluation_system": ["geopandas", "sklearn.metrics"],
     "sweml": ["geopandas"],
     "fimbench_gui": ["osgeo.gdal"],
+    "hydro_correlation_tool": ["geoglows", "dataretrieval", "geoalchemy2",
+                               "hydroeval", "geopandas"],
     "nrds": ["geopandas", "xarray", "pyarrow", "s3fs"],
 }
 EXTRA = ["ciroh_plugins"]

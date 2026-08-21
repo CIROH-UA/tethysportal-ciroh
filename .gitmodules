@@ -33,6 +33,10 @@
 	path = apps/mrms_usgs_events
 	url = https://github.com/Aquaveo/mrms_usgs_events.git
 	branch = feat/ciroh-optional-hed
+[submodule "apps/hydro-correlation-tool"]
+	path = apps/hydro-correlation-tool
+	url = https://github.com/gwenhover/hydro-correlation-tool
+	branch = main
 [submodule "apps/nrds-client"]
 	path = apps/nrds-client
 	url = https://github.com/CIROH-UA/nrds-client
