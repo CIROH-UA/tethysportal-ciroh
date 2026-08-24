@@ -40,4 +40,4 @@
 [submodule "apps/nrds-client"]
 	path = apps/nrds-client
 	url = https://github.com/CIROH-UA/nrds-client
-	branch = perf/react-deckgl-review
+	branch = feat/mobile-sheet-collapse
