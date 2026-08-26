@@ -37,3 +37,7 @@
 	path = apps/hydro-correlation-tool
 	url = https://github.com/gwenhover/hydro-correlation-tool
 	branch = main
+[submodule "apps/nrds-client"]
+	path = apps/nrds-client
+	url = https://github.com/CIROH-UA/nrds-client
+	branch = main

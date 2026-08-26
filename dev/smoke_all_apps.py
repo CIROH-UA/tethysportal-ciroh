@@ -18,6 +18,7 @@ DEEP_DEPS = {
     "fimbench_gui": ["osgeo.gdal"],
     "hydro_correlation_tool": ["geoglows", "dataretrieval", "geoalchemy2",
                                "hydroeval", "geopandas"],
+    "nrds": ["geopandas", "xarray", "pyarrow", "s3fs"],
 }
 EXTRA = ["ciroh_plugins"]
 

@@ -82,14 +82,21 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
     uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
 
-# hydro-correlation-tool declares its runtime deps in install.yml (not
-# pyproject), so `uv pip install .` won't pull them — add them explicitly.
-# geopandas/pyarrow/requests are already in the image via other apps.
 COPY apps/hydro-correlation-tool ${TETHYS_HOME}/apps/hydro-correlation-tool
 RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/hydro-correlation-tool && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
     uv pip install --overrides ${TETHYS_HOME}/overrides.txt \
       geoglows dataretrieval geoalchemy2 hydroeval
+
+COPY apps/nrds-client ${TETHYS_HOME}/apps/nrds-client
+RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
+    cd ${TETHYS_HOME}/apps/nrds-client && \
+    mv reactapp/config/development.env reactapp/config/production.env && \
+    sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = false#g" reactapp/config/production.env && \
+    npm install && npm run build && \
+    /opt/conda/envs/tethys/bin/python scripts/build_slim_index.py && \
+    SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0 uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
+    /opt/conda/envs/tethys/bin/python -c "import pathlib,sys,tethysapp.nrds as a; p=pathlib.Path(a.__file__).parent/'public/data/hydrofabric_index_slim.parquet'; sys.exit(0) if p.is_file() and p.stat().st_size>30_000_000 else sys.exit('slim index missing/too small in installed package: %s'%p)"
 
 USER root
 RUN apt-get update \
