@@ -82,20 +82,12 @@ RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms && \
     uv pip install . --overrides ${TETHYS_HOME}/overrides.txt
 
-# hydro-correlation-tool declares its runtime deps in install.yml (not
-# pyproject), so `uv pip install .` won't pull them — add them explicitly.
-# geopandas/pyarrow/requests are already in the image via other apps.
 COPY apps/hydro-correlation-tool ${TETHYS_HOME}/apps/hydro-correlation-tool
 RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/apps/hydro-correlation-tool && uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
     uv pip install --overrides ${TETHYS_HOME}/overrides.txt \
       geoglows dataretrieval geoalchemy2 hydroeval
 
-# nrds: Tethys app with a webpack/React (deck.gl) frontend — same build shape as
-# tethys_dash. Swap dev->prod react config (only DEBUG differs; root URL is
-# already /apps/nrds/), webpack build, then install. Its Python deps (pyarrow,
-# xarray, s3fs, ...) are already satisfied by the image. setuptools_scm needs git
-# for the version, but .dockerignore strips .git — so pin a pretend version.
 COPY apps/nrds-client ${TETHYS_HOME}/apps/nrds-client
 RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
     cd ${TETHYS_HOME}/apps/nrds-client && \
