@@ -10,4 +10,5 @@ SVC="${POSTGIS_SERVICE_NAME:-tethys_postgis}"
 tethys link "persistent:${SVC}" "tethysdash:ps_database:primary_db"     || echo "  (tethysdash link may already exist)"
 tethys link "persistent:${SVC}" "fimserve_viewer:ps_database:jobs_db"   || echo "  (fimserve_viewer link may already exist)"
 tethys link "persistent:${SVC}" "usgs_mrms:ps_database:jobs_db"         || echo "  (usgs_mrms link may already exist)"
+tethys link "persistent:${SVC}" "hydro_correlation_tool:ps_database:primary_db" || echo "  (hydro_correlation_tool link may already exist)"
 tethys syncstores all
