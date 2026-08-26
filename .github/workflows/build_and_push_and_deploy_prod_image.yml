@@ -27,14 +27,6 @@ jobs:
           fetch-depth: 1
           submodules: 'false'
 
-      # hydro-correlation-tool is a PRIVATE repo under github.com/gwenhover.
-      # The default GITHUB_TOKEN can't read it, so inject a PAT (repo secret
-      # HYDRO_CORR_TOKEN, read access to that repo) for just gwenhover/* URLs.
-      # Public submodules keep cloning anonymously.
-      - name: Authenticate private submodule (hydro-correlation-tool)
-        run: |
-          git config --global url."https://x-access-token:${{ secrets.HYDRO_CORR_TOKEN }}@github.com/gwenhover/".insteadOf "https://github.com/gwenhover/"
-
       - name: Update submodules recursively
         run: |
           git submodule sync --recursive
