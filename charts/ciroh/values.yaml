@@ -133,6 +133,8 @@ portalConfig:
     DATA_UPLOAD_MAX_MEMORY_SIZE: 1073741824
     DATA_UPLOAD_MAX_NUMBER_FIELDS: 1073741824
     FILE_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+    INSTALLED_APPS:
+      - tethysapp.ngiab
     AUTHENTICATION_BACKENDS:
       - tethys_services.backends.hydroshare.HydroShareOAuth2
     OAUTH_CONFIG:
