@@ -98,6 +98,12 @@ RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
     SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0 uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
     /opt/conda/envs/tethys/bin/python -c "import pathlib,sys,tethysapp.nrds as a; p=pathlib.Path(a.__file__).parent/'public/data/hydrofabric_index_slim.parquet'; sys.exit(0) if p.is_file() and p.stat().st_size>30_000_000 else sys.exit('slim index missing/too small in installed package: %s'%p)"
 
+COPY apps/ngiab-client ${TETHYS_HOME}/apps/ngiab-client
+RUN --mount=type=cache,target=/cache/uv \
+    cd ${TETHYS_HOME}/apps/ngiab-client && \
+    SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0 uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
+    /opt/conda/envs/tethys/bin/python -c "import duckdb; from importlib.metadata import version; print('ngiab', version('tethysapp-ngiab'), '| duckdb', duckdb.__version__)"
+
 USER root
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libgdal-dev gdal-bin g++ \
