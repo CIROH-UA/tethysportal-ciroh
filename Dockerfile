@@ -104,6 +104,14 @@ RUN --mount=type=cache,target=/cache/uv \
     SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0 uv pip install . --overrides ${TETHYS_HOME}/overrides.txt && \
     /opt/conda/envs/tethys/bin/python -c "import duckdb; from importlib.metadata import version; print('ngiab', version('tethysapp-ngiab'), '| duckdb', duckdb.__version__)"
 
+# ngiab's duckdb_conn LOADs httpfs+aws from a fixed dir with autoinstall/autoload
+# off, so the version-matched extensions must be baked in at build time (the app
+# reads them back from DUCKDB_HOME at runtime). Without this, run ingest fails at
+# conversion with "Extension httpfs not found".
+RUN mkdir -p /opt/duckdb_extensions && \
+    /opt/conda/envs/tethys/bin/python -c "import duckdb; c=duckdb.connect(); c.execute(\"SET extension_directory='/opt/duckdb_extensions'\"); c.execute('INSTALL httpfs'); c.execute('INSTALL aws'); print('duckdb extensions installed', duckdb.__version__)" && \
+    /opt/conda/envs/tethys/bin/python -c "import pathlib,sys; e=list(pathlib.Path('/opt/duckdb_extensions').rglob('httpfs.duckdb_extension')); sys.exit(0 if e else 'httpfs extension missing after INSTALL')"
+
 USER root
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libgdal-dev gdal-bin g++ \
@@ -127,6 +135,9 @@ ENV POSTGIS_SERVICE_NAME="tethys_postgis"
 
 COPY --from=builder /opt/python /opt/python
 COPY --from=builder /opt/conda /opt/conda
+# ngiab DuckDB extensions (httpfs, aws), read from DUCKDB_HOME at runtime.
+COPY --from=builder /opt/duckdb_extensions /opt/duckdb_extensions
+ENV DUCKDB_HOME=/opt/duckdb_extensions
 COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
 # Portal-owned S3 storage backend (base no longer ships it); on PYTHONPATH=/opt/portal.
 COPY conf/portal_storage.py /opt/portal/portal_storage.py
