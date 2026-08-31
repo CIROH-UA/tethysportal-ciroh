@@ -219,6 +219,7 @@ STORAGES:
     OPTIONS:
       bucket_name: {{ .Values.s3Static.bucket }}
       region_name: {{ .Values.s3Static.region }}
+      signature_version: s3v4
       location: static
       querystring_auth: false
       {{- with .Values.s3Static.cloudfrontDomain }}
@@ -232,6 +233,11 @@ STORAGES:
     OPTIONS:
       bucket_name: {{ .Values.s3Static.bucket }}
       region_name: {{ .Values.s3Static.region }}
+      # Force SigV4 presigning. django-storages defaults to the SigV2 signer on
+      # the global s3.amazonaws.com endpoint; SigV2 bakes Content-Type into the
+      # signature, so browser PUTs (which send their own Content-Type) 403 with
+      # SignatureDoesNotMatch. SigV4 query presign does not sign Content-Type.
+      signature_version: s3v4
       location: media
       querystring_auth: false
       {{- with .Values.s3Static.cloudfrontDomain }}
