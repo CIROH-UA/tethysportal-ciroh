@@ -130,6 +130,12 @@ Environment shared by the tethys-init container and the web container.
       name: {{ include "ciroh.secretName" . }}
       key: OIDC_RSA_PRIVATE_KEY
       optional: true
+- name: SWEML_S3_READER_EXTERNAL_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "ciroh.secretName" . }}
+      key: SWEML_S3_READER_EXTERNAL_ID
+      optional: true
 - name: POSTGIS_SERVICE_NAME
   value: "tethys_postgis"
 - name: INIT_VERSION

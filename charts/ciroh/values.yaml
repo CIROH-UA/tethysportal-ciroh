@@ -78,6 +78,8 @@ tethys:
       value: s3
     NGIAB_RUNS_PREFIX:
       value: ngiab_visualizer
+    SWEML_S3_READER_ROLE_ARN:
+      value: arn:aws:iam::858933856877:role/ciroh-portal-s3-reader
     # db-env-variables
     TETHYS_DB_NAME:
       value: tethys_platform
