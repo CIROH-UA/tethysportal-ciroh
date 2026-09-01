@@ -19,6 +19,7 @@ DEEP_DEPS = {
     "hydro_correlation_tool": ["geoglows", "dataretrieval", "geoalchemy2",
                                "hydroeval", "geopandas"],
     "nrds": ["geopandas", "xarray", "pyarrow", "s3fs"],
+    "ngiab": ["duckdb", "geopandas", "xarray", "netCDF4", "pyogrio"],
 }
 EXTRA = ["ciroh_plugins"]
 

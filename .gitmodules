@@ -9,7 +9,7 @@
 [submodule "apps/tethysapp-sweml"]
 	path = apps/tethysapp-sweml
 	url = https://github.com/Aquaveo/tethysapp-sweml.git
-	branch = devcon
+	branch = main
 [submodule "apps/tethysapp-tethys_dash"]
 	path = apps/tethysapp-tethys_dash
 	url = https://github.com/tethysplatform/tethysapp-tethys_dash.git
@@ -41,3 +41,7 @@
 	path = apps/nrds-client
 	url = https://github.com/CIROH-UA/nrds-client
 	branch = main
+[submodule "apps/ngiab-client"]
+	path = apps/ngiab-client
+	url = https://github.com/CIROH-UA/ngiab-client
+	branch = feat/storage-backed-model-runs

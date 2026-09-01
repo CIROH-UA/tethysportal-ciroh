@@ -71,6 +71,15 @@ tethys:
     # the sized volume and is skipped on repeat runs for a state on the same pod.
     USGS_MRMS_WORKDIR:
       value: /home/tethys/persist/usgs_mrms
+    # NGIAB Visualizer: model runs live in the portal's default S3 storage
+    # (ciroh-portal-assets/media/ngiab_visualizer) via IRSA. This switch also puts
+    # DuckDB into S3 mode; with no keys it reads the bucket via the credential chain.
+    NGIAB_STORAGE_BACKEND:
+      value: s3
+    NGIAB_RUNS_PREFIX:
+      value: ngiab_visualizer
+    SWEML_S3_READER_ROLE_ARN:
+      value: arn:aws:iam::858933856877:role/ciroh-portal-s3-reader
     # db-env-variables
     TETHYS_DB_NAME:
       value: tethys_platform
@@ -126,6 +135,8 @@ portalConfig:
     DATA_UPLOAD_MAX_MEMORY_SIZE: 1073741824
     DATA_UPLOAD_MAX_NUMBER_FIELDS: 1073741824
     FILE_UPLOAD_MAX_MEMORY_SIZE: 1073741824
+    INSTALLED_APPS:
+      - tethysapp.ngiab
     AUTHENTICATION_BACKENDS:
       - tethys_services.backends.hydroshare.HydroShareOAuth2
     OAUTH_CONFIG:
