@@ -17,3 +17,8 @@ variable "eips" {
   description = "List of Elastic IP IDs"
   default = [] # Optional: Provide a default value if needed
 }
+
+variable "kubernetes_version" {
+  type        = string
+  description = "EKS control plane version. Node groups and Karpenter AMIs follow this."
+}

@@ -32,6 +32,7 @@ module "ciroh_portal" {
   region              = "us-east-1"
   profile             = "456531024327"
   cluster_name        = "ciroh-portal-prod"
+  kubernetes_version  = "1.36"
   app_name            = "cirohportal"
   helm_chart          = "ciroh"
   helm_repo           = "https://docs.ciroh.org/tethysportal-ciroh"
