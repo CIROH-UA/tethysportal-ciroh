@@ -6,6 +6,8 @@ tethys-app:
     host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
     name: tethys_platform
     username: tethys_default
+  ephemeralStorage:
+    className: gp2
   serviceAccount:
     roleArn: arn:aws:iam::456531024327:role/fimeval-s3-irsa
   ingress:
