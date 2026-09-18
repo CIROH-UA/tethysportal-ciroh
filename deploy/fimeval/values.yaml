@@ -1,0 +1,27 @@
+# CIROH overlay for the standalone FIMeval chart (apps/tethysapp-fimeval-gui/deploy/chart).
+# Only environment specifics live here; the generic base is in the app repo.
+
+tethys-app:
+  externalDatabase:
+    host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
+    name: tethys_platform
+    username: tethys_default
+  serviceAccount:
+    roleArn: arn:aws:iam::456531024327:role/fimeval-s3-irsa
+  ingress:
+    enabled: true
+    className: alb
+    host: fimeval.tethys.ciroh.org
+    annotations:
+      alb.ingress.kubernetes.io/group.name: ciroh-portal
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
+
+dask:
+  worker:
+    nodeSelector:
+      karpenter.sh/capacity-type: spot
+    env:
+      FIMEVAL_TARGET_CRS: EPSG:5070
