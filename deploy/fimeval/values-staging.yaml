@@ -2,6 +2,10 @@
 # database (seed it from tethys_platform). No public ingress; reach it via
 # `kubectl port-forward -n staging svc/fimeval 8080:8080`.
 tethys-app:
+  # staging has no S3 static; DEBUG runs the dev server which serves /static/ locally
+  portalConfig:
+    settings:
+      DEBUG: true
   externalDatabase:
     host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
     port: 5432
