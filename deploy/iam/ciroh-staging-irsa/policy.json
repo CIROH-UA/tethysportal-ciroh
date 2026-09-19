@@ -8,7 +8,7 @@
         "s3:PutObject",
         "s3:DeleteObject"
       ],
-      "Resource": "arn:aws:s3:::ciroh-portal-assets/fimeval-staging/*"
+      "Resource": "arn:aws:s3:::ciroh-portal-assets/staging/*"
     },
     {
       "Effect": "Allow",
@@ -16,7 +16,7 @@
       "Resource": "arn:aws:s3:::ciroh-portal-assets",
       "Condition": {
         "StringLike": {
-          "s3:prefix": "fimeval-staging/*"
+          "s3:prefix": "staging/*"
         }
       }
     }

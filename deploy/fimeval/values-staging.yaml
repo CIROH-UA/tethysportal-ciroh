@@ -7,10 +7,10 @@ tethys-app:
     settings:
       DEBUG: true
   tethys:
-    # staging shares ciroh-portal-assets but namespaces its data under fimeval-staging/
+    # staging apps share ciroh-portal-assets under staging/<app>/
     env:
       FIMEVAL_S3_KEY_PREFIX:
-        value: fimeval-staging/
+        value: staging/fimeval/
   externalDatabase:
     host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
     port: 5432
@@ -19,7 +19,7 @@ tethys-app:
   ephemeralStorage:
     className: gp2
   serviceAccount:
-    roleArn: arn:aws:iam::456531024327:role/fimeval-s3-irsa-staging
+    roleArn: arn:aws:iam::456531024327:role/ciroh-staging-irsa
   ingress:
     enabled: false
 
