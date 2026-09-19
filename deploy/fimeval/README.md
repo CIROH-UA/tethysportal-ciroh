@@ -1,32 +1,31 @@
-# FIMeval on the CIROH portal
+# FIMeval on the CIROH cluster
 
-FIMeval is a standalone Tethys app, deployed on its own subdomain on the shared
-ciroh-portal ALB, decoupled from the portal image. Its generic Helm chart lives in
-the app repo (`Aquaveo/tethysapp-fimeval-gui`, `deploy/chart`); this directory holds
-only the CIROH environment overlay.
+FIMeval is a standalone Tethys app, decoupled from the portal image. Its generic
+Helm chart lives in the app repo (`Aquaveo/tethysapp-fimeval-gui`, `deploy/chart`);
+this directory holds only the CIROH environment overlay.
 
-## Install
+Currently deployed to **staging only** (`staging` namespace). There is no prod
+FIMeval yet; when there is, add a prod overlay here.
+
+## Install (staging)
 
 From a checkout of the app repo (`tethysapp-fimeval-gui`):
 
 ```bash
 helm dependency build deploy/chart
 helm install fimeval deploy/chart \
-  -n fimeval --create-namespace \
-  -f <tethysportal-ciroh>/deploy/fimeval/values.yaml
+  -n staging --create-namespace \
+  -f <tethysportal-ciroh>/deploy/fimeval/values-staging.yaml
 ```
 
-`values.yaml` sets the shared RDS host, the `fimeval-s3-irsa` role, the
-`fimeval.tethys.ciroh.org` ingress on the `ciroh-portal` ALB group, and spot
-worker placement. `iam/` holds the concrete trust and permission policies for the
-`fimeval-s3-irsa` role (S3 on `ciroh-portal-assets/fimeval/*`).
+`values-staging.yaml` points at the `tethys_platform_staging` database (same RDS as
+prod, seeded from `tethys_platform`), runs with `DEBUG` on so the dev server serves
+static, uses the shared `ciroh-staging-irsa` role, namespaces S3 under
+`staging/fimeval/`, and exposes no public ingress. Reach it via:
 
-## DNS and TLS
+```bash
+kubectl port-forward -n staging svc/fimeval 8080:8080
+```
 
-Per-app subdomains on the shared ALB need, once:
-
-- a DNS record for the host (`fimeval.tethys.ciroh.org`, or a wildcard
-  `*.tethys.ciroh.org`) pointing at the portal ALB, and
-- an ACM cert covering the host (a wildcard `*.tethys.ciroh.org` covers every app).
-
-The ALB routes by Host header, so the raw ELB name returns 404 by design.
+The shared staging IAM role lives at `../iam/ciroh-staging-irsa/`. Set the app's
+`s3_bucket` custom setting to `ciroh-portal-assets` post-deploy (keys blank, IRSA).
