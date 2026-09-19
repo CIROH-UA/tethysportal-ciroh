@@ -1,0 +1,35 @@
+# Staging "house" portal: bare Tethys (no apps baked), multi-app mode, on the shared
+# tethys_platform_staging DB. Proxy apps to the standalone staging apps are added via
+# admin. No public ingress; reach via `kubectl port-forward -n staging svc/portal 8080:8080`.
+fullnameOverride: portal
+
+image:
+  repository: ghcr.io/aquaveo/tethys-uvx
+  tag: runtime
+  pullPolicy: Always
+
+tethys:
+  mode: multi
+
+portalConfig:
+  settings:
+    DEBUG: true
+
+externalDatabase:
+  host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
+  port: 5432
+  name: tethys_platform_staging
+  username: tethys_default
+
+ephemeralStorage:
+  className: gp2
+
+secrets:
+  existingSecretName: fimeval-secrets
+
+serviceAccount:
+  create: true
+  name: staging-portal
+
+ingress:
+  enabled: false
