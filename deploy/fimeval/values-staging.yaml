@@ -22,6 +22,12 @@ tethys-app:
     roleArn: arn:aws:iam::456531024327:role/ciroh-staging-irsa
   ingress:
     enabled: false
+  # scale the web pod to 0 when idle; KEDA interceptor wakes it 0->1 on request
+  scaleToZero:
+    enabled: true
+    hosts: ["fimeval.tethys.ciroh.org"]
+    maxReplicas: 2
+    scaledownPeriod: 120
 
 dask:
   worker:
