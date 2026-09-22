@@ -1,0 +1,56 @@
+# Production fimeval: shared prod tethys_platform DB (shared users), S3 static + data
+# via IRSA, DEBUG off, scale-to-zero on the ciroh-apps ALB at fimeval.tethys.ciroh.org.
+# App data + static namespaced under fimeval/ in ciroh-portal-assets.
+tethys-app:
+  image:
+    repository: gioelkin/tethysapp-fimeval-gui
+    tag: latest
+    pullPolicy: Always
+  tethys:
+    mode: single
+    standaloneApp: fimeval_gui
+  externalDatabase:
+    host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
+    port: 5432
+    name: tethys_platform
+    username: tethys_default
+  ephemeralStorage:
+    className: gp2
+  s3Static:
+    enabled: true
+    bucket: ciroh-portal-assets
+    region: us-east-1
+  serviceAccount:
+    # reuse the portal's SA (already bound to ciroh-portal-irsa) -> S3 works, no new IAM role
+    create: false
+    name: ciroh-portal
+  secrets:
+    existingSecretName: ciroh-portal-secrets
+    secretEnv:
+      - name: HYDROSHARE_CLIENT_ID
+        key: HYDROSHARE_CLIENT_ID
+      - name: HYDROSHARE_SECRET_ID
+        key: HYDROSHARE_SECRET_ID
+  portalConfig:
+    settings:
+      AUTHENTICATION_BACKENDS:
+        - tethys_services.backends.hydroshare.HydroShareOAuth2
+      OAUTH_CONFIG:
+        OAUTH2_PROVIDER:
+          OIDC_ENABLED: true
+          PKCE_REQUIRED: true
+  scaleToZero:
+    enabled: true
+    hosts: ["fimeval.tethys.ciroh.org"]
+    maxReplicas: 2
+    scaledownPeriod: 300
+  pdb:
+    enabled: true
+
+dask:
+  serviceAccountName: ciroh-portal
+  worker:
+    nodeSelector:
+      karpenter.sh/capacity-type: spot
+    env:
+      FIMEVAL_TARGET_CRS: EPSG:5070
