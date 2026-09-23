@@ -1,10 +1,19 @@
-# Production fimeval: shared prod tethys_platform DB (shared users), S3 static + data
-# via IRSA, DEBUG off, scale-to-zero on the ciroh-apps ALB at fimeval.tethys.ciroh.org.
+# Production fimeval: its OWN tethys_platform_fimeval DB (NOT the portal's), S3 static +
+# data via IRSA, DEBUG off, scale-to-zero on the ciroh-apps ALB at fimeval.tethys.ciroh.org.
 # App data + static namespaced under fimeval/ in ciroh-portal-assets.
+#
+# Why a separate DB: Tethys's app registry (tethys_apps_tethysapp) is global to a database.
+# Sharing the portal's tethys_platform DB registered fimeval_gui as a real app the portal
+# then tried to reverse a URL for (NoReverseMatch -> portal crashloop) once it was configured.
+# Unified identity is provided by the shared HydroShare OAuth IdP, not a shared DB.
 tethys-app:
   image:
+    # Wrapper image built from deploy/fimeval/Dockerfile: the fimeval app image
+    # plus the CIROH portal runtime modules (OIDC backend + S3 static fix), baked
+    # in so they are importable by both the web and provision processes. Keeps the
+    # portal-specific code in this repo, out of the fimeval app repo.
     repository: gioelkin/tethysapp-fimeval-gui
-    tag: latest
+    tag: ciroh
     pullPolicy: Always
   tethys:
     mode: single
@@ -12,7 +21,7 @@ tethys-app:
   externalDatabase:
     host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
     port: 5432
-    name: tethys_platform
+    name: tethys_platform_fimeval
     username: tethys_default
   ephemeralStorage:
     className: gp2
@@ -31,14 +40,34 @@ tethys-app:
         key: HYDROSHARE_CLIENT_ID
       - name: HYDROSHARE_SECRET_ID
         key: HYDROSHARE_SECRET_ID
+      # OIDC client credentials issued by the portal at /o/applications/register/.
+      # Add these two keys to ciroh-portal-secrets after registering the app.
+      - name: TETHYS_PORTAL_OIDC_KEY
+        key: FIMEVAL_OIDC_CLIENT_ID
+      - name: TETHYS_PORTAL_OIDC_SECRET
+        key: FIMEVAL_OIDC_CLIENT_SECRET
   portalConfig:
     settings:
+      # Centralized login: authenticate via the CIROH portal's OIDC provider
+      # (backend baked into the image). ModelBackend is kept as a break-glass
+      # /admin login. Self-signup is closed; the portal is the hub.
+      ENABLE_OPEN_SIGNUP: false
       AUTHENTICATION_BACKENDS:
-        - tethys_services.backends.hydroshare.HydroShareOAuth2
+        - ciroh_portal_oidc.TethysPortalOpenIdConnect
+        - django.contrib.auth.backends.ModelBackend
+      # Single-app mode serves the app at / and has no /apps/ route, so send a
+      # completed social login to the app root instead of the default /apps/
+      # (which the React router 404s). OAUTH_CONFIG keys are applied as Django
+      # settings after the defaults, so this override takes effect.
       OAUTH_CONFIG:
-        OAUTH2_PROVIDER:
-          OIDC_ENABLED: true
-          PKCE_REQUIRED: true
+        SOCIAL_AUTH_LOGIN_REDIRECT_URL: /
+      # Vanilla Tethys chrome emits leading-slash static paths that django-storages'
+      # S3 backend rejects (login/error pages 500). Swap only the staticfiles
+      # backend for the slash-tolerant subclass; deep-merge keeps the chart's
+      # OPTIONS and the media (default) storage.
+      STORAGES:
+        staticfiles:
+          BACKEND: ciroh_portal_static.LeadingSlashS3Storage
   scaleToZero:
     enabled: true
     hosts: ["fimeval.tethys.ciroh.org"]
