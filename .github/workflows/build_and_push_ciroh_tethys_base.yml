@@ -3,6 +3,9 @@ name: build_push_ciroh_tethys_base
 # Docker Hub. Standalone apps build on this base via their Dockerfile's
 # UVX_BUILDER build arg, so it carries the OIDC login backend, the S3 static
 # fix, and the branded login templates into every app image.
+#
+# Publishes awiciroh/ciroh-tethys:builder (floating) and :builder_<sha>
+# (immutable); apps pin the immutable tag for reproducible builds.
 
 on:
   workflow_dispatch:
