@@ -31,7 +31,8 @@ helm upgrade --install fimeval \
 ```
 
 Create the `tethys_platform_fimeval` database once, owned by `tethys_default`,
-before the first deploy.
+before the first deploy. Apply `ingress.yaml` once to route
+`fimeval.tethys.ciroh.org` on the shared `ciroh-apps` ALB to the KEDA interceptor.
 
 ## Post deploy settings
 
@@ -48,9 +49,3 @@ Site Admin, App Settings, FIMeval GUI, or the CLI.
 tethys schedulers create-dask -n fimeval_dask \
   -e tcp://fimeval-dask-scheduler:8786 -d fimeval-dask-scheduler:8787 -t 60 -b 0
 ```
-
-## Staging
-
-`values-staging.yaml` targets the `tethys_platform_staging` database with `DEBUG`
-on and no public ingress. Reach it with `kubectl port-forward -n staging
-svc/fimeval 8080:8080`. The shared staging IAM role is in `../iam/ciroh-staging-irsa/`.

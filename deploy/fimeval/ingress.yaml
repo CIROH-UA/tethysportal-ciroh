@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: fimeval-staging
+  name: fimeval
   namespace: keda
   annotations:
     alb.ingress.kubernetes.io/group.name: ciroh-apps
