@@ -6,11 +6,6 @@ override; this template just supplies the single OIDC action. No local
 username/password form; Django admin keeps its own login at /admin/login/.
 {% endcomment %}
 
-{% block styles %}
-  {{ block.super }}
-  {{ site_globals.login_css|load_custom_css|safe }}
-{% endblock %}
-
 {% block account_form_title %}Sign In{% endblock %}
 
 {% block account_form_body %}
