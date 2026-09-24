@@ -26,6 +26,7 @@ RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
 
 FROM ${UVX_RUNTIME}
 
+USER root
 COPY --from=builder /opt/python /opt/python
 COPY --from=builder /opt/conda /opt/conda
 RUN chmod -R a+rwX /opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp
