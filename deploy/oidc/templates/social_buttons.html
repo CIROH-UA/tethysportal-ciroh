@@ -1,0 +1,17 @@
+{% comment %}
+CIROH override of Tethys's social_buttons include, baked over the installed
+template by the app wrapper image (deploy/oidc/). Renders the CIROH portal OIDC
+backend as a friendly "Sign in with CIROH Portal" button; any other configured
+backend falls back to a generic label.
+{% endcomment %}
+{% for backend in backends %}
+  {% if backend == 'tethys_portal' %}
+    <a class="btn btn-block btn-social btn-custom-oauth" href="{% url 'social:begin' backend %}{% if request.GET.next %}?next={{request.GET.next|urlencode}}{% endif %}">
+      <i class="bi bi-box-arrow-in-right"></i> {{ action }} with CIROH Portal
+    </a>
+  {% else %}
+    <a class="btn btn-block btn-social btn-custom-oauth" href="{% url 'social:begin' backend %}{% if request.GET.next %}?next={{request.GET.next|urlencode}}{% endif %}">
+      <i class="bi bi-unlock-fill"></i> {{ action }} with {{ backend }}
+    </a>
+  {% endif %}
+{% endfor %}

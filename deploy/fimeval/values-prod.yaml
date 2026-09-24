@@ -68,6 +68,16 @@ tethys-app:
       STORAGES:
         staticfiles:
           BACKEND: ciroh_portal_static.LeadingSlashS3Storage
+    # CIROH branding applied by provision `tethys site -f`, so the login/chrome show
+    # CIROH (not the app name or "Your Organization") consistently across apps.
+    # Favicon is a full URL (base.html uses it directly, skipping S3 static); the
+    # brand image is a slash-free path resolved via the shared bucket.
+    siteSettings:
+      GENERAL_SETTINGS:
+        brand_text: CIROH
+        brand_image: ciroh_theme/images/CIROHLogo.png
+        favicon: https://ciroh-portal-assets.s3.amazonaws.com/static/ciroh_theme/images/favicon.ico
+        footer_copyright: "Copyright © 2026 CIROH"
   scaleToZero:
     enabled: true
     hosts: ["fimeval.tethys.ciroh.org"]

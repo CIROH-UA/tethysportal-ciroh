@@ -1,0 +1,30 @@
+{% extends "tethys_portal/accounts/base.html" %}
+
+{% comment %}
+CIROH override of the Tethys login page, baked over the installed template by the
+app wrapper image (deploy/oidc/). SSO-only: the local username/password form is
+removed so the only path is the CIROH portal. Django admin keeps its own login at
+/admin/login/ for break-glass.
+{% endcomment %}
+
+{% load tethys %}
+
+{% block title %}{{ block.super }} - Log In{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  {{ site_globals.login_css|load_custom_css|safe }}
+{% endblock %}
+
+{% block account_form_title %}Sign In{% endblock %}
+
+{% block account_form_body %}
+  {% if backends.not_associated %}
+    {% include 'tethys_portal/accounts/social_buttons.html' with action='Sign in' backends=backends.not_associated %}
+  {% else %}
+    <p class="text-center text-muted mb-0">No sign-in method is configured.</p>
+  {% endif %}
+{% endblock %}
+
+{% block terms-of-service-override %}
+{% endblock %}
