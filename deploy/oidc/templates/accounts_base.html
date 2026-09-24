@@ -1,13 +1,5 @@
 {% extends "base.html" %}
 
-{% comment %}
-CIROH-branded chrome for the account pages (login and the other accounts/* pages),
-baked over Tethys's tethys_portal/accounts/base.html by the app wrapper image
-(deploy/oidc/). A split sign-in gateway: a deep hydro-blue panel with a generated
-topographic-contour scene and the CIROH wordmark on the left, and a calm sign-in
-canvas on the right. App-name-free, so it is identical across every CIROH app.
-{% endcomment %}
-
 {% load static tethys %}
 
 {% block title %}Sign in · CIROH{% endblock %}
@@ -36,8 +28,6 @@ canvas on the right. App-name-free, so it is identical across every CIROH app.
       font-family: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
     }
 
-    /* Reset Tethys's centered wrapper so the gateway fills the viewport. These
-       styles only load on account pages, so the global selectors are safe here. */
     html, body { height: 100%; }
     body { margin: 0; background: var(--canvas); color: var(--ink);
            font-family: 'Schibsted Grotesk', system-ui, sans-serif;
@@ -52,7 +42,6 @@ canvas on the right. App-name-free, so it is identical across every CIROH app.
       grid-template-columns: 1.08fr 1fr;
     }
 
-    /* ---- Left: brand + topographic scene ---- */
     .ciroh-brand {
       position: relative;
       overflow: hidden;
@@ -112,7 +101,6 @@ canvas on the right. App-name-free, so it is identical across every CIROH app.
     }
     .ciroh-expand::before { content: ""; width: 2.2rem; height: 1px; background: oklch(0.82 0.09 214 / 0.6); }
 
-    /* ---- Right: sign-in ---- */
     .ciroh-signin {
       display: flex;
       align-items: center;
@@ -131,7 +119,6 @@ canvas on the right. App-name-free, so it is identical across every CIROH app.
     }
     .ciroh-sub { margin: 0 0 1.9rem; color: var(--muted); font-size: 1rem; line-height: 1.5; }
 
-    /* The SSO button, styled as a real primary CTA (Tethys emits an <a>). */
     .ciroh-body :is(a.btn, a.btn-social) {
       display: flex; align-items: center; justify-content: center; gap: 0.6rem;
       width: 100%; box-sizing: border-box;

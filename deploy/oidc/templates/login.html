@@ -1,11 +1,5 @@
 {% extends "tethys_portal/accounts/base.html" %}
 
-{% comment %}
-CIROH SSO-only login. All layout, chrome, and styling live in the accounts/base.html
-override; this template just supplies the single OIDC action. No local
-username/password form; Django admin keeps its own login at /admin/login/.
-{% endcomment %}
-
 {% block account_form_title %}Sign In{% endblock %}
 
 {% block account_form_body %}

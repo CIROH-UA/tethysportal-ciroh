@@ -1,13 +1,8 @@
-# Staging overlay: same RDS instance as prod, separate tethys_platform_staging
-# database (seed it from tethys_platform). No public ingress; reach it via
-# `kubectl port-forward -n staging svc/fimeval 8080:8080`.
 tethys-app:
-  # staging has no S3 static; DEBUG runs the dev server which serves /static/ locally
   portalConfig:
     settings:
       DEBUG: true
   tethys:
-    # staging apps share ciroh-portal-assets under staging/<app>/
     env:
       FIMEVAL_S3_KEY_PREFIX:
         value: staging/fimeval/
@@ -22,7 +17,6 @@ tethys-app:
     roleArn: arn:aws:iam::456531024327:role/ciroh-staging-irsa
   ingress:
     enabled: false
-  # scale the web pod to 0 when idle; KEDA interceptor wakes it 0->1 on request
   scaleToZero:
     enabled: true
     hosts: ["fimeval-staging.tethys.ciroh.org"]

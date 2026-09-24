@@ -1,31 +1,56 @@
 # FIMeval on the CIROH cluster
 
-FIMeval is a standalone Tethys app, decoupled from the portal image. Its generic
-Helm chart lives in the app repo (`Aquaveo/tethysapp-fimeval-gui`, `deploy/chart`);
-this directory holds only the CIROH environment overlay.
+FIMeval runs as a standalone single app Tethys portal, decoupled from the main
+CIROH portal image. Its generic Helm chart lives in the app repo
+(`Aquaveo/tethysapp-fimeval-gui`, `deploy/chart`); this directory holds only the
+CIROH environment overlays.
 
-Currently deployed to **staging only** (`staging` namespace). There is no prod
-FIMeval yet; when there is, add a prod overlay here.
+Production is live at `https://fimeval.tethys.ciroh.org` in the `cirohportal`
+namespace: single app mode, scale to zero via KEDA, static and data on S3, and
+sign in through the CIROH portal (see `../oidc`).
 
-## Install (staging)
+## Why its own database
 
-From a checkout of the app repo (`tethysapp-fimeval-gui`):
+The Tethys app registry is global to a database. When FIMeval shared the portal's
+`tethys_platform` database it registered itself as a real app, and the portal
+crashed trying to reverse a URL for a package it does not have installed. So
+`values-prod.yaml` gives FIMeval its own `tethys_platform_fimeval` database on the
+same RDS instance. Unified identity comes from the shared HydroShare login, not a
+shared database.
+
+## Deploy (prod)
+
+Build the wrapper image (portal login backend, S3 static fix, and login templates,
+baked over the app image), then upgrade:
 
 ```bash
-helm dependency build deploy/chart
-helm install fimeval deploy/chart \
-  -n staging --create-namespace \
-  -f <tethysportal-ciroh>/deploy/fimeval/values-staging.yaml
+docker build -t gioelkin/tethysapp-fimeval-gui:ciroh -f deploy/fimeval/Dockerfile deploy
+docker push gioelkin/tethysapp-fimeval-gui:ciroh
+helm upgrade --install fimeval \
+  <app repo>/deploy/chart -n cirohportal -f deploy/fimeval/values-prod.yaml
 ```
 
-`values-staging.yaml` points at the `tethys_platform_staging` database (same RDS as
-prod, seeded from `tethys_platform`), runs with `DEBUG` on so the dev server serves
-static, uses the shared `ciroh-staging-irsa` role, namespaces S3 under
-`staging/fimeval/`, and exposes no public ingress. Reach it via:
+Create the `tethys_platform_fimeval` database once, owned by `tethys_default`,
+before the first deploy.
+
+## Post deploy settings
+
+These live in the app database, so set them once per fresh database. Either use
+Site Admin, App Settings, FIMeval GUI, or the CLI.
+
+1. Custom setting `s3_bucket` = `ciroh-portal-assets` (S3 credentials stay blank so
+   IRSA is used).
+2. A Dask scheduler pointing at the in cluster scheduler, linked to the app's
+   `dask_primary` scheduler setting. Give it a positive `timeout` (for example 60);
+   a zero timeout triggers a Tethys client init error.
 
 ```bash
-kubectl port-forward -n staging svc/fimeval 8080:8080
+tethys schedulers create-dask -n fimeval_dask \
+  -e tcp://fimeval-dask-scheduler:8786 -d fimeval-dask-scheduler:8787 -t 60 -b 0
 ```
 
-The shared staging IAM role lives at `../iam/ciroh-staging-irsa/`. Set the app's
-`s3_bucket` custom setting to `ciroh-portal-assets` post-deploy (keys blank, IRSA).
+## Staging
+
+`values-staging.yaml` targets the `tethys_platform_staging` database with `DEBUG`
+on and no public ingress. Reach it with `kubectl port-forward -n staging
+svc/fimeval 8080:8080`. The shared staging IAM role is in `../iam/ciroh-staging-irsa/`.

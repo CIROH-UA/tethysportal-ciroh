@@ -1,9 +1,3 @@
-# Shared ALB for standalone app subdomains (*.tethys.ciroh.org), separate from the
-# portal's apex ALB. Lives in the `keda` namespace so it can back the KEDA
-# interceptor Service (same-namespace rule); the interceptor wakes the target app
-# and routes to it cross-namespace by Host. Group `ciroh-apps` = one ALB that every
-# app subdomain joins. The *.tethys.ciroh.org ACM cert is auto-discovered.
-# Admin repoints ONLY the *.tethys.ciroh.org wildcard to this ALB; the apex stays.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

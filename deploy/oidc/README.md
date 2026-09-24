@@ -5,8 +5,8 @@ The CIROH portal is an OpenID Connect provider (endpoints live under
 it, so the portal is the single sign-on hub. The portal itself still logs users
 in through HydroShare, which remains the source of identity.
 
-This directory holds two small Python modules that standalone apps need at
-runtime but that must not live in an app repo (each app merges to its own main):
+This directory holds the runtime pieces standalone apps need but that must not
+live in an app repo (each app merges to its own main):
 
 * `ciroh_portal_oidc.py` the OIDC login backend (`TethysPortalOpenIdConnect`).
   Reads its endpoint and client credentials from the environment.
@@ -15,15 +15,22 @@ runtime but that must not live in an app repo (each app merges to its own main):
   leading slash (hardcoded in `accounts/base.html`, and the default favicon
   setting); django-storages' S3 backend rejects those, so the login and error
   pages 500 under `s3Static`. Stripping the leading slash makes them resolve.
+* `templates/` the CIROH branded, sign in only login page
+  (`accounts_base.html`, `login.html`, `social_buttons.html`), baked over
+  Tethys's copies. App name free, so every app shares one login.
 
 ## How they reach the app
 
-Both are baked into the app image by a small wrapper built in this repo
-(`deploy/<app>/Dockerfile`: `FROM <app image>` then `COPY` the two modules into
-`site-packages`). They are copied, not mounted, because `collectstatic` in the
-provision job loads the static storage, so the modules must be importable by the
-provision process as well as the web process. The app image and app source stay
-untouched. The wrapper is published as a distinct tag (fimeval: the `:ciroh` tag).
+All of it is baked into the app image by a small wrapper built in this repo
+(`deploy/<app>/Dockerfile`: `FROM <app image>`, then `COPY` the modules into
+`site-packages` and the templates over Tethys's copies). The modules are copied,
+not mounted, because `collectstatic` in the provision job loads the static
+storage, so they must be importable by the provision process as well as the web
+process. The app image and app source stay untouched. The wrapper is published as
+a distinct tag (fimeval: the `:ciroh` tag).
+
+CIROH branding (brand text, image, favicon, footer) is applied by the app overlay
+through `portalConfig.siteSettings`, so `tethys site` sets it on every provision.
 
 ## Onboarding an app (fimeval as the example)
 

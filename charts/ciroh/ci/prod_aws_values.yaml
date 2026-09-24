@@ -42,7 +42,6 @@ ingresses:
     enabled: true
     className: 'alb'
     annotations:
-      # join the shared ciroh-apps ALB so the portal and app subdomains share one LB
       alb.ingress.kubernetes.io/group.name: ciroh-apps
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/scheme: internet-facing
