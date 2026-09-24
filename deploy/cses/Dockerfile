@@ -20,12 +20,19 @@ RUN apt-get update \
 COPY deploy/cses/requirements.txt ${TETHYS_HOME}/cses-requirements.txt
 COPY apps/Tethys-CSES ${TETHYS_HOME}/apps/Tethys-CSES
 
+# The app's package-data globs are lowercase, so uppercase-extension statics
+# (CSESoverviewImage.JPG) are dropped on install and 403 from S3. The cp below
+# syncs the full public tree into the installed package so collectstatic sees it.
+
 RUN --mount=type=cache,target=/cache/uv \
     uv pip install -r ${TETHYS_HOME}/cses-requirements.txt \
     && uv pip install "gdal==$(gdal-config --version)" \
     && cd ${TETHYS_HOME}/apps/Tethys-CSES \
     && uv pip install . \
-    && /opt/conda/envs/tethys/bin/python -c "import storages"
+    && /opt/conda/envs/tethys/bin/python -c "import storages" \
+    && cp -a tethysapp/community_streamflow_evaluation_system/public/. \
+       /opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp/community_streamflow_evaluation_system/public/ \
+    && test -f /opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp/community_streamflow_evaluation_system/public/images/CSESoverviewImage.JPG
 
 FROM ${UVX_RUNTIME}
 
