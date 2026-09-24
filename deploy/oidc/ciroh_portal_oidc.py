@@ -1,10 +1,11 @@
 """CIROH portal OpenID Connect login backend for standalone Tethys apps.
 
 This module lives in the tethysportal-ciroh deploy overlay, not in any app
-repository, and is injected into an app pod through a ConfigMap mounted on
-PYTHONPATH. It lets a standalone app authenticate its users against the CIROH
-portal's OIDC provider so the portal is the single sign-on hub. The portal in
-turn logs users in via HydroShare, so HydroShare remains the source of identity.
+repository, and is baked into the app image by the deploy wrapper
+(deploy/<app>/Dockerfile). It lets a standalone app authenticate its users
+against the CIROH portal's OIDC provider so the portal is the single sign-on hub.
+The portal in turn logs users in via HydroShare, so HydroShare remains the source
+of identity.
 
 Endpoint and client credentials come from the environment so the same module
 serves every app and every tier (prod, staging) without edits:
