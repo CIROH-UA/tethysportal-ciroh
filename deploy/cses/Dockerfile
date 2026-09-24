@@ -24,7 +24,8 @@ RUN --mount=type=cache,target=/cache/uv \
     uv pip install -r ${TETHYS_HOME}/cses-requirements.txt \
     && uv pip install "gdal==$(gdal-config --version)" \
     && cd ${TETHYS_HOME}/apps/Tethys-CSES \
-    && uv pip install .
+    && uv pip install . \
+    && /opt/conda/envs/tethys/bin/python -c "import storages"
 
 FROM ${UVX_RUNTIME}
 
