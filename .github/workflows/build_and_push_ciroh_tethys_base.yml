@@ -4,8 +4,9 @@ name: build_push_ciroh_tethys_base
 # UVX_BUILDER build arg, so it carries the OIDC login backend, the S3 static
 # fix, and the branded login templates into every app image.
 #
-# Publishes awiciroh/ciroh-tethys:builder (floating) and :builder_<sha>
-# (immutable); apps pin the immutable tag for reproducible builds.
+# Publishes awiciroh/ciroh-tethys:builder_<sha> (immutable) on every run, plus
+# the floating :builder tag on push and manual dispatch. Pull requests publish
+# only the immutable tag, so a PR never moves :builder before it merges.
 
 on:
   workflow_dispatch:
@@ -21,6 +22,11 @@ on:
       - 'deploy/ciroh-tethys/**'
       - 'deploy/oidc/**'
       - '.github/workflows/build_and_push_ciroh_tethys_base.yml'
+  pull_request:
+    paths:
+      - 'deploy/ciroh-tethys/**'
+      - 'deploy/oidc/**'
+      - '.github/workflows/build_and_push_ciroh_tethys_base.yml'
 
 env:
   DOCKER_HUB_ORG: awiciroh
@@ -29,6 +35,10 @@ env:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ciroh-tethys-base-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -48,10 +58,25 @@ jobs:
           fetch-depth: 1
           submodules: 'false'
 
-      - name: Set tags
+      - name: Set image tags
         run: |
-          echo "TAG=builder_${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "TAG_LATEST=builder" >> $GITHUB_ENV
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            SHA="${GITHUB_SHA}"
+          fi
+          IMAGE="${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}"
+          {
+            echo "IMAGE_TAGS<<EOF"
+            echo "${IMAGE}:builder_${SHA}"
+            if [ "${{ github.event_name }}" != "pull_request" ]; then
+              echo "${IMAGE}:builder"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Show tags
+        run: printf '%s\n' "${IMAGE_TAGS}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -71,8 +96,6 @@ jobs:
           push: true
           build-args: |
             TETHYS_UVX_BUILDER=${{ env.TETHYS_UVX_BUILDER }}
-          tags: |
-            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
-            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
+          tags: ${{ env.IMAGE_TAGS }}
           cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
