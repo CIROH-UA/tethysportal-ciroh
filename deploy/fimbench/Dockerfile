@@ -13,7 +13,6 @@ ENV UV_CACHE_DIR=/cache/uv
 ENV npm_config_cache=/cache/npm
 
 WORKDIR ${TETHYS_HOME}
-USER root
 
 COPY apps/fimbench ${TETHYS_HOME}/apps/fimbench
 
@@ -26,9 +25,9 @@ RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
 
 FROM ${UVX_RUNTIME}
 
-USER root
-COPY --from=builder /opt/python /opt/python
-COPY --from=builder /opt/conda /opt/conda
-RUN chmod -R a+rwX /opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp
+# Re-own the copied env to the runtime's non-root user (1000) during the copy,
+# so nothing runs as root and no chmod is needed. tethys-uvx runs rootless.
+COPY --chown=1000:1000 --from=builder /opt/python /opt/python
+COPY --chown=1000:1000 --from=builder /opt/conda /opt/conda
 
 USER 1000:1000
