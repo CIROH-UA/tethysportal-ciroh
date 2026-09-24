@@ -47,7 +47,7 @@ through `portalConfig.siteSettings`, so `tethys site` sets it on every provision
    base first), from the app repo:
 
    ```bash
-   docker build --build-arg UVX_BUILDER=gioelkin/ciroh-tethys:builder \
+   docker build --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
      -t gioelkin/tethysapp-fimeval-gui:ciroh .
    docker push gioelkin/tethysapp-fimeval-gui:ciroh
    ```

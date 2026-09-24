@@ -1,0 +1,75 @@
+name: build_push_ciroh_tethys_base
+# Build the CIROH Tethys builder base (deploy/ciroh-tethys) and push it to
+# Docker Hub. Standalone apps build on this base via their Dockerfile's
+# UVX_BUILDER build arg, so it carries the OIDC login backend, the S3 static
+# fix, and the branded login templates into every app image.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tethys_uvx_builder:
+        description: 'Base tethys-uvx builder image to build on'
+        required: false
+        default: 'ghcr.io/aquaveo/tethys-uvx:builder'
+  push:
+    branches:
+      - '*'
+    paths:
+      - 'deploy/ciroh-tethys/**'
+      - 'deploy/oidc/**'
+      - '.github/workflows/build_and_push_ciroh_tethys_base.yml'
+
+env:
+  DOCKER_HUB_ORG: awiciroh
+  DOCKER_REPO: ciroh-tethys
+  TETHYS_UVX_BUILDER: ${{ github.event.inputs.tethys_uvx_builder || 'ghcr.io/aquaveo/tethys-uvx:builder' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.0
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          docker-images: true
+          tool-cache: true
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: 'false'
+
+      - name: Set tags
+        run: |
+          echo "TAG=builder_${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "TAG_LATEST=builder" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
+          password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: deploy
+          file: deploy/ciroh-tethys/Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            TETHYS_UVX_BUILDER=${{ env.TETHYS_UVX_BUILDER }}
+          tags: |
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
+          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true

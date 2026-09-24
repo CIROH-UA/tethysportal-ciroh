@@ -22,16 +22,22 @@ CIROH files ride in through the builder's `/opt/conda`.
 
 ## Build
 
-From `deploy/` so the shared files under `oidc/` are in the build context:
+CI builds and publishes this base to Docker Hub as `awiciroh/ciroh-tethys`. The
+workflow `.github/workflows/build_and_push_ciroh_tethys_base.yml` runs on any push
+that touches `deploy/ciroh-tethys/` or `deploy/oidc/`, and on demand via
+`workflow_dispatch` (where the `tethys-uvx` base image can be set). It tags
+`:builder` (floating) and `:builder_<sha>` (immutable); build apps against the
+immutable tag for reproducibility.
+
+To build it by hand, run from `deploy/` so the shared files under `oidc/` are in
+the build context:
 
 ```bash
-docker build -t ghcr.io/ciroh-ua/ciroh-tethys:builder \
+docker build -t awiciroh/ciroh-tethys:builder \
+  --build-arg TETHYS_UVX_BUILDER=ghcr.io/aquaveo/tethys-uvx:builder \
   -f ciroh-tethys/Dockerfile deploy
-docker push ghcr.io/ciroh-ua/ciroh-tethys:builder
+docker push awiciroh/ciroh-tethys:builder
 ```
-
-Pick whatever registry the team uses; pin an immutable tag per `tethys-uvx`
-revision rather than a floating `:builder` for reproducible app builds.
 
 ## How apps consume it
 
@@ -39,7 +45,7 @@ App Dockerfiles already parameterize their base as `ARG UVX_BUILDER=...`, so no 
 repo changes are needed. CIROH builds an app against this base with a build arg:
 
 ```bash
-docker build --build-arg UVX_BUILDER=ghcr.io/ciroh-ua/ciroh-tethys:builder \
+docker build --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
   -t <app-image> .
 ```
 

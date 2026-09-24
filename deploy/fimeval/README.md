@@ -20,17 +20,13 @@ shared database.
 
 ## Deploy (prod)
 
-Build the CIROH base once (see `../ciroh-tethys`), then build the app on it so the
-login backend, S3 static fix, and login templates ship in the app image (no
-wrapper), and upgrade:
+CI publishes the CIROH base as `awiciroh/ciroh-tethys:builder` (see
+`../ciroh-tethys`). Build the app on it so the login backend, S3 static fix, and
+login templates ship in the app image (no wrapper), and upgrade:
 
 ```bash
-# in tethysportal-ciroh/deploy: build the CIROH base
-docker build -t gioelkin/ciroh-tethys:builder -f ciroh-tethys/Dockerfile .
-docker push gioelkin/ciroh-tethys:builder
-
 # in the fimeval app repo: build the app on the CIROH base
-docker build --build-arg UVX_BUILDER=gioelkin/ciroh-tethys:builder \
+docker build --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
   -t gioelkin/tethysapp-fimeval-gui:ciroh .
 docker push gioelkin/tethysapp-fimeval-gui:ciroh
 
