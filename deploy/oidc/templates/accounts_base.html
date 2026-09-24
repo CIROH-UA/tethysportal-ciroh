@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% comment %}
+CIROH-branded chrome for the account pages (login and the other accounts/* pages),
+baked over Tethys's tethys_portal/accounts/base.html by the app wrapper image
+(deploy/oidc/). A split sign-in gateway: a deep hydro-blue panel with a generated
+topographic-contour scene and the CIROH wordmark on the left, and a calm sign-in
+canvas on the right. App-name-free, so it is identical across every CIROH app.
+{% endcomment %}
+
+{% load static tethys %}
+
+{% block title %}Sign in · CIROH{% endblock %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: oklch(0.26 0.021 258);
+      --muted: oklch(0.52 0.021 258);
+      --canvas: oklch(0.985 0.004 245);
+      --card: oklch(1 0 0);
+      --line: oklch(0.912 0.012 250);
+      --blue: oklch(0.45 0.113 248);
+      --blue-deep: oklch(0.32 0.086 252);
+      --blue-deeper: oklch(0.26 0.07 254);
+      --blue-press: oklch(0.40 0.11 248);
+      --cyan: oklch(0.82 0.09 214);
+      --focus: oklch(0.72 0.13 232);
+      font-family: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Reset Tethys's centered wrapper so the gateway fills the viewport. These
+       styles only load on account pages, so the global selectors are safe here. */
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--canvas); color: var(--ink);
+           font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    #site-wrapper, .wrapper { padding: 0 !important; margin: 0 !important; max-width: none !important; width: 100%; }
+    #content { padding: 0 !important; }
+    .clear-header { display: none; }
+
+    .ciroh-auth {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.08fr 1fr;
+    }
+
+    /* ---- Left: brand + topographic scene ---- */
+    .ciroh-brand {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(120% 100% at 15% 0%, var(--blue) 0%, var(--blue-deep) 46%, var(--blue-deeper) 100%);
+      color: oklch(0.97 0.01 240);
+      padding: clamp(2rem, 4vw, 4rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    .ciroh-contours {
+      position: absolute;
+      inset: -10% -6% -12% -6%;
+      width: 112%;
+      height: 122%;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .ciroh-contours path { fill: none; stroke: var(--cyan); stroke-width: 1.1; }
+    .ciroh-contours .c-faint { stroke: oklch(0.86 0.05 220); opacity: 0.35; }
+
+    .ciroh-wordmark {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6ch;
+      font-weight: 800;
+      font-size: clamp(1.5rem, 2vw, 1.9rem);
+      letter-spacing: -0.01em;
+    }
+    .ciroh-wordmark .mark { width: 0.46em; height: 0.46em; border-radius: 50%;
+      background: var(--cyan); box-shadow: 0 0 0 0.26em oklch(0.82 0.09 214 / 0.2); }
+
+    .ciroh-lead { position: relative; max-width: 30ch; }
+    .ciroh-lead h2 {
+      margin: 0 0 0.9rem;
+      font-weight: 600;
+      font-size: clamp(1.9rem, 3.4vw, 3rem);
+      line-height: 1.04;
+      letter-spacing: -0.025em;
+    }
+    .ciroh-lead p {
+      margin: 0;
+      color: oklch(0.9 0.03 225);
+      font-size: clamp(0.98rem, 1.1vw, 1.12rem);
+      line-height: 1.55;
+      max-width: 42ch;
+    }
+    .ciroh-expand {
+      position: relative;
+      font-size: 0.82rem;
+      letter-spacing: 0.01em;
+      color: oklch(0.85 0.05 222);
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .ciroh-expand::before { content: ""; width: 2.2rem; height: 1px; background: oklch(0.82 0.09 214 / 0.6); }
+
+    /* ---- Right: sign-in ---- */
+    .ciroh-signin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(2rem, 5vw, 4rem);
+    }
+    .ciroh-panel { width: 100%; max-width: 25rem; }
+    .ciroh-eyebrow {
+      font-size: 0.76rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--blue); margin: 0 0 0.7rem;
+    }
+    .ciroh-panel h1 {
+      margin: 0 0 0.5rem;
+      font-weight: 700; font-size: clamp(1.8rem, 3vw, 2.3rem);
+      letter-spacing: -0.02em; line-height: 1.05; color: var(--ink);
+    }
+    .ciroh-sub { margin: 0 0 1.9rem; color: var(--muted); font-size: 1rem; line-height: 1.5; }
+
+    /* The SSO button, styled as a real primary CTA (Tethys emits an <a>). */
+    .ciroh-body :is(a.btn, a.btn-social) {
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      width: 100%; box-sizing: border-box;
+      padding: 0.95rem 1.25rem; margin: 0;
+      background: var(--blue); color: oklch(0.99 0.005 240);
+      border: 1px solid transparent; border-radius: 12px;
+      font-family: inherit; font-size: 1.02rem; font-weight: 600; letter-spacing: -0.005em;
+      text-decoration: none; cursor: pointer;
+      box-shadow: 0 1px 2px oklch(0.32 0.086 252 / 0.25), 0 8px 22px oklch(0.32 0.086 252 / 0.18);
+      transition: transform 0.4s cubic-bezier(0.22,1,0.36,1),
+                  background-color 0.25s ease, box-shadow 0.4s cubic-bezier(0.22,1,0.36,1);
+    }
+    .ciroh-body :is(a.btn, a.btn-social):hover {
+      background: var(--blue-press);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 4px oklch(0.32 0.086 252 / 0.28), 0 14px 30px oklch(0.32 0.086 252 / 0.24);
+    }
+    .ciroh-body :is(a.btn, a.btn-social):active { transform: translateY(0); }
+    .ciroh-body :is(a.btn, a.btn-social):focus-visible {
+      outline: 3px solid var(--focus); outline-offset: 2px;
+    }
+    .ciroh-body .bi { font-style: normal; }
+    .ciroh-body + .ciroh-body { margin-top: 0.75rem; }
+
+    .ciroh-note {
+      margin: 1.4rem 0 0; padding-top: 1.3rem; border-top: 1px solid var(--line);
+      color: var(--muted); font-size: 0.86rem; line-height: 1.5;
+    }
+    .ciroh-note a { color: var(--blue); text-decoration: none; }
+    .ciroh-note a:hover { text-decoration: underline; }
+
+    .ciroh-foot {
+      margin-top: 2.2rem; display: flex; justify-content: space-between; gap: 1rem;
+      color: oklch(0.6 0.02 255); font-size: 0.78rem;
+    }
+
+    @media (max-width: 860px) {
+      .ciroh-auth { grid-template-columns: 1fr; }
+      .ciroh-brand { min-height: 15rem; padding: 2rem 1.5rem; }
+      .ciroh-lead h2 { font-size: 1.7rem; }
+      .ciroh-lead p { display: none; }
+      .ciroh-signin { padding: 2.5rem 1.5rem 3rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ciroh-body :is(a.btn, a.btn-social) { transition: background-color 0.2s ease; }
+      .ciroh-body :is(a.btn, a.btn-social):hover { transform: none; }
+    }
+  </style>
+{% endblock %}
+
+{% block custom_styles %}
+  {{ site_globals.accounts_base_css|load_custom_css|safe }}
+{% endblock %}
+
+{% block content %}
+  <div class="ciroh-auth">
+    <aside class="ciroh-brand">
+      <svg class="ciroh-contours" viewBox="0 0 600 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path class="c-faint" d="M-40 90 C 130 40, 300 150, 640 70"/>
+        <path d="M-40 150 C 150 90, 320 210, 640 120"/>
+        <path d="M-40 214 C 160 150, 340 270, 640 176"/>
+        <path class="c-faint" d="M-40 286 C 150 232, 350 330, 640 246"/>
+        <path d="M-40 360 C 170 300, 360 404, 640 320"/>
+        <path d="M-40 440 C 150 384, 360 486, 640 402"/>
+        <path class="c-faint" d="M-40 520 C 170 470, 350 566, 640 486"/>
+        <path d="M-40 600 C 160 552, 360 640, 640 566"/>
+        <path d="M-40 682 C 170 636, 340 712, 640 648"/>
+        <path class="c-faint" d="M-40 756 C 160 716, 360 784, 640 726"/>
+      </svg>
+
+      <div class="ciroh-wordmark"><span class="mark"></span>CIROH</div>
+
+      <div class="ciroh-lead">
+        <h2>Research to operations, for the nation's water.</h2>
+        <p>One sign-in for the CIROH suite of hydrologic analysis and flood-evaluation tools.</p>
+      </div>
+
+      <div class="ciroh-expand">Cooperative Institute for Research to Operations in Hydrology</div>
+    </aside>
+
+    <main class="ciroh-signin">
+      <div class="ciroh-panel">
+        <p class="ciroh-eyebrow">CIROH Applications</p>
+        <h1>{% block account_form_title %}Sign In{% endblock %}</h1>
+        <p class="ciroh-sub">Continue with your CIROH portal account to reach this tool.</p>
+
+        <div class="ciroh-body">
+          {% block account_form_body %}{% endblock %}
+        </div>
+
+        <p class="ciroh-note">
+          Access is managed through the CIROH portal. Need an account, or trouble signing in?
+          <a href="https://ciroh.ua.edu/" target="_blank" rel="noreferrer">Contact CIROH</a>.
+        </p>
+
+        <div class="ciroh-foot">
+          <span>Copyright © 2026 CIROH</span>
+          <span>Cooperative Institute for Research to Operations in Hydrology</span>
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock %}
