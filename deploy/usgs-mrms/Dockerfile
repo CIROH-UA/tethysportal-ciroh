@@ -39,10 +39,8 @@ RUN --mount=type=cache,target=/cache/uv \
     && uv pip install ${TETHYS_HOME}/apps/usgs_mrms_tethys_app/tethysapp-usgs_mrms \
     && /opt/conda/envs/tethys/bin/python -c "import storages, boto3" \
     && PKG=/opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp/usgs_mrms \
-    && find "${PKG}/public" -type f -name '*.js' -print0 | xargs -0 -r sed -i 's#/apps/usgs-mrms/#/#g' \
-    && find "${PKG}/templates" -type f -name '*.html' -print0 | xargs -0 -r sed -i 's#/apps/usgs-mrms/#/#g' \
-    && find "${PKG}/controllers" -type f -name '*.py' -print0 | xargs -0 -r sed -i 's#/apps/usgs-mrms/#/#g' \
-    && ! grep -rn '/apps/usgs-mrms/' "${PKG}/public" "${PKG}/templates" "${PKG}/controllers"
+    && grep -rlI '/apps/usgs-mrms/' "${PKG}/public" "${PKG}/templates" "${PKG}/controllers" | xargs -r sed -i 's#/apps/usgs-mrms/#/#g' \
+    && ! grep -rnI '/apps/usgs-mrms/' "${PKG}/public" "${PKG}/templates" "${PKG}/controllers"
 
 FROM ${UVX_RUNTIME}
 
