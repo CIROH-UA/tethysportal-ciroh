@@ -1,0 +1,71 @@
+tethys-app:
+  fullnameOverride: fimserve
+  image:
+    repository: awiciroh/tethysapp-fimserve
+    tag: latest
+    pullPolicy: Always
+  tethys:
+    mode: single
+    standaloneApp: fimserve_viewer
+    env:
+      FIMSERV_ROOT:
+        value: /home/tethys/persist/fimserve
+      FIMSERVE_CACHE_MAX_GB:
+        value: '3'
+  externalDatabase:
+    host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
+    port: 5432
+    name: tethys_platform_fimserve
+    username: tethys_default
+  ephemeralStorage:
+    className: gp2
+  s3Static:
+    enabled: true
+    bucket: ciroh-portal-assets
+    region: us-east-1
+  serviceAccount:
+    create: false
+    name: ciroh-portal
+    roleArn: arn:aws:iam::456531024327:role/ciroh-portal-irsa
+  secrets:
+    existingSecretName: ciroh-portal-secrets
+    secretEnv:
+      - name: HYDROSHARE_CLIENT_ID
+        key: HYDROSHARE_CLIENT_ID
+      - name: HYDROSHARE_SECRET_ID
+        key: HYDROSHARE_SECRET_ID
+      - name: TETHYS_PORTAL_OIDC_KEY
+        key: FIMSERVE_OIDC_CLIENT_ID
+      - name: TETHYS_PORTAL_OIDC_SECRET
+        key: FIMSERVE_OIDC_CLIENT_SECRET
+  portalConfig:
+    settings:
+      ENABLE_OPEN_SIGNUP: false
+      AUTHENTICATION_BACKENDS:
+        - ciroh_portal_oidc.TethysPortalOpenIdConnect
+        - django.contrib.auth.backends.ModelBackend
+      OAUTH_CONFIG:
+        SOCIAL_AUTH_LOGIN_REDIRECT_URL: /
+      STORAGES:
+        staticfiles:
+          BACKEND: ciroh_portal_static.LeadingSlashS3Storage
+    siteSettings:
+      GENERAL_SETTINGS:
+        brand_text: CIROH
+        brand_image: ciroh_theme/images/CIROHLogo.png
+        favicon: https://ciroh-portal-assets.s3.amazonaws.com/static/ciroh_theme/images/favicon.ico
+        footer_copyright: "Copyright © 2026 CIROH"
+  scaleToZero:
+    enabled: true
+    hosts: ["fimserve.tethys.ciroh.org"]
+    maxReplicas: 2
+    scaledownPeriod: 300
+  pdb:
+    enabled: true
+
+dask:
+  enabled: true
+  serviceAccountName: ciroh-portal
+  worker:
+    nodeSelector:
+      karpenter.sh/capacity-type: spot
