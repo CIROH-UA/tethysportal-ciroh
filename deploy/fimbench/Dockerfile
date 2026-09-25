@@ -18,13 +18,10 @@ COPY apps/fimbench ${TETHYS_HOME}/apps/fimbench
 
 # The app's vite.config hardcodes base '/apps/fimbench-gui/' in production, which
 # makes the React Router basename wrong for single-app mode (served at '/') and
-# renders a blank page. Force base '/' before the build; guard so a moved line
-# fails the build instead of shipping blank.
+# renders a blank page. Override base to '/' via the Vite CLI (npm passes args
+# after -- to `vite build`), leaving vite.config.ts untouched.
 RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
-    cd ${TETHYS_HOME}/apps/fimbench/reactapp \
-    && sed -i -E "s#^([[:space:]]*)base:.*#\1base: '/',#" vite.config.ts \
-    && grep -qF "base: '/'," vite.config.ts \
-    && npm install && npm run build \
+    cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build -- --base=/ \
     && cd ${TETHYS_HOME}/apps/fimbench \
     && uv pip install pandas boto3 \
     && uv pip install . \
