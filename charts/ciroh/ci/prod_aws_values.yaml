@@ -94,44 +94,15 @@ valkey:
 postgis:
   enabled: false
 
-# Flood-map generation now runs on scale-to-zero Dask workers (see dask below),
-# not in-process, so the web pod no longer needs HAND-pipeline headroom. This is
-# the shared multi-app portal pod, so the limit stays high enough for the other
-# apps (ngiab, tethysdash, teehr reads) rather than a fimserve-only floor.
+# Flood-map generation runs the HAND pipeline (GDAL mosaic + streamflow labels)
+# in-process on the serving pod. It OOMKilled at the 6Gi limit, taking the whole
+# pod down (exit 137). Give headroom until execution is moved off the web pods.
 resources:
   requests:
     cpu: 500m
-    memory: 1Gi
-  limits:
     memory: 4Gi
-
-# Adaptive Dask tier (dask-kubernetes operator, already installed; fimeval runs
-# the same pattern). A small always-on scheduler plus a worker template that
-# scales 0..maximum via the DaskAutoscaler. Workers run this same portal image,
-# so fimserve, teehr, gdal, and FIMserv are already present.
-dask:
-  enabled: true
-  scheduler:
-    resources:
-      requests:
-        cpu: 250m
-        memory: 1Gi
-      limits:
-        memory: 2Gi
-  worker:
-    memoryLimit: 8GiB
-    nodeSelector:
-      karpenter.sh/capacity-type: spot
-    resources:
-      requests:
-        cpu: '2'
-        memory: 8Gi
-        ephemeral-storage: 20Gi
-      limits:
-        memory: 12Gi
-        ephemeral-storage: 40Gi
-  autoscaler:
-    maximum: 3
+  limits:
+    memory: 12Gi
 
 nodeSelector: {}
 tolerations: []
