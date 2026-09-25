@@ -19,9 +19,9 @@ COPY apps/fimbench ${TETHYS_HOME}/apps/fimbench
 RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
     cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build \
     && cd ${TETHYS_HOME}/apps/fimbench \
-    && uv pip install pandas \
+    && uv pip install pandas boto3 \
     && uv pip install . \
-    && /opt/conda/envs/tethys/bin/python -c "import storages"
+    && /opt/conda/envs/tethys/bin/python -c "import storages, boto3"
 
 FROM ${UVX_RUNTIME}
 
