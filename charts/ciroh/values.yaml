@@ -239,3 +239,19 @@ hpa:
   maxReplicas: 1
   targetCPUUtilizationPercentage: 75
   targetMemoryUtilizationPercentage: 80
+
+# Adaptive Dask tier via the dask-kubernetes operator. Off by default (dev/k3d
+# has no operator CRDs); prod values enable it. When on, it renders a DaskCluster
+# (small scheduler plus a 0..maximum worker template on the portal image) and a
+# DaskAutoscaler. The app offloads flood-map generation here when its dask_primary
+# scheduler setting points at the rendered scheduler Service.
+dask:
+  enabled: false
+  scheduler:
+    resources: {}
+  worker:
+    memoryLimit: 8GiB
+    nodeSelector: {}
+    resources: {}
+  autoscaler:
+    maximum: 3
