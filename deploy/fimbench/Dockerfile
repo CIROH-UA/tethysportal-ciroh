@@ -20,8 +20,15 @@ COPY apps/fimbench ${TETHYS_HOME}/apps/fimbench
 # makes the React Router basename wrong for single-app mode (served at '/') and
 # renders a blank page. Override base to '/' via the Vite CLI (npm passes args
 # after -- to `vite build`), leaving vite.config.ts untouched.
+#
+# The React bundle also hardcodes '/static/fimbench_gui/' image paths (logo, docs,
+# CSS backgrounds) as app-origin URLs, but static is served from S3 under
+# s3Static, so those 404. Rewrite them to the S3 static base in the built output.
+ARG STATIC_BASE=https://ciroh-portal-assets.s3.amazonaws.com/static
 RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
     cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build -- --base=/ \
+    && find ../tethysapp/fimbench_gui/public/frontend -type f \( -name '*.js' -o -name '*.css' \) -print0 \
+       | xargs -0 sed -i "s#/static/fimbench_gui/#${STATIC_BASE}/fimbench_gui/#g" \
     && cd ${TETHYS_HOME}/apps/fimbench \
     && uv pip install pandas boto3 \
     && uv pip install . \
