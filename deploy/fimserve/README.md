@@ -10,7 +10,7 @@ Pieces:
 
 - Image: built from the app repo's own `Dockerfile`
   (`Aquaveo/tethysapp-fimserve_viewer`, CIROH Tethys base) and pushed as
-  `awiciroh/tethysapp-fimserve`, the same way fimeval's image is built.
+  `gioelkin/tethysapp-fimserve`, the same way fimeval's image is built.
 - Chart: the wrapper chart lives in the app repo at
   `apps/tethysapp-fimserve_viewer/deploy/chart` (tethys-app subchart plus the
   Dask cluster). The Dask worker runs this same image and bootstraps Django with
@@ -39,7 +39,7 @@ From the app repo (`Aquaveo/tethysapp-fimserve_viewer`, currently on
 
 ```
 docker buildx build --platform linux/amd64 \
-  -t awiciroh/tethysapp-fimserve:latest --push .
+  -t gioelkin/tethysapp-fimserve:latest --push .
 ```
 
 ## Deploy
