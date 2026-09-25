@@ -7,11 +7,16 @@ tethys:
   standaloneApp: usgs_mrms
   publicProtocol: https
   env:
-    USGS_MRMS_S3_BUCKET: ciroh-portal-assets
-    USGS_MRMS_S3_PREFIX: usgs-mrms
-    USGS_MRMS_S3_REGION: us-east-1
-    HYDRO_HISTORY_S3_PREFIX: experiments/hydro_history_3mm_all_stage
-    USGS_MRMS_WORKDIR: /home/tethys/persist/usgs-mrms
+    USGS_MRMS_S3_BUCKET:
+      value: "ciroh-portal-assets"
+    USGS_MRMS_S3_PREFIX:
+      value: "usgs-mrms"
+    USGS_MRMS_S3_REGION:
+      value: "us-east-1"
+    HYDRO_HISTORY_S3_PREFIX:
+      value: "experiments/hydro_history_3mm_all_stage"
+    USGS_MRMS_WORKDIR:
+      value: "/home/tethys/persist/usgs-mrms"
 externalDatabase:
   host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
   port: 5432
