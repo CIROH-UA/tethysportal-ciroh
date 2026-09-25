@@ -1,0 +1,69 @@
+image:
+  repository: awiciroh/tethysapp-tethysdash
+  tag: latest
+  pullPolicy: Always
+tethys:
+  mode: single
+  standaloneApp: tethysdash
+  publicProtocol: https
+externalDatabase:
+  host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
+  port: 5432
+  name: tethys_platform_tethysdash
+  username: tethys_default
+ephemeralStorage:
+  className: gp2
+s3Static:
+  enabled: true
+  bucket: ciroh-portal-assets
+  region: us-east-1
+serviceAccount:
+  create: false
+  name: ciroh-portal
+secrets:
+  existingSecretName: ciroh-portal-secrets
+  secretEnv:
+    - name: HYDROSHARE_CLIENT_ID
+      key: HYDROSHARE_CLIENT_ID
+    - name: HYDROSHARE_SECRET_ID
+      key: HYDROSHARE_SECRET_ID
+    - name: TETHYS_PORTAL_OIDC_KEY
+      key: TETHYSDASH_OIDC_CLIENT_ID
+    - name: TETHYS_PORTAL_OIDC_SECRET
+      key: TETHYSDASH_OIDC_CLIENT_SECRET
+portalConfig:
+  settings:
+    ENABLE_OPEN_SIGNUP: false
+    AUTHENTICATION_BACKENDS:
+      - ciroh_portal_oidc.TethysPortalOpenIdConnect
+      - django.contrib.auth.backends.ModelBackend
+    OAUTH_CONFIG:
+      SOCIAL_AUTH_LOGIN_REDIRECT_URL: /
+    STORAGES:
+      staticfiles:
+        BACKEND: ciroh_portal_static.LeadingSlashS3Storage
+    CHANNEL_LAYERS:
+      default:
+        BACKEND: channels_redis.core.RedisChannelLayer
+        CONFIG:
+          hosts:
+            - redis://ciroh-valkey:6379/0
+    CACHES:
+      default:
+        BACKEND: django_redis.cache.RedisCache
+        LOCATION: redis://ciroh-valkey:6379/1
+        OPTIONS:
+          CLIENT_CLASS: django_redis.client.DefaultClient
+  siteSettings:
+    GENERAL_SETTINGS:
+      brand_text: CIROH
+      brand_image: ciroh_theme/images/CIROHLogo.png
+      favicon: https://ciroh-portal-assets.s3.amazonaws.com/static/ciroh_theme/images/favicon.ico
+      footer_copyright: "Copyright © 2026 CIROH"
+scaleToZero:
+  enabled: true
+  hosts: ["tethysdash.tethys.ciroh.org"]
+  maxReplicas: 2
+  scaledownPeriod: 300
+pdb:
+  enabled: true
