@@ -8,8 +8,9 @@ web pod.
 
 Pieces:
 
-- Image: `deploy/fimserve/Dockerfile` builds `awiciroh/tethysapp-fimserve` on the
-  CIROH Tethys base, via `.github/workflows/build_and_push_fimserve_image.yml`.
+- Image: built from the app repo's own `Dockerfile`
+  (`Aquaveo/tethysapp-fimserve_viewer`, CIROH Tethys base) and pushed as
+  `awiciroh/tethysapp-fimserve`, the same way fimeval's image is built.
 - Chart: the wrapper chart lives in the app repo at
   `apps/tethysapp-fimserve_viewer/deploy/chart` (tethys-app subchart plus the
   Dask cluster). The Dask worker runs this same image and bootstraps Django with
@@ -33,10 +34,13 @@ Pieces:
 
 ## Build the image
 
-Push under `deploy/fimserve/**` on any branch, or run
-`build_push_fimserve_image` manually. It builds the app at `fimserve_app_ref`
-(default `feat/dask-offload`; switch to `main` once the offload code merges) and
-pushes `awiciroh/tethysapp-fimserve:<sha>` plus `:latest`.
+From the app repo (`Aquaveo/tethysapp-fimserve_viewer`, currently on
+`feat/dask-offload` until the offload code merges), build and push:
+
+```
+docker buildx build --platform linux/amd64 \
+  -t awiciroh/tethysapp-fimserve:latest --push .
+```
 
 ## Deploy
 
