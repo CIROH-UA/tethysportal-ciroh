@@ -21,11 +21,18 @@ WORKDIR ${TETHYS_HOME}
 COPY deploy/snow-inspector/requirements.txt ${TETHYS_HOME}/snow-requirements.txt
 COPY apps/snow-inspector ${TETHYS_HOME}/apps/snow-inspector
 
+# Single-app mode serves controllers at root ("/snow_data/", "/pixel-borders/"),
+# but the app JS builds those URLs assuming the multi-app "/apps/snow-inspector/"
+# layout (window.location.pathname.split('/snow-inspector')), which 404s at "/".
+# Rewrite the built JS to root-absolute endpoints, then guard the split is gone.
 RUN --mount=type=cache,target=/cache/uv \
     uv pip install -r ${TETHYS_HOME}/snow-requirements.txt \
     && cd ${TETHYS_HOME}/apps/snow-inspector \
     && uv pip install . \
-    && /opt/conda/envs/tethys/bin/python -c "import storages, boto3"
+    && /opt/conda/envs/tethys/bin/python -c "import storages, boto3" \
+    && PKG=/opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp/snow_inspector \
+    && sed -i "s#window\.location\.pathname\.split('/snow-inspector')\[0\] +##g; s#\"/snow-inspector/#\"/#g" "${PKG}"/public/js/*.js \
+    && ! grep -rIn "location.pathname.split('/snow-inspector')" "${PKG}/public"
 
 FROM ${UVX_RUNTIME}
 
