@@ -41,8 +41,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gdal-bin \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /opt/python /opt/python
-COPY --from=builder /opt/conda /opt/conda
-RUN chmod -R a+rwX /opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp
+COPY --chown=1000:1000 --from=builder /opt/python /opt/python
+COPY --chown=1000:1000 --from=builder /opt/conda /opt/conda
 
 USER 1000:1000
