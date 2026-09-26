@@ -23,7 +23,7 @@ COPY deploy/nrds/overrides.txt ${TETHYS_HOME}/overrides.txt
 COPY apps/nrds-client ${TETHYS_HOME}/apps/nrds-client
 
 RUN --mount=type=cache,target=/cache/uv \
-    uv pip install --overrides ${TETHYS_HOME}/overrides.txt pyarrow \
+    uv pip install --overrides ${TETHYS_HOME}/overrides.txt pyarrow fsspec s3fs xarray geopandas \
     && cd ${TETHYS_HOME}/apps/nrds-client \
     && /opt/conda/envs/tethys/bin/python scripts/build_slim_index.py \
     && SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0 uv pip install . --overrides ${TETHYS_HOME}/overrides.txt \
