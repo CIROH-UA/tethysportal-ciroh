@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% comment %}
+CIROH portal app library. Overrides the default Tethys card grid with a branded,
+filterable launcher. The portal is a hub: most cards are ProxyApp entries
+(app.proxied) that open a standalone app on its own subdomain; native apps launch
+in place. Server-rendered, self-contained (no external hosts, no build step).
+{% endcomment %}
+{% load static tethys %}
+
+{% block title %}{{ block.super }} - {% if site_globals.apps_library_title %}{{ site_globals.apps_library_title }}{% else %}Apps{% endif %}{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  <style id="ciroh-app-library">
+    #ciroh-apps {
+      --brand: oklch(0.52 0.13 249);
+      --brand-strong: oklch(0.42 0.13 249);
+      --ink: oklch(0.29 0.02 249);
+      --ink-soft: oklch(0.5 0.02 249);
+      --line: oklch(0.9 0.008 249);
+      --surface: oklch(0.98 0.004 249);
+      --card: oklch(0.995 0.002 249);
+      --card-hover: oklch(0.97 0.01 249);
+      --chip: oklch(0.95 0.01 249);
+      --shadow: 0 1px 2px oklch(0.5 0.02 249 / 0.06), 0 8px 24px oklch(0.42 0.06 249 / 0.08);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    :root[data-bs-theme="dark"] #ciroh-apps,
+    .dark-mode #ciroh-apps {
+      --brand: oklch(0.72 0.12 249);
+      --brand-strong: oklch(0.8 0.1 249);
+      --ink: oklch(0.93 0.01 249);
+      --ink-soft: oklch(0.72 0.02 249);
+      --line: oklch(0.34 0.02 249);
+      --surface: oklch(0.21 0.02 249);
+      --card: oklch(0.25 0.02 249);
+      --card-hover: oklch(0.29 0.025 249);
+      --chip: oklch(0.3 0.02 249);
+      --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 10px 28px oklch(0 0 0 / 0.35);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-bs-theme="light"]) #ciroh-apps {
+        --brand: oklch(0.72 0.12 249);
+        --brand-strong: oklch(0.8 0.1 249);
+        --ink: oklch(0.93 0.01 249);
+        --ink-soft: oklch(0.72 0.02 249);
+        --line: oklch(0.34 0.02 249);
+        --surface: oklch(0.21 0.02 249);
+        --card: oklch(0.25 0.02 249);
+        --card-hover: oklch(0.29 0.025 249);
+        --chip: oklch(0.3 0.02 249);
+        --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 10px 28px oklch(0 0 0 / 0.35);
+      }
+    }
+
+    #ciroh-apps { max-width: 1180px; margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem) 16px 4rem; color: var(--ink); }
+
+    .cal-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 1.75rem; }
+    .cal-head h1 { font-size: clamp(1.6rem, 3vw, 2.15rem); font-weight: 680; letter-spacing: -0.02em; margin: 0; color: var(--ink); }
+    .cal-head p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.95rem; max-width: 62ch; }
+    .cal-count { font-variant-numeric: tabular-nums; color: var(--brand-strong); font-weight: 640; }
+
+    .cal-search { position: relative; min-width: min(320px, 100%); flex: 0 1 320px; }
+    .cal-search input {
+      width: 100%; padding: 0.6rem 0.9rem 0.6rem 2.3rem; font-size: 0.95rem;
+      color: var(--ink); background: var(--card); border: 1px solid var(--line);
+      border-radius: 0.7rem; transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+    }
+    .cal-search input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px oklch(0.52 0.13 249 / 0.16); }
+    .cal-search .bi { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--ink-soft); pointer-events: none; }
+
+    .cal-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; }
+    .cal-tag {
+      font-size: 0.8rem; font-weight: 560; color: var(--ink-soft); background: var(--chip);
+      border: 1px solid transparent; border-radius: 2rem; padding: 0.3rem 0.8rem; cursor: pointer;
+      transition: color 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease);
+    }
+    .cal-tag:hover { color: var(--ink); }
+    .cal-tag[aria-pressed="true"] { color: oklch(0.99 0.01 249); background: var(--brand); border-color: var(--brand); }
+    :root[data-bs-theme="dark"] .cal-tag[aria-pressed="true"], .dark-mode .cal-tag[aria-pressed="true"] { color: oklch(0.16 0.02 249); }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(15rem, 27vw, 17.5rem), 1fr)); gap: 1rem; }
+
+    .cal-card {
+      position: relative; display: flex; flex-direction: column; gap: 0.7rem; height: 100%;
+      padding: 1.15rem 1.15rem 1rem; text-decoration: none; color: inherit;
+      background: var(--card); border: 1px solid var(--line); border-radius: 0.9rem;
+      box-shadow: 0 1px 2px oklch(0.5 0.02 249 / 0.04);
+      transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease), border-color 0.22s var(--ease), background 0.22s var(--ease);
+    }
+    .cal-card:hover, .cal-card:focus-visible { transform: translateY(-3px); background: var(--card-hover); border-color: oklch(0.52 0.13 249 / 0.4); box-shadow: var(--shadow); outline: none; }
+    .cal-card:focus-visible { border-color: var(--brand); box-shadow: 0 0 0 3px oklch(0.52 0.13 249 / 0.2), var(--shadow); }
+    .cal-card.is-veiled { opacity: 0.55; }
+
+    .cal-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .cal-icon { width: 3rem; height: 3rem; border-radius: 0.7rem; display: grid; place-items: center; overflow: hidden; flex: none; background: var(--chip); }
+    .cal-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .cal-icon.mono { font-weight: 700; font-size: 1.25rem; color: oklch(0.99 0.01 249); background: var(--card-accent, var(--brand)); }
+    .cal-ext { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--brand-strong); }
+    .cal-ext .bi { font-size: 0.9rem; }
+
+    .cal-name { font-size: 1.05rem; font-weight: 640; letter-spacing: -0.01em; line-height: 1.2; color: var(--ink); margin: 0; }
+    .cal-desc { font-size: 0.875rem; line-height: 1.45; color: var(--ink-soft); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .cal-foot { margin-top: auto; padding-top: 0.5rem; display: flex; align-items: center; gap: 0.4rem; font-size: 0.83rem; font-weight: 580; color: var(--brand-strong); }
+    .cal-foot .bi { transition: transform 0.2s var(--ease); }
+    .cal-card:hover .cal-foot .bi { transform: translateX(3px); }
+
+    .cal-add { align-items: center; justify-content: center; text-align: center; border-style: dashed; color: var(--ink-soft); }
+    .cal-add .bi { font-size: 1.6rem; color: var(--ink-soft); }
+
+    .cal-empty { grid-column: 1 / -1; text-align: center; color: var(--ink-soft); padding: 4rem 1rem; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cal-card, .cal-search input, .cal-tag, .cal-foot .bi { transition: none; }
+      .cal-card:hover, .cal-card:focus-visible { transform: none; }
+    }
+  </style>
+{% endblock %}
+
+{% block primary_content %}
+<div id="ciroh-apps">
+  <header class="cal-head">
+    <div>
+      <h1>{% if site_globals.apps_library_title %}{{ site_globals.apps_library_title }}{% else %}Applications{% endif %}</h1>
+      <p>Launch a CIROH water modeling tool. <span class="cal-count" data-total>{{ apps.configured|length }}</span> available.</p>
+    </div>
+    {% if apps.configured %}
+    <div class="cal-search">
+      <i class="bi bi-search"></i>
+      <input type="search" id="cal-filter" placeholder="Search applications" aria-label="Search applications" autocomplete="off">
+    </div>
+    {% endif %}
+  </header>
+
+  {% with tags=apps|get_tags_from_apps %}
+  {% if tags %}
+  <div class="cal-tags" role="group" aria-label="Filter by tag">
+    <button type="button" class="cal-tag" data-tag="__all__" aria-pressed="true">All</button>
+    {% for tag in tags %}
+    <button type="button" class="cal-tag" data-tag="{{ tag.0 }}" aria-pressed="false">{{ tag.1 }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <div class="cal-grid" id="cal-grid">
+    {% if request.user.is_staff and debug_mode %}
+    <a class="cal-card cal-add" href="#" data-bs-toggle="modal" data-bs-target="#modal-add-app" data-skip-filter>
+      <div class="bi bi-plus-lg"></div>
+      <p class="cal-name">Add app</p>
+    </a>
+    {% endif %}
+
+    {% for app in apps.configured %}
+    <a class="cal-card{% if not app.show_in_apps_library or not app.enabled %} is-veiled{% endif %}"
+       data-name="{{ app.name|lower }}" data-desc="{{ app.description|default:''|lower }}" data-tags="{{ app|get_tag_class }}"
+       {% if app.color %}style="--card-accent: {{ app.color }};"{% endif %}
+       href="{% if app.proxied %}{{ app.url }}{% if app.back_url %}?back={{ app.back_url }}{% endif %}{% else %}{% url app.index_url %}{% endif %}"
+       {% if app.proxied and app.open_in_new_tab %}target="_blank" rel="noopener"{% endif %}
+       title="{{ app.name }}">
+      <div class="cal-card-top">
+        <span class="cal-icon{% if not app.icon %} mono{% endif %}">
+          {% if app.icon %}<img src="{% if 'http' in app.icon %}{{ app.icon }}{% else %}{% static app.icon %}{% endif %}" alt="">{% else %}{{ app.name|first|upper }}{% endif %}
+        </span>
+        {% if app.proxied %}<span class="cal-ext"><i class="bi bi-box-arrow-up-right"></i>External</span>{% endif %}
+      </div>
+      <h2 class="cal-name">{{ app.name }}</h2>
+      {% if app.description %}<p class="cal-desc">{{ app.description }}</p>{% endif %}
+      <span class="cal-foot">{% if app.proxied %}Open{% else %}Launch{% endif %}<i class="bi bi-arrow-right"></i></span>
+    </a>
+    {% endfor %}
+
+    {% for app in apps.unconfigured %}
+    <a class="cal-card is-veiled" data-name="{{ app.name|lower }}" data-desc="" data-tags=""
+       href="{% url 'admin:index' %}tethys_apps/tethysapp/{{ app.id }}/change/" title="Not configured">
+      <div class="cal-card-top">
+        <span class="cal-icon mono">{{ app.name|first|upper }}</span>
+      </div>
+      <h2 class="cal-name">{{ app.name }}</h2>
+      <span class="cal-foot">Configure<i class="bi bi-gear"></i></span>
+    </a>
+    {% endfor %}
+
+    {% if not apps.configured and not apps.unconfigured %}
+    <p class="cal-empty">No applications are available yet.</p>
+    {% endif %}
+    <p class="cal-empty" id="cal-noresults" hidden>No applications match your search.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+{% if request.user.is_staff and debug_mode %}
+<div class="modal fade" id="modal-add-app" tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="modal-label">Add App</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body d-flex justify-content-around">
+      <a class="btn btn-primary" href="{% url 'admin:create_app' %}"><i class="bi bi-hammer"></i> Create</a>
+      <a class="btn btn-primary" href="{% url 'admin:import_app' %}"><i class="bi bi-upload"></i> Import</a>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div>
+  </div></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script>
+    (function () {
+      var grid = document.getElementById("cal-grid");
+      if (!grid) return;
+      var search = document.getElementById("cal-filter");
+      var noResults = document.getElementById("cal-noresults");
+      var tagButtons = Array.prototype.slice.call(document.querySelectorAll(".cal-tag"));
+      var cards = Array.prototype.slice.call(grid.querySelectorAll(".cal-card[data-name]"));
+      var activeTag = "__all__";
+
+      function apply() {
+        var q = (search ? search.value : "").trim().toLowerCase();
+        var shown = 0;
+        cards.forEach(function (card) {
+          var matchText = !q || card.dataset.name.indexOf(q) !== -1 || card.dataset.desc.indexOf(q) !== -1;
+          var matchTag = activeTag === "__all__" || (" " + card.dataset.tags + " ").indexOf(" " + activeTag + " ") !== -1;
+          var visible = matchText && matchTag;
+          card.hidden = !visible;
+          if (visible) shown++;
+        });
+        if (noResults) noResults.hidden = shown !== 0;
+      }
+
+      if (search) search.addEventListener("input", apply);
+      tagButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          activeTag = btn.dataset.tag;
+          tagButtons.forEach(function (b) { b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
+          apply();
+        });
+      });
+    })();
+  </script>
+{% endblock %}
