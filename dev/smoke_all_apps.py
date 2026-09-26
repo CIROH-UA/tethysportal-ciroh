@@ -25,7 +25,10 @@ EXTRA = ["ciroh_plugins"]
 
 
 def app_packages():
-    import tethysapp
+    try:
+        import tethysapp
+    except ModuleNotFoundError:
+        return []
     return sorted(m.name for m in pkgutil.iter_modules(tethysapp.__path__))
 
 
@@ -42,10 +45,13 @@ def check_app(pkg):
         importlib.import_module(dep)
 
 
-import numpy
-import zarr
-
-print(f"python {sys.version.split()[0]} | numpy {numpy.__version__} | zarr {zarr.__version__}")
+bits = [f"python {sys.version.split()[0]}"]
+for mod in ("numpy", "zarr"):
+    try:
+        bits.append(f"{mod} {importlib.import_module(mod).__version__}")
+    except ModuleNotFoundError:
+        pass
+print(" | ".join(bits))
 
 targets = [(f"tethysapp.{p}", p) for p in app_packages()] + [(e, None) for e in EXTRA]
 broken = []
