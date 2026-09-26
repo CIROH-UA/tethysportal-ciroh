@@ -23,7 +23,8 @@ COPY deploy/nrds/overrides.txt ${TETHYS_HOME}/overrides.txt
 COPY apps/nrds-client ${TETHYS_HOME}/apps/nrds-client
 
 RUN --mount=type=cache,target=/cache/uv \
-    cd ${TETHYS_HOME}/apps/nrds-client \
+    uv pip install --overrides ${TETHYS_HOME}/overrides.txt pyarrow \
+    && cd ${TETHYS_HOME}/apps/nrds-client \
     && /opt/conda/envs/tethys/bin/python scripts/build_slim_index.py \
     && SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0 uv pip install . --overrides ${TETHYS_HOME}/overrides.txt \
     && /opt/conda/envs/tethys/bin/python -c "import storages, boto3" \
