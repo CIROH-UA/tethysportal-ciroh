@@ -58,3 +58,12 @@ scaleToZero:
   scaledownPeriod: 300
 pdb:
   enabled: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+    ephemeral-storage: 2Gi
+  limits:
+    memory: 3Gi
+    ephemeral-storage: 4Gi
