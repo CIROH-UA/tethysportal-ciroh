@@ -41,7 +41,7 @@ tethys-app:
   portalConfig:
     settings:
       ENABLE_OPEN_SIGNUP: false
-    ENABLE_OPEN_PORTAL: true
+      ENABLE_OPEN_PORTAL: true
       AUTHENTICATION_BACKENDS:
         - ciroh_portal_oidc.TethysPortalOpenIdConnect
         - django.contrib.auth.backends.ModelBackend
