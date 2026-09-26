@@ -11,11 +11,12 @@ ENV npm_config_cache=/cache/npm
 WORKDIR ${TETHYS_HOME}
 
 COPY requirements/piprequirements.txt ./piprequirements.txt
-RUN --mount=type=cache,target=/cache/uv uv pip install -r piprequirements.txt
+COPY requirements/overrides.txt ${TETHYS_HOME}/overrides.txt
+RUN --mount=type=cache,target=/cache/uv uv pip install -r piprequirements.txt --overrides ${TETHYS_HOME}/overrides.txt
 
 # Dashboard plugins used by the CIROH portal landing (ciroh_plugins) plus the
 # TethysDash plugin set. Kept in the hub.
-RUN --mount=type=cache,target=/cache/uv uv pip install \
+RUN --mount=type=cache,target=/cache/uv uv pip install --overrides ${TETHYS_HOME}/overrides.txt \
     git+https://github.com/FIRO-Tethys/ciroh_plugins.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git \
     git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git \
