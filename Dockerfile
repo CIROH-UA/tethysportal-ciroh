@@ -18,6 +18,18 @@ COPY extensions ${TETHYS_HOME}/extensions
 RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install .
 
+# Override two core Tethys templates (portal home + app library) with the CIROH
+# versions. Django's filesystem loader searches tethys_portal/templates ahead of the
+# app-directory templates, so copying the overrides there wins over the core ones
+# (same mechanism as the OIDC login override). Shipping them only inside the
+# extension is not enough: the extension templates never beat core in the loader order.
+RUN TP="$(${VIRTUAL_ENV}/bin/python -c 'import tethys_portal,os;print(os.path.join(os.path.dirname(tethys_portal.__file__),"templates"))')" \
+ && CT="$(${VIRTUAL_ENV}/bin/python -c 'import tethysext.ciroh_theme,os;print(os.path.join(os.path.dirname(tethysext.ciroh_theme.__file__),"templates"))')" \
+ && mkdir -p "$TP/tethys_apps" "$TP/tethys_portal" \
+ && cp "$CT/tethys_apps/app_library.html" "$TP/tethys_apps/app_library.html" \
+ && cp "$CT/tethys_portal/home.html" "$TP/tethys_portal/home.html" \
+ && echo "CIROH template overrides installed into $TP"
+
 # The viewer/data apps (sweml, hydrocompute, snow-inspector, tethysdash, cses,
 # fimbench, fimserve_viewer, usgs-mrms, hydro-correlation-tool, nrds, ngiab) now
 # run as standalone deployments (deploy/<app>/ overlays + their own images), so
