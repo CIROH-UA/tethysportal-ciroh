@@ -14,17 +14,6 @@ COPY requirements/piprequirements.txt ./piprequirements.txt
 COPY requirements/overrides.txt ${TETHYS_HOME}/overrides.txt
 RUN --mount=type=cache,target=/cache/uv uv pip install -r piprequirements.txt --overrides ${TETHYS_HOME}/overrides.txt
 
-# Dashboard plugins used by the CIROH portal landing (ciroh_plugins) plus the
-# TethysDash plugin set. Kept in the hub.
-RUN --mount=type=cache,target=/cache/uv uv pip install --overrides ${TETHYS_HOME}/overrides.txt \
-    git+https://github.com/FIRO-Tethys/ciroh_plugins.git \
-    git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git \
-    git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git \
-    git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git \
-    git+https://github.com/FIRO-Tethys/tethysdash_plugin-great_lakes_viewer.git \
-    git+https://github.com/FIRO-Tethys/tethysdash_plugin_usgs_water_services.git \
-    git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git \
-    git+https://github.com/FIRO-Tethys/RFC-Plugins.git
 COPY extensions ${TETHYS_HOME}/extensions
 RUN --mount=type=cache,target=/cache/uv \
     cd ${TETHYS_HOME}/extensions/tethysext-ciroh_theme && uv pip install .
@@ -36,8 +25,7 @@ RUN --mount=type=cache,target=/cache/uv \
 # OIDC provider, the CIROH theme, and the app library of ProxyApp cards that link
 # out to each app's subdomain.
 
-RUN chmod -R a+rX /opt/python /opt/conda \
-  && chmod -R a+rwX ${VIRTUAL_ENV}/lib/python3.12/site-packages/ciroh_plugins
+RUN chmod -R a+rX /opt/python /opt/conda
 
 FROM ${UVX_RUNTIME}
 
