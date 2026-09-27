@@ -34,7 +34,11 @@ secrets:
 portalConfig:
   settings:
     ENABLE_OPEN_SIGNUP: false
-    ENABLE_OPEN_PORTAL: true
+    # Login required: the app mints a per-user DRF token on load
+    # (Token.objects.get_or_create(user=request.user)), which raises TypeError for an
+    # AnonymousUser. With open portal the anonymous readiness probe hit that and 500'd,
+    # crash-looping the pod (KEDA 504). This app stores per-user data, so it needs auth.
+    ENABLE_OPEN_PORTAL: false
     AUTHENTICATION_BACKENDS:
       - ciroh_portal_oidc.TethysPortalOpenIdConnect
       - django.contrib.auth.backends.ModelBackend
