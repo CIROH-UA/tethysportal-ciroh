@@ -32,23 +32,8 @@ self-contained.
       font-family: 'Schibsted Grotesk', system-ui, -apple-system, "Segoe UI", sans-serif;
       color: var(--ink);
     }
-    :root[data-bs-theme="dark"] .ciroh-home, .dark-mode .ciroh-home {
-      --ink: oklch(0.93 0.01 250);
-      --muted: oklch(0.72 0.02 250);
-      --canvas: oklch(0.21 0.02 250);
-      --card: oklch(0.25 0.02 250);
-      --line: oklch(0.34 0.02 250);
-    }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-bs-theme="light"]) .ciroh-home {
-        --ink: oklch(0.93 0.01 250);
-        --muted: oklch(0.72 0.02 250);
-        --canvas: oklch(0.21 0.02 250);
-        --card: oklch(0.25 0.02 250);
-        --line: oklch(0.34 0.02 250);
-      }
-    }
-
+    /* Committed light aesthetic to match the CIROH sign-in page, on any portal theme. */
+    body { background: oklch(0.985 0.004 245) !important; }
     .ciroh-home { max-width: 1160px; margin: 0 auto; padding: clamp(1rem, 3vw, 2rem) 16px 4rem; }
 
     .home-hero {
@@ -102,7 +87,7 @@ self-contained.
     }
     .explore-item:hover { transform: translateY(-2px); border-color: oklch(0.45 0.113 248 / 0.45); box-shadow: 0 8px 24px oklch(0.32 0.086 252 / 0.1); }
     .explore-item:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-    .explore-glyph { flex: none; width: 2.5rem; height: 2.5rem; border-radius: 0.6rem; display: grid; place-items: center; color: oklch(0.99 0.01 240); background: var(--tile, var(--blue)); }
+    .explore-glyph { flex: none; width: 2.5rem; height: 2.5rem; border-radius: 0.6rem; display: grid; place-items: center; color: var(--blue); background: oklch(0.955 0.02 245); }
     .explore-glyph .bi { font-size: 1.15rem; }
     .explore-text strong { display: block; font-size: 1rem; font-weight: 640; letter-spacing: -0.01em; color: var(--ink); }
     .explore-text span { display: block; margin-top: 0.15rem; font-size: 0.85rem; line-height: 1.4; color: var(--muted); }

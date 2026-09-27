@@ -11,54 +11,31 @@ in place. Server-rendered, self-contained (no external hosts, no build step).
 
 {% block styles %}
   {{ block.super }}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
   <style id="ciroh-app-library">
     #ciroh-apps {
-      --brand: oklch(0.52 0.13 249);
-      --brand-strong: oklch(0.42 0.13 249);
-      --ink: oklch(0.29 0.02 249);
-      --ink-soft: oklch(0.5 0.02 249);
-      --line: oklch(0.9 0.008 249);
-      --surface: oklch(0.98 0.004 249);
-      --card: oklch(0.995 0.002 249);
-      --card-hover: oklch(0.97 0.01 249);
-      --chip: oklch(0.95 0.01 249);
-      --shadow: 0 1px 2px oklch(0.5 0.02 249 / 0.06), 0 8px 24px oklch(0.42 0.06 249 / 0.08);
+      /* Committed light palette matching the CIROH sign-in page (one theme, any portal mode). */
+      --brand: oklch(0.45 0.113 248);
+      --brand-strong: oklch(0.32 0.086 252);
+      --ink: oklch(0.26 0.021 258);
+      --ink-soft: oklch(0.52 0.021 258);
+      --line: oklch(0.912 0.012 250);
+      --surface: oklch(0.985 0.004 245);
+      --card: oklch(1 0 0);
+      --card-hover: oklch(0.99 0.004 250);
+      --chip: oklch(0.955 0.02 245);
+      --shadow: 0 1px 2px oklch(0.32 0.086 252 / 0.06), 0 12px 28px oklch(0.32 0.086 252 / 0.1);
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
-    :root[data-bs-theme="dark"] #ciroh-apps,
-    .dark-mode #ciroh-apps {
-      --brand: oklch(0.72 0.12 249);
-      --brand-strong: oklch(0.8 0.1 249);
-      --ink: oklch(0.93 0.01 249);
-      --ink-soft: oklch(0.72 0.02 249);
-      --line: oklch(0.34 0.02 249);
-      --surface: oklch(0.21 0.02 249);
-      --card: oklch(0.25 0.02 249);
-      --card-hover: oklch(0.29 0.025 249);
-      --chip: oklch(0.3 0.02 249);
-      --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 10px 28px oklch(0 0 0 / 0.35);
-    }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-bs-theme="light"]) #ciroh-apps {
-        --brand: oklch(0.72 0.12 249);
-        --brand-strong: oklch(0.8 0.1 249);
-        --ink: oklch(0.93 0.01 249);
-        --ink-soft: oklch(0.72 0.02 249);
-        --line: oklch(0.34 0.02 249);
-        --surface: oklch(0.21 0.02 249);
-        --card: oklch(0.25 0.02 249);
-        --card-hover: oklch(0.29 0.025 249);
-        --chip: oklch(0.3 0.02 249);
-        --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 10px 28px oklch(0 0 0 / 0.35);
-      }
-    }
 
-    #ciroh-apps { max-width: 1180px; margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem) 16px 4rem; color: var(--ink); }
+    body { background: oklch(0.985 0.004 245) !important; }
+    #ciroh-apps { max-width: 1180px; margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem) 16px 4rem; color: var(--ink); font-family: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif; }
 
-    .cal-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 1.75rem; }
-    .cal-head h1 { font-size: clamp(1.6rem, 3vw, 2.15rem); font-weight: 680; letter-spacing: -0.02em; margin: 0; color: var(--ink); }
-    .cal-head p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.95rem; max-width: 62ch; }
-    .cal-count { font-variant-numeric: tabular-nums; color: var(--brand-strong); font-weight: 640; }
+    .cal-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 1.5rem; }
+    .cal-eyebrow { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brand); margin: 0 0 0.5rem; }
+    .cal-head h1 { font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -0.02em; margin: 0; color: var(--ink); }
+    .cal-head p { margin: 0.4rem 0 0; color: var(--ink-soft); font-size: 0.98rem; max-width: 60ch; }
+    .cal-count { font-variant-numeric: tabular-nums; color: var(--brand); font-weight: 640; }
 
     .cal-actions { display: flex; flex-direction: column; align-items: stretch; gap: 0.6rem; flex: 0 1 320px; min-width: min(320px, 100%); }
 
@@ -87,33 +64,31 @@ in place. Server-rendered, self-contained (no external hosts, no build step).
 
     .cal-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; }
     .cal-tag {
-      font-size: 0.8rem; font-weight: 560; color: var(--ink-soft); background: var(--chip);
-      border: 1px solid transparent; border-radius: 2rem; padding: 0.3rem 0.8rem; cursor: pointer;
+      font-size: 0.8rem; font-weight: 550; color: var(--ink-soft); background: transparent;
+      border: 1px solid var(--line); border-radius: 2rem; padding: 0.3rem 0.85rem; cursor: pointer;
       transition: color 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease);
     }
-    .cal-tag:hover { color: var(--ink); }
+    .cal-tag:hover { color: var(--ink); border-color: var(--ink-soft); }
     .cal-tag[aria-pressed="true"] { color: oklch(0.99 0.01 249); background: var(--brand); border-color: var(--brand); }
-    :root[data-bs-theme="dark"] .cal-tag[aria-pressed="true"], .dark-mode .cal-tag[aria-pressed="true"] { color: oklch(0.16 0.02 249); }
 
     .cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(15rem, 27vw, 17.5rem), 1fr)); align-items: stretch; gap: 1rem; }
 
     .cal-card {
       position: relative; display: flex; flex-direction: column; gap: 0.7rem;
-      padding: 1.15rem 1.15rem 1rem; text-decoration: none; color: inherit;
-      background: var(--card); border: 1px solid var(--line); border-radius: 0.9rem;
-      box-shadow: 0 1px 2px oklch(0.5 0.02 249 / 0.04);
-      transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease), border-color 0.22s var(--ease), background 0.22s var(--ease);
+      padding: 1.2rem 1.2rem 1.05rem; text-decoration: none; color: inherit;
+      background: var(--card); border: 1px solid var(--line); border-radius: 0.8rem;
+      transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease), border-color 0.22s var(--ease);
     }
-    .cal-card:hover, .cal-card:focus-visible { transform: translateY(-3px); background: var(--card-hover); border-color: oklch(0.52 0.13 249 / 0.4); box-shadow: var(--shadow); outline: none; }
-    .cal-card:focus-visible { border-color: var(--brand); box-shadow: 0 0 0 3px oklch(0.52 0.13 249 / 0.2), var(--shadow); }
+    .cal-card:hover, .cal-card:focus-visible { transform: translateY(-2px); border-color: oklch(0.45 0.113 248 / 0.4); box-shadow: var(--shadow); outline: none; }
+    .cal-card:focus-visible { border-color: var(--brand); box-shadow: 0 0 0 3px oklch(0.45 0.113 248 / 0.18); }
     .cal-card.is-veiled { opacity: 0.55; }
 
     .cal-card-top { display: flex; align-items: center; justify-content: space-between; }
-    .cal-icon { width: 3rem; height: 3rem; border-radius: 0.7rem; display: grid; place-items: center; overflow: hidden; flex: none; background: var(--chip); }
+    .cal-icon { width: 2.75rem; height: 2.75rem; border-radius: 0.65rem; display: grid; place-items: center; overflow: hidden; flex: none; background: var(--chip); }
     .cal-icon img { width: 100%; height: 100%; object-fit: cover; }
-    .cal-icon.mono { font-weight: 700; font-size: 1.25rem; color: oklch(0.99 0.01 249); background: var(--card-accent, var(--brand)); }
-    .cal-ext { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--brand-strong); }
-    .cal-ext .bi { font-size: 0.9rem; }
+    .cal-icon.mono { font-weight: 700; font-size: 1.2rem; color: var(--brand); background: var(--chip); }
+    .cal-ext { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+    .cal-ext .bi { font-size: 0.85rem; }
 
     .cal-name { font-size: 1.05rem; font-weight: 640; letter-spacing: -0.01em; line-height: 1.2; color: var(--ink); margin: 0; }
     .cal-desc { font-size: 0.875rem; line-height: 1.45; color: var(--ink-soft); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -137,6 +112,7 @@ in place. Server-rendered, self-contained (no external hosts, no build step).
 <div id="ciroh-apps">
   <header class="cal-head">
     <div>
+      <p class="cal-eyebrow">CIROH Applications</p>
       <h1>{% if site_globals.apps_library_title %}{{ site_globals.apps_library_title }}{% else %}Applications{% endif %}</h1>
       <p>Launch a CIROH water modeling tool. <span class="cal-count" data-total>{{ apps.configured|length }}</span> available.</p>
     </div>
@@ -178,7 +154,6 @@ in place. Server-rendered, self-contained (no external hosts, no build step).
     {% for app in apps.configured %}
     <a class="cal-card{% if not app.show_in_apps_library or not app.enabled %} is-veiled{% endif %}"
        data-name="{{ app.name|lower }}" data-desc="{{ app.description|default:''|lower }}" data-tags="{{ app|get_tag_class }}"
-       style="--card-accent: {% if app.color %}{{ app.color }}{% else %}{% cycle 'oklch(0.55 0.15 250)' 'oklch(0.55 0.15 285)' 'oklch(0.52 0.13 200)' 'oklch(0.55 0.15 160)' 'oklch(0.58 0.13 45)' 'oklch(0.55 0.16 330)' 'oklch(0.57 0.15 235)' 'oklch(0.55 0.14 130)' %}{% endif %};"
        href="{% if app.proxied %}{{ app.url }}{% if app.back_url %}?back={{ app.back_url }}{% endif %}{% else %}{% url app.index_url %}{% endif %}"
        {% if app.proxied and app.open_in_new_tab %}target="_blank" rel="noopener"{% endif %}
        title="{{ app.name }}">
