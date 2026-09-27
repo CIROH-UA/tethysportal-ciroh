@@ -178,7 +178,7 @@ in place. Server-rendered, self-contained (no external hosts, no build step).
     {% for app in apps.configured %}
     <a class="cal-card{% if not app.show_in_apps_library or not app.enabled %} is-veiled{% endif %}"
        data-name="{{ app.name|lower }}" data-desc="{{ app.description|default:''|lower }}" data-tags="{{ app|get_tag_class }}"
-       {% if app.color %}style="--card-accent: {{ app.color }};"{% endif %}
+       style="--card-accent: {% if app.color %}{{ app.color }}{% else %}{% cycle 'oklch(0.55 0.15 250)' 'oklch(0.55 0.15 285)' 'oklch(0.52 0.13 200)' 'oklch(0.55 0.15 160)' 'oklch(0.58 0.13 45)' 'oklch(0.55 0.16 330)' 'oklch(0.57 0.15 235)' 'oklch(0.55 0.14 130)' %}{% endif %};"
        href="{% if app.proxied %}{{ app.url }}{% if app.back_url %}?back={{ app.back_url }}{% endif %}{% else %}{% url app.index_url %}{% endif %}"
        {% if app.proxied and app.open_in_new_tab %}target="_blank" rel="noopener"{% endif %}
        title="{{ app.name }}">
