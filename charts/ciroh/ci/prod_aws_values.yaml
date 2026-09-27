@@ -42,6 +42,11 @@ ingresses:
     enabled: true
     className: 'alb'
     annotations:
+      # Share the ciroh-apps ALB (same group as the *.tethys.ciroh.org apps) so the
+      # apex tethys.ciroh.org, whose external DNS points at that shared ALB, gets a
+      # listener rule for the portal. Without this the portal gets its own ALB that
+      # DNS does not point at, and the apex 404s.
+      alb.ingress.kubernetes.io/group.name: ciroh-apps
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/backend-protocol: HTTP
