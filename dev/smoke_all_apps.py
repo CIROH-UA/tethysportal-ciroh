@@ -21,7 +21,7 @@ DEEP_DEPS = {
     "nrds": ["geopandas", "xarray", "pyarrow", "s3fs"],
     "ngiab": ["duckdb", "geopandas", "xarray", "netCDF4", "pyogrio"],
 }
-EXTRA = ["ciroh_plugins"]
+EXTRA = []
 
 
 def app_packages():
