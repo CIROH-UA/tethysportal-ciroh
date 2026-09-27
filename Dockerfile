@@ -28,6 +28,7 @@ RUN TP="$(${VIRTUAL_ENV}/bin/python -c 'import tethys_portal,os;print(os.path.jo
  && mkdir -p "$TP/tethys_apps" "$TP/tethys_portal" \
  && cp "$CT/tethys_apps/app_library.html" "$TP/tethys_apps/app_library.html" \
  && cp "$CT/tethys_portal/home.html" "$TP/tethys_portal/home.html" \
+ && cp "$CT/header.html" "$TP/header.html" \
  && echo "CIROH template overrides installed into $TP"
 
 # The viewer/data apps (sweml, hydrocompute, snow-inspector, tethysdash, cses,
