@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% comment %}
+CIROH portal home page. The portal is a hub: this landing introduces the CIROH
+suite, offers a single HydroShare sign-in, and sends people to the app library.
+Reuses the CIROH auth visual language (gradient brand panel, contour lines,
+wordmark) from deploy/oidc/templates/accounts_base.html. Server-rendered,
+self-contained.
+{% endcomment %}
+{% load static tethys %}
+
+{% block title %}{{ block.super }}{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style id="ciroh-home-styles">
+    .ciroh-home {
+      --ink: oklch(0.26 0.021 258);
+      --muted: oklch(0.52 0.021 258);
+      --canvas: oklch(0.985 0.004 245);
+      --card: oklch(1 0 0);
+      --line: oklch(0.912 0.012 250);
+      --blue: oklch(0.45 0.113 248);
+      --blue-deep: oklch(0.32 0.086 252);
+      --blue-deeper: oklch(0.26 0.07 254);
+      --blue-press: oklch(0.4 0.11 248);
+      --cyan: oklch(0.82 0.09 214);
+      --focus: oklch(0.72 0.13 232);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      font-family: 'Schibsted Grotesk', system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+    }
+    :root[data-bs-theme="dark"] .ciroh-home, .dark-mode .ciroh-home {
+      --ink: oklch(0.93 0.01 250);
+      --muted: oklch(0.72 0.02 250);
+      --canvas: oklch(0.21 0.02 250);
+      --card: oklch(0.25 0.02 250);
+      --line: oklch(0.34 0.02 250);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-bs-theme="light"]) .ciroh-home {
+        --ink: oklch(0.93 0.01 250);
+        --muted: oklch(0.72 0.02 250);
+        --canvas: oklch(0.21 0.02 250);
+        --card: oklch(0.25 0.02 250);
+        --line: oklch(0.34 0.02 250);
+      }
+    }
+
+    .ciroh-home { max-width: 1160px; margin: 0 auto; padding: clamp(1rem, 3vw, 2rem) 16px 4rem; }
+
+    .home-hero {
+      position: relative; overflow: hidden; border-radius: 1.25rem;
+      background: radial-gradient(125% 120% at 12% 0%, var(--blue) 0%, var(--blue-deep) 48%, var(--blue-deeper) 100%);
+      color: oklch(0.97 0.01 240);
+      padding: clamp(2rem, 5vw, 4.5rem) clamp(1.5rem, 5vw, 4rem);
+    }
+    .home-contours { position: absolute; inset: -8% -4%; width: 108%; height: 118%; opacity: 0.5; pointer-events: none; }
+    .home-contours path { fill: none; stroke: var(--cyan); stroke-width: 1.1; }
+    .home-contours .c-faint { stroke: oklch(0.86 0.05 220); opacity: 0.35; }
+
+    .home-hero-inner { position: relative; max-width: 38rem; }
+    .home-wordmark { display: inline-flex; align-items: center; gap: 0.6ch; font-weight: 800; font-size: clamp(1.3rem, 2vw, 1.6rem); letter-spacing: -0.01em; margin-bottom: clamp(1.5rem, 4vw, 2.5rem); }
+    .home-wordmark .mark { width: 0.46em; height: 0.46em; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 0.26em oklch(0.82 0.09 214 / 0.2); }
+
+    .home-hero h1 { margin: 0 0 1rem; font-weight: 600; font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.04; letter-spacing: -0.025em; text-wrap: balance; }
+    .home-hero p { margin: 0; max-width: 46ch; color: oklch(0.91 0.03 225); font-size: clamp(1rem, 1.3vw, 1.18rem); line-height: 1.55; }
+
+    .home-cta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: clamp(1.75rem, 4vw, 2.5rem); }
+    .home-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+      padding: 0.85rem 1.4rem; border-radius: 0.75rem; text-decoration: none;
+      font-family: inherit; font-size: 1rem; font-weight: 600; letter-spacing: -0.005em;
+      border: 1px solid transparent; cursor: pointer;
+      transition: transform 0.35s var(--ease), background-color 0.2s ease, box-shadow 0.35s var(--ease);
+    }
+    .home-btn-primary {
+      color: var(--blue-deep); background: oklch(0.98 0.01 220);
+      box-shadow: 0 1px 2px oklch(0.2 0.05 254 / 0.3), 0 10px 26px oklch(0.2 0.05 254 / 0.25);
+    }
+    .home-btn-primary:hover { transform: translateY(-2px); background: oklch(1 0 0); box-shadow: 0 2px 4px oklch(0.2 0.05 254 / 0.32), 0 16px 34px oklch(0.2 0.05 254 / 0.3); }
+    .home-btn-primary img { width: 1.25rem; height: 1.25rem; border-radius: 4px; }
+    .home-btn-ghost { color: oklch(0.98 0.01 220); background: oklch(0.98 0.01 220 / 0.08); border-color: oklch(0.86 0.05 220 / 0.45); }
+    .home-btn-ghost:hover { transform: translateY(-2px); background: oklch(0.98 0.01 220 / 0.16); }
+    .home-btn .bi { transition: transform 0.25s var(--ease); }
+    .home-btn:hover .bi { transform: translateX(3px); }
+    .home-btn:active { transform: translateY(0); }
+    .home-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .home-greeting { position: relative; margin: 1.4rem 0 0; color: oklch(0.85 0.05 222); font-size: 0.9rem; }
+
+    .home-explore { margin-top: clamp(2.5rem, 6vw, 4rem); }
+    .home-explore h2 { font-size: clamp(1.35rem, 2.4vw, 1.7rem); font-weight: 680; letter-spacing: -0.02em; margin: 0 0 0.4rem; color: var(--ink); }
+    .home-explore .lead { margin: 0 0 1.5rem; color: var(--muted); font-size: 0.98rem; max-width: 60ch; }
+    .explore-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.9rem; }
+    .explore-item {
+      display: flex; align-items: flex-start; gap: 0.9rem; padding: 1rem 1.1rem;
+      text-decoration: none; color: inherit; background: var(--card);
+      border: 1px solid var(--line); border-radius: 0.85rem;
+      transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+    }
+    .explore-item:hover { transform: translateY(-2px); border-color: oklch(0.45 0.113 248 / 0.45); box-shadow: 0 8px 24px oklch(0.32 0.086 252 / 0.1); }
+    .explore-item:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .explore-glyph { flex: none; width: 2.5rem; height: 2.5rem; border-radius: 0.6rem; display: grid; place-items: center; color: oklch(0.99 0.01 240); background: var(--tile, var(--blue)); }
+    .explore-glyph .bi { font-size: 1.15rem; }
+    .explore-text strong { display: block; font-size: 1rem; font-weight: 640; letter-spacing: -0.01em; color: var(--ink); }
+    .explore-text span { display: block; margin-top: 0.15rem; font-size: 0.85rem; line-height: 1.4; color: var(--muted); }
+
+    .home-partners { margin-top: clamp(2.5rem, 6vw, 3.5rem); padding-top: 1.5rem; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem 2rem; }
+    .home-partners .label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .home-partners img { height: 2rem; width: auto; opacity: 0.8; filter: grayscale(0.2); }
+    .home-partners img:hover { opacity: 1; filter: none; }
+
+    @media (max-width: 640px) {
+      .home-cta { flex-direction: column; align-items: stretch; }
+      .home-btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .home-btn, .explore-item, .home-btn .bi { transition: background-color 0.2s ease; }
+      .home-btn:hover, .explore-item:hover, .home-btn:hover .bi { transform: none; }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="ciroh-home">
+  <section class="home-hero">
+    <svg class="home-contours" viewBox="0 0 900 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <path class="c-faint" d="M-40 50 C 240 10, 560 110, 960 40"/>
+      <path d="M-40 96 C 260 50, 600 150, 960 84"/>
+      <path d="M-40 150 C 250 100, 620 200, 960 132"/>
+      <path class="c-faint" d="M-40 210 C 270 160, 620 250, 960 186"/>
+      <path d="M-40 268 C 260 220, 640 306, 960 244"/>
+      <path d="M-40 330 C 270 286, 640 372, 960 300"/>
+      <path class="c-faint" d="M-40 392 C 260 350, 640 428, 960 360"/>
+    </svg>
+    <div class="home-hero-inner">
+      <div class="home-wordmark"><span class="mark"></span>CIROH</div>
+      <h1>Research to operations, for the nation's water.</h1>
+      <p>One portal for the CIROH suite of hydrologic analysis, flood evaluation, and streamflow tools. Sign in once with HydroShare and launch any application.</p>
+      <div class="home-cta">
+        {% if request.user.is_authenticated %}
+        <a class="home-btn home-btn-primary" href="/apps/">Browse applications
+          <svg class="bi" width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/></svg>
+        </a>
+        {% else %}
+        <a class="home-btn home-btn-primary" href="{% url 'social:begin' 'hydroshare' %}?next=/apps/">
+          <img src="{% static 'ciroh_theme/images/HydroShare.png' %}" alt="" width="20" height="20">
+          Sign in with HydroShare
+        </a>
+        <a class="home-btn home-btn-ghost" href="/apps/">Browse applications
+          <svg class="bi" width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/></svg>
+        </a>
+        {% endif %}
+      </div>
+      {% if request.user.is_authenticated %}
+      <p class="home-greeting">Signed in as {{ request.user.get_username }}.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="home-explore">
+    <h2>Explore the suite</h2>
+    <p class="lead">Every tool runs as its own application. Open the launcher to search and filter the full catalog.</p>
+    <div class="explore-grid">
+      <a class="explore-item" href="/apps/" style="--tile: oklch(0.5 0.14 245);">
+        <span class="explore-glyph"><svg class="bi" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c0 0-6 5.686-6 10a6 6 0 0 0 6 6M6.646 4.646l.708.708c-.29.29-1.128 1.311-1.907 2.87l-.894-.448c.82-1.641 1.717-2.753 2.093-3.13"/></svg></span>
+        <span class="explore-text"><strong>Flood inundation</strong><span>Generate, evaluate, and benchmark HAND flood maps.</span></span>
+      </a>
+      <a class="explore-item" href="/apps/" style="--tile: oklch(0.52 0.14 285);">
+        <span class="explore-glyph"><svg class="bi" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 4.5a.5.5 0 0 1 .5-.5c2 0 3.5.5 4.5 1s2.5 1 4.5 1a10 10 0 0 0 2-.2v9a12 12 0 0 1-2 .2c-2 0-3.5-.5-4.5-1s-2.5-1-4.5-1zM0 11.5c2 0 3.5.5 4.5 1s2.5 1 4.5 1a10 10 0 0 0 2-.2"/></svg></span>
+        <span class="explore-text"><strong>Streamflow</strong><span>NextGen runs, gauge correlation, and evaluation.</span></span>
+      </a>
+      <a class="explore-item" href="/apps/" style="--tile: oklch(0.55 0.11 210);">
+        <span class="explore-glyph"><svg class="bi" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 16a.5.5 0 0 1-.5-.5v-1.293l-.646.647a.5.5 0 0 1-.707-.708L7.5 12.793V8.866l-3.4 1.963-.496 1.85a.5.5 0 1 1-.966-.26l.237-.882-1.12.646a.5.5 0 0 1-.5-.866l1.12-.646-.884-.237a.5.5 0 1 1 .26-.966l1.848.495L6.5 8 3.102 6.037l-1.849.495a.5.5 0 0 1-.259-.966l.884-.237-1.12-.646a.5.5 0 1 1 .5-.866l1.12.646-.237-.883a.5.5 0 0 1 .966-.258l.495 1.849L7.5 7.134V3.207L6.14 1.847a.5.5 0 1 1 .707-.707l.653.646V.5a.5.5 0 0 1 1 0v1.293l.647-.647a.5.5 0 1 1 .707.708L8.5 3.207v3.927l3.4-1.963.496-1.85a.5.5 0 1 1 .966.26l-.236.882 1.12-.646a.5.5 0 0 1 .5.866l-1.12.646.883.237a.5.5 0 1 1-.26.966l-1.848-.495L9.5 8l3.398 1.963 1.849-.495a.5.5 0 0 1 .259.966l-.883.237 1.12.646a.5.5 0 0 1-.5.866l-1.12-.646.236.883a.5.5 0 1 1-.966.258l-.495-1.849L8.5 8.866v3.927l1.36 1.36a.5.5 0 1 1-.707.708l-.653-.647V15.5a.5.5 0 0 1-.5.5"/></svg></span>
+        <span class="explore-text"><strong>Snow</strong><span>Snow water equivalent products and inspection.</span></span>
+      </a>
+      <a class="explore-item" href="/apps/" style="--tile: oklch(0.55 0.12 60);">
+        <span class="explore-glyph"><svg class="bi" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/></svg></span>
+        <span class="explore-text"><strong>Data &amp; dashboards</strong><span>Hydrofabric, in-browser compute, and dashboards.</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="home-partners">
+    <span class="label">In partnership with</span>
+    <img src="{% static 'ciroh_theme/images/owp.png' %}" alt="Office of Water Prediction">
+    <img src="{% static 'ciroh_theme/images/jupyterhub.png' %}" alt="JupyterHub">
+    <img src="{% static 'ciroh_theme/images/HydroShare.png' %}" alt="HydroShare">
+  </section>
+</div>
+{% endblock %}
