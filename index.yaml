@@ -3,7 +3,7 @@ entries:
   ciroh:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2026-09-27T21:41:56.607871028Z"
+    created: "2026-09-28T20:12:12.884122693Z"
     dependencies:
     - condition: postgis.enabled
       name: postgis
@@ -14,7 +14,7 @@ entries:
       repository: oci://ghcr.io/valkey-io/valkey-helm
       version: 0.10.0
     description: Tethys portal for CIROH
-    digest: ac3b71a03207e91a937f872f97eb8ecf493697f977beff78ac516ba9dc92837d
+    digest: ee60940a31cb7b398dda99dfdcccf5d296d2a3ea34500d52743ec6541d1688b9
     name: ciroh
     type: application
     urls:
@@ -102,4 +102,4 @@ entries:
     urls:
     - https://CIROH-UA.github.io/tethysportal-ciroh/ciroh-0.1.6.tgz
     version: 0.1.6
-generated: "2026-09-27T21:41:56.605687224Z"
+generated: "2026-09-28T20:12:12.882117473Z"
