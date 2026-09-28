@@ -1,6 +1,6 @@
 image:
-  repository: awiciroh/tethysapp-tethysdash
-  tag: latest
+  repository: gioelkin/tethysapp-tethysdash
+  tag: plugins
   pullPolicy: Always
 tethys:
   mode: single

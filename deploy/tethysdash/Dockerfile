@@ -38,6 +38,21 @@ RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
     && uv pip install . \
     && /opt/conda/envs/tethys/bin/python -c "import storages, boto3, channels_redis, django_redis, geoalchemy2, alembic, psycopg2, intake"
 
+# TethysDash discovers visualizations through installed plugin packages (intake
+# entry points), so the dashboards the monolithic portal shipped only render when
+# these same plugins are baked into the image.
+RUN --mount=type=cache,target=/cache/uv \
+    uv pip install \
+        git+https://github.com/FIRO-Tethys/ciroh_plugins.git \
+        git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git \
+        git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git \
+        git+https://github.com/FIRO-Tethys/tethysdash_plugin_cw3e.git \
+        git+https://github.com/FIRO-Tethys/tethysdash_plugin-great_lakes_viewer.git \
+        git+https://github.com/FIRO-Tethys/tethysdash_plugin_usgs_water_services.git \
+        git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git \
+        git+https://github.com/FIRO-Tethys/RFC-Plugins.git \
+    && /opt/conda/envs/tethys/bin/python -c "import ciroh_plugins"
+
 FROM ${UVX_RUNTIME}
 
 # Re-own the copied env to the runtime's non-root user (1000) during the copy,
