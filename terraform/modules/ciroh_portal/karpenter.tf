@@ -43,7 +43,7 @@ resource "helm_release" "karpenter" {
 
   values = [
     <<-EOT
-    replicas: 2
+    replicas: 1
     nodeSelector:
       karpenter.sh/controller: 'true'
     dnsPolicy: Default

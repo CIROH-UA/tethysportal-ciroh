@@ -94,13 +94,14 @@ valkey:
 postgis:
   enabled: false
 
-# Flood-map generation runs the HAND pipeline (GDAL mosaic + streamflow labels)
-# in-process on the serving pod. It OOMKilled at the 6Gi limit, taking the whole
-# pod down (exit 137). Give headroom until execution is moved off the web pods.
+# Lean hub after the cutover: serves the launcher/home/login and acts as the
+# OIDC provider only (apps are standalone), so it idles at ~130Mi / ~10m CPU.
+# Requests are sized for that, not the old in-process flood-map pipeline; the
+# generous memory limit stays as burst headroom.
 resources:
   requests:
-    cpu: 500m
-    memory: 4Gi
+    cpu: 200m
+    memory: 1Gi
   limits:
     memory: 12Gi
 
