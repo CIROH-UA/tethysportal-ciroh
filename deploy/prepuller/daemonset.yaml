@@ -1,0 +1,47 @@
+# Image pre-puller: caches the standalone-app images on every node so a KEDA
+# scale-from-zero wake finds the image already present (imagePullPolicy
+# IfNotPresent hits the cache) instead of pulling ~470 MB (~10-14s) on the wake.
+# Each init container pulls one image then exits; the pause container keeps the
+# pod running so the set stays cached and the DaemonSet does not restart-loop.
+# Update the image tags here whenever an app image is rebuilt to a new tag.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: image-prepuller
+  namespace: cirohportal
+  labels:
+    app.kubernetes.io/name: image-prepuller
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: image-prepuller
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: image-prepuller
+    spec:
+      priorityClassName: system-node-critical
+      terminationGracePeriodSeconds: 0
+      automountServiceAccountToken: false
+      initContainers:
+        - { name: fimeval, image: "gioelkin/tethysapp-fimeval-gui:ce577be", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: fimserve, image: "gioelkin/tethysapp-fimserve:latest", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: hydro-correlation-tool, image: "gioelkin/tethysapp-hydro-correlation-tool:pytzfix", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: tethysdash, image: "gioelkin/tethysapp-tethysdash:plugins", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: ngiab, image: "awiciroh/tethysapp-ngiab:17b9fcc6d20e6e3342c023f48e251a41972935df", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: nrds, image: "awiciroh/tethysapp-nrds:5491780a247211e184025b9d9af30bd48403e8c9", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: cses, image: "awiciroh/tethysapp-cses:2f348cef1a2835be4d1ac0fcc14f4bdcd82fa6f2", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: hydrocompute, image: "awiciroh/tethysapp-hydrocompute:279070399a0c8921ec30fe6f7b73344a9939d977", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: snow-inspector, image: "awiciroh/tethysapp-snow-inspector:10f46307ea8f53a450a07388b9ba0684d42dd235", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: sweml, image: "awiciroh/tethysapp-sweml:ec7594c0e901279b593192cfd1cc9820aed7c330", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: fimbench, image: "awiciroh/tethysapp-fimbench:8760c15b7425836907539c81c1dd58b4ad9c70d6", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+        - { name: usgs-mrms, image: "awiciroh/tethysapp-usgs-mrms:543cc3300c44597855bca66da0f3ffc43523c2df", imagePullPolicy: IfNotPresent, command: ["/bin/sh","-c","exit 0"] }
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.9
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { memory: 32Mi }
