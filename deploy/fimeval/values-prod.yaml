@@ -1,7 +1,7 @@
 tethys-app:
   image:
     repository: gioelkin/tethysapp-fimeval-gui
-    tag: ciroh
+    tag: ce577be
     pullPolicy: Always
   tethys:
     mode: single
