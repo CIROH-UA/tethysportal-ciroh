@@ -4,3 +4,4 @@ geoalchemy2
 hydroeval
 boto3
 pytz
+geopandas
