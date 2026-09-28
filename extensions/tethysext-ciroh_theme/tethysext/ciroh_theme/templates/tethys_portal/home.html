@@ -92,11 +92,6 @@ self-contained.
     .explore-text strong { display: block; font-size: 1rem; font-weight: 640; letter-spacing: -0.01em; color: var(--ink); }
     .explore-text span { display: block; margin-top: 0.15rem; font-size: 0.85rem; line-height: 1.4; color: var(--muted); }
 
-    .home-partners { margin-top: clamp(2.5rem, 6vw, 3.5rem); padding-top: 1.5rem; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem 2rem; }
-    .home-partners .label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-    .home-partners img { height: 2rem; width: auto; opacity: 0.8; filter: grayscale(0.2); }
-    .home-partners img:hover { opacity: 1; filter: none; }
-
     @media (max-width: 640px) {
       .home-cta { flex-direction: column; align-items: stretch; }
       .home-btn { width: 100%; }
@@ -166,13 +161,6 @@ self-contained.
         <span class="explore-text"><strong>Data &amp; dashboards</strong><span>Hydrofabric, in-browser compute, and dashboards.</span></span>
       </a>
     </div>
-  </section>
-
-  <section class="home-partners">
-    <span class="label">In partnership with</span>
-    <img src="{% static 'ciroh_theme/images/owp.png' %}" alt="Office of Water Prediction">
-    <img src="{% static 'ciroh_theme/images/jupyterhub.png' %}" alt="JupyterHub">
-    <img src="{% static 'ciroh_theme/images/HydroShare.png' %}" alt="HydroShare">
   </section>
 </div>
 {% endblock %}

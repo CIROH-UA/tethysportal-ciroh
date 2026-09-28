@@ -57,8 +57,6 @@ every page (same mechanism as the home + app_library overrides).
         {% block user_menu %}
           {% if user.is_authenticated and user.is_active %}
             {% include "tethys_portal/user/user_header_menu.html" %}
-          {% else %}
-            <a class="btn btn-outline-light" role="button" href="{% url 'accounts:login' %}" title="Sign in">Sign in</a>
           {% endif %}
         {% endblock %}
       </div>
