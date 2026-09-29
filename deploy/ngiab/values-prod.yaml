@@ -9,12 +9,15 @@ tethys:
   env:
     CLIENT_MAX_BODY_SIZE:
       value: 1024M
+    NGIAB_STORAGE_BACKEND:
+      value: s3
 externalDatabase:
   host: ciroh-portal-db.cfmp1axs2tbt.us-east-1.rds.amazonaws.com
   port: 5432
   name: tethys_platform_ngiab
   username: tethys_default
 ephemeralStorage:
+  type: emptyDir
   className: gp2
 s3Static:
   enabled: true
@@ -38,6 +41,8 @@ portalConfig:
   settings:
     ENABLE_OPEN_SIGNUP: false
     ENABLE_OPEN_PORTAL: true
+    INSTALLED_APPS:
+      - tethysapp.ngiab
     AUTHENTICATION_BACKENDS:
       - ciroh_portal_oidc.TethysPortalOpenIdConnect
       - django.contrib.auth.backends.ModelBackend
