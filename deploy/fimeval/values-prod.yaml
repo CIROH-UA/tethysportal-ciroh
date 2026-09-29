@@ -1,7 +1,7 @@
 tethys-app:
   image:
     repository: gioelkin/tethysapp-fimeval-gui
-    tag: 58560e1
+    tag: "58560e1"
     pullPolicy: IfNotPresent
   tethys:
     mode: single
