@@ -1,3 +1,7 @@
+# CIROH portal (hub) requirements. The portal is a plain Tethys portal: the OIDC
+# provider the standalone apps authenticate against, HydroShare sign-in, S3
+# static/media, and the CIROH theme templates. The science/geo and app-specific
+# dependencies moved out with the apps to their own standalone images.
 django>=4.2,<5
 django-cors-headers
 django-session-security
@@ -8,41 +12,13 @@ django-mfa2
 django-recaptcha
 django-oauth-toolkit
 django-tenants
-django-analytical
-hs-restclient
 python-jose
-arrow
-isodate
-docker
-plotly
-bokeh
-dask
-condorpy
-tethys-dask-scheduler
-tethys-dataset-services
-owslib
-geoalchemy2
-pyshp
-
-numpy==1.26.4
-pandas
-scikit-learn
-matplotlib
-geopandas
-shapely
-pyproj
+hs-restclient
 requests
 boto3
 django-storages
-hydroeval
-tqdm
-pypng
-xmltodict
-intake>=0.6.6
+condorpy
+tethys-dask-scheduler
+tethys-dataset-services
 pytz
 setuptools
-
-pynhd==0.17.1
-pygeoogc==0.17.1
-pygeoutils==0.17.1
-pygeohydro==0.17.1

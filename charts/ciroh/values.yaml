@@ -105,7 +105,7 @@ tethys:
     ENABLE_OPEN_PORTAL:
       value: true
     BYPASS_TETHYS_HOME_PAGE:
-      value: true
+      value: false
     CHANNEL_LAYERS_BACKEND:
       value: channels_redis.core.RedisChannelLayer
     PORTAL_SUPERUSER_NAME:
@@ -135,8 +135,6 @@ portalConfig:
     DATA_UPLOAD_MAX_MEMORY_SIZE: 1073741824
     DATA_UPLOAD_MAX_NUMBER_FIELDS: 1073741824
     FILE_UPLOAD_MAX_MEMORY_SIZE: 1073741824
-    INSTALLED_APPS:
-      - tethysapp.ngiab
     AUTHENTICATION_BACKENDS:
       - tethys_services.backends.hydroshare.HydroShareOAuth2
     OAUTH_CONFIG:
@@ -148,7 +146,7 @@ portalConfig:
       SOCIAL_AUTH_LOGIN_REDIRECT_URL: /apps/
     TETHYS_PORTAL_CONFIG:
       ENABLE_OPEN_PORTAL: true
-      BYPASS_TETHYS_HOME_PAGE: true
+      BYPASS_TETHYS_HOME_PAGE: false
   siteSettings:
     GENERAL_SETTINGS: {}
 

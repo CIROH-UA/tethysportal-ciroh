@@ -1,0 +1,18 @@
+# Runtime dependencies for the standalone USGS-MRMS app image. This is the union
+# of the Tethys app conda deps (install.yml) and the mrms_usgs_events pip package
+# deps, since neither pyproject.toml pins them for the uvx build. GDAL is added
+# separately in the Dockerfile, matched to the system gdal-config version.
+numpy
+plotly
+mercantile
+xarray
+zarr
+boto3
+python-dotenv
+pillow
+geopandas
+pyarrow
+orjson
+typer
+requests
+pandas

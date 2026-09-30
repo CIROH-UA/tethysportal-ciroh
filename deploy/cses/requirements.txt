@@ -1,0 +1,10 @@
+django-storages>=1.14
+pandas
+geopandas
+pyogrio
+fiona
+boto3
+s3fs
+fsspec
+scikit-learn
+hydroeval

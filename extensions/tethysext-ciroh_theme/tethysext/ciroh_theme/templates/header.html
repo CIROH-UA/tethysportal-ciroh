@@ -1,0 +1,66 @@
+{% load static %}
+{% comment %}
+CIROH portal header override. Replaces the default blue Tethys navbar with the CIROH
+brand chrome (blue gradient, cyan-dot wordmark, Schibsted Grotesk) while keeping the
+functional bits: brand link, app-library link, user menu, and sign-in. Copied into
+tethys_portal/templates/header.html at build time so it overrides the core include on
+every page (same mechanism as the home + app_library overrides).
+{% endcomment %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&display=swap">
+<style id="ciroh-header-styles">
+  #site-header.ciroh-header .navbar {
+    background: linear-gradient(100deg, oklch(0.30 0.08 254) 0%, oklch(0.44 0.12 249) 100%) !important;
+    border-radius: 0 0 1rem 1rem;
+    font-family: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
+    box-shadow: 0 6px 22px oklch(0.3 0.08 254 / 0.25);
+  }
+  #site-header.ciroh-header .navbar-brand { display: inline-flex; align-items: baseline; gap: 0.55ch; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em; color: oklch(0.98 0.01 220); }
+  #site-header.ciroh-header .brand-dot { align-self: center; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: oklch(0.82 0.09 214); box-shadow: 0 0 0 0.22rem oklch(0.82 0.09 214 / 0.25); }
+  #site-header.ciroh-header .brand-sub { font-weight: 500; font-size: 0.7rem; letter-spacing: 0.03em; text-transform: uppercase; color: oklch(0.85 0.05 220); }
+  #site-header.ciroh-header .navbar-brand:hover { color: oklch(1 0 0); }
+  #site-header.ciroh-header .nav-link { color: oklch(0.93 0.03 222) !important; font-weight: 560; transition: color 0.15s ease; }
+  #site-header.ciroh-header .nav-link:hover, #site-header.ciroh-header .nav-link.active { color: oklch(0.82 0.09 214) !important; }
+  #site-header.ciroh-header .btn-outline-light { border-radius: 0.6rem; border-color: oklch(0.82 0.09 214 / 0.55); color: oklch(0.98 0.01 220); font-weight: 600; transition: background-color 0.18s ease, color 0.18s ease, transform 0.25s cubic-bezier(0.22,1,0.36,1); }
+  #site-header.ciroh-header .btn-outline-light:hover { background: oklch(0.82 0.09 214); color: oklch(0.24 0.06 254); border-color: oklch(0.82 0.09 214); transform: translateY(-1px); }
+  #site-header.ciroh-header .btn-user-profile { color: oklch(0.98 0.01 220); }
+  @media (prefers-reduced-motion: reduce) {
+    #site-header.ciroh-header .btn-outline-light { transition: background-color 0.18s ease, color 0.18s ease; }
+    #site-header.ciroh-header .btn-outline-light:hover { transform: none; }
+  }
+</style>
+
+<header id="site-header" class="site-header ciroh-header container-fluid">
+  <div id="header-spacer" class="w-100 my-8"><p></p></div>
+  <nav id="header-navbar" class="navbar navbar-expand-md navbar-dark shadow px-4 py-3 mx-3">
+    <div class="container-fluid">
+      {% block header_brand %}
+        <a id="header-brand" class="navbar-brand" href="{% if single_app_mode %}{% if configured_single_app %}{% url configured_single_app.index_url %}{% else %}{% url 'user:profile' %}{% endif %}{% else %}{% url 'home' %}{% endif %}">
+          <span class="brand-dot"></span>CIROH<span class="brand-sub">Water Modeling Portal</span>
+        </a>
+      {% endblock %}
+
+      {% block header_navbar_nav %}
+      <button id="header-toggler" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#header-navbar-nav" aria-controls="header-navbar-nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="header-navbar-nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          {% block header_nav_items %}
+            {% url 'app_library' as app_library_url %}
+            {% if show_app_library_button %}
+              <li class="nav-item">
+                <a class="h5 me-3 mb-0 nav-link{% if request.path == app_library_url %} active" aria-current="page{% endif %}" href="{{ app_library_url }}" title="{% if site_globals.apps_library_title %}{{ site_globals.apps_library_title }}{% else %}Apps{% endif %}">{% if site_globals.apps_library_title %}{{ site_globals.apps_library_title }}{% else %}Apps{% endif %}</a>
+              </li>
+            {% endif %}
+          {% endblock %}
+        </ul>
+        {% block user_menu %}
+          {% if user.is_authenticated and user.is_active %}
+            {% include "tethys_portal/user/user_header_menu.html" %}
+          {% endif %}
+        {% endblock %}
+      </div>
+      {% endblock %}
+    </div>
+  </nav>
+</header>
