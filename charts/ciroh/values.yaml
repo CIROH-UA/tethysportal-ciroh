@@ -141,8 +141,11 @@ portalConfig:
       OAUTH2_PROVIDER:
         OIDC_ENABLED: true
         PKCE_REQUIRED: true
+        OAUTH2_VALIDATOR_CLASS: portal_oidc.CirohOIDCValidator
         SCOPES:
           openid: OpenID Connect scope
+          profile: Username and name
+          email: Email address
       SOCIAL_AUTH_LOGIN_REDIRECT_URL: /apps/
     TETHYS_PORTAL_CONFIG:
       ENABLE_OPEN_PORTAL: true
