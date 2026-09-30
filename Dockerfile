@@ -49,6 +49,9 @@ COPY --from=builder /opt/conda /opt/conda
 COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
 # Portal-owned S3 storage backend (base no longer ships it); on PYTHONPATH=/opt/portal.
 COPY conf/portal_storage.py /opt/portal/portal_storage.py
+# Portal-owned OIDC validator: adds preferred_username/name/email claims so apps
+# show the real name instead of the sub UUID; on PYTHONPATH=/opt/portal.
+COPY conf/portal_oidc.py /opt/portal/portal_oidc.py
 # Portal-owned config hook: OAuth secrets from env (base portal-config.sh runs it).
 COPY --chmod=0755 conf/portal-config.d/ /opt/portal/portal-config.d/
 # Portal-owned provision hook: link app stores + syncstores (base provision.sh runs it).
