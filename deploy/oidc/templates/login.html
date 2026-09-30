@@ -1,0 +1,14 @@
+{% extends "tethys_portal/accounts/base.html" %}
+
+{% block account_form_title %}Sign In{% endblock %}
+
+{% block account_form_body %}
+  {% if backends.not_associated %}
+    {% include 'tethys_portal/accounts/social_buttons.html' with action='Sign in' backends=backends.not_associated %}
+  {% else %}
+    <p class="ciroh-sub">No sign-in method is configured.</p>
+  {% endif %}
+{% endblock %}
+
+{% block terms-of-service-override %}
+{% endblock %}

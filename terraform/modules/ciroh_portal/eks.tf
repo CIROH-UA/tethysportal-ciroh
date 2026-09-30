@@ -65,8 +65,12 @@ module "eks" {
     tethys-core = {
       name            = "tethys-core-group"
       instance_types  = ["c6i.large"]
-      desired_size    = 2
-      min_size        = 2
+      # One on-demand baseline node is enough for the Karpenter controller +
+      # system pods (cluster runs ~1-2% CPU); the elastic tier is spot via
+      # Karpenter. Keep in lockstep with Karpenter replicas:1 (karpenter.tf) so
+      # its single controller replica always has a node.
+      desired_size    = 1
+      min_size        = 1
       max_size        = 3
       # These used to live in eks_managed_node_group_defaults
       # ami_type                   = "AL2023_x86_64_STANDARD"

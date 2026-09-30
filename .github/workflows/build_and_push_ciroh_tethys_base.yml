@@ -1,0 +1,101 @@
+name: build_push_ciroh_tethys_base
+# Build the CIROH Tethys builder base (deploy/ciroh-tethys) and push it to
+# Docker Hub. Standalone apps build on this base via their Dockerfile's
+# UVX_BUILDER build arg, so it carries the OIDC login backend, the S3 static
+# fix, and the branded login templates into every app image.
+#
+# Publishes awiciroh/ciroh-tethys:builder_<sha> (immutable) on every run, plus
+# the floating :builder tag on push and manual dispatch. Pull requests publish
+# only the immutable tag, so a PR never moves :builder before it merges.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tethys_uvx_builder:
+        description: 'Base tethys-uvx builder image to build on'
+        required: false
+        default: 'ghcr.io/aquaveo/tethys-uvx:builder'
+  push:
+    branches:
+      - '*'
+    paths:
+      - 'deploy/ciroh-tethys/**'
+      - 'deploy/oidc/**'
+      - '.github/workflows/build_and_push_ciroh_tethys_base.yml'
+  pull_request:
+    paths:
+      - 'deploy/ciroh-tethys/**'
+      - 'deploy/oidc/**'
+      - '.github/workflows/build_and_push_ciroh_tethys_base.yml'
+
+env:
+  DOCKER_HUB_ORG: awiciroh
+  DOCKER_REPO: ciroh-tethys
+  TETHYS_UVX_BUILDER: ${{ github.event.inputs.tethys_uvx_builder || 'ghcr.io/aquaveo/tethys-uvx:builder' }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ciroh-tethys-base-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.0
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          docker-images: true
+          tool-cache: true
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: 'false'
+
+      - name: Set image tags
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            SHA="${GITHUB_SHA}"
+          fi
+          IMAGE="${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}"
+          {
+            echo "IMAGE_TAGS<<EOF"
+            echo "${IMAGE}:builder_${SHA}"
+            if [ "${{ github.event_name }}" != "pull_request" ]; then
+              echo "${IMAGE}:builder"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Show tags
+        run: printf '%s\n' "${IMAGE_TAGS}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
+          password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: deploy
+          file: deploy/ciroh-tethys/Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            TETHYS_UVX_BUILDER=${{ env.TETHYS_UVX_BUILDER }}
+          tags: ${{ env.IMAGE_TAGS }}
+          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
