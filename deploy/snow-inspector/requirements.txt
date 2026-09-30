@@ -1,0 +1,5 @@
+pyshp
+geojson
+shapely
+pypng
+hs_restclient
