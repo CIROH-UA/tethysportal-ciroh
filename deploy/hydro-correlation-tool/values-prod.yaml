@@ -1,6 +1,6 @@
 image:
   repository: gioelkin/tethysapp-hydro-correlation-tool
-  tag: pytzfix
+  tag: cacheseed
   pullPolicy: Always
 tethys:
   mode: single
