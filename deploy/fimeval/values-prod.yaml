@@ -6,6 +6,10 @@ tethys-app:
   tethys:
     mode: single
     standaloneApp: fimeval_gui
+    env:
+      # Prod data predates the configurable prefix and lives under fimeval/.
+      FIMEVAL_S3_KEY_PREFIX:
+        value: fimeval/
     initContainers:
       waitForDb: false
   externalDatabase:
@@ -65,3 +69,4 @@ dask:
       karpenter.sh/capacity-type: spot
     env:
       FIMEVAL_TARGET_CRS: EPSG:5070
+      FIMEVAL_S3_KEY_PREFIX: fimeval/

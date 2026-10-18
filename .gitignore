@@ -19,3 +19,6 @@ charts/ciroh/charts
 # charts/ciroh/ci/.sops.yaml
 charts/ciroh/ci/secrets-dec.yaml
 docker-compose.mrms-local.yml
+
+deploy/fimeval/chart/charts
+deploy/fimeval/chart/*.lock

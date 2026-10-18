@@ -1,9 +1,8 @@
 # FIMeval on the CIROH cluster
 
 FIMeval runs as a standalone single app Tethys portal, decoupled from the main
-CIROH portal image. Its generic Helm chart lives in the app repo
-(`Aquaveo/tethysapp-fimeval-gui`, `deploy/chart`); this directory holds only the
-CIROH environment overlays.
+CIROH portal image. Its Helm chart (tethys-app subchart plus the Dask cluster)
+lives here in `chart/`, next to the CIROH environment overlays.
 
 Production is live at `https://fimeval.tethys.ciroh.org` in the `cirohportal`
 namespace: single app mode, scale to zero via KEDA, static and data on S3, and
@@ -25,13 +24,23 @@ CI publishes the CIROH base as `awiciroh/ciroh-tethys:builder` (see
 login templates ship in the app image (no wrapper), and upgrade:
 
 ```bash
-# in the fimeval app repo: build the app on the CIROH base
-docker build --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
-  -t gioelkin/tethysapp-fimeval-gui:ciroh .
+# from this repo, with the app source passed as the `app` build context
+APP=../apps/tethysapp-fimeval-gui   # or a git URL, e.g. https://github.com/Aquaveo/tethysapp-fimeval-gui.git#main
+
+# backend tests (SQLite, moto); the runner exits 0 even on failure, so read the summary
+docker build -f deploy/fimeval/Dockerfile --target test \
+  --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
+  --build-context app=$APP -t fimeval:test deploy/fimeval
+docker run --rm fimeval:test
+
+docker build -f deploy/fimeval/Dockerfile \
+  --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
+  --build-context app=$APP -t gioelkin/tethysapp-fimeval-gui:ciroh deploy/fimeval
 docker push gioelkin/tethysapp-fimeval-gui:ciroh
 
+helm dependency build deploy/fimeval/chart
 helm upgrade --install fimeval \
-  <app repo>/deploy/chart -n cirohportal -f deploy/fimeval/values-prod.yaml
+  deploy/fimeval/chart -n cirohportal -f deploy/fimeval/values-prod.yaml
 ```
 
 Create the `tethys_platform_fimeval` database once, owned by `tethys_default`,
