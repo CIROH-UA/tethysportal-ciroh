@@ -22,3 +22,5 @@ docker-compose.mrms-local.yml
 
 deploy/fimeval/chart/charts
 deploy/fimeval/chart/*.lock
+deploy/fimserve/chart/charts
+deploy/fimserve/chart/*.lock

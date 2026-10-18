@@ -1,0 +1,79 @@
+# Generic FIMserve deploy values. Environment specifics (DB host, IAM role,
+# ingress host, secret name, node placement) go in an overlay passed with -f.
+
+tethys-app:
+  fullnameOverride: fimserve
+  image:
+    repository: gioelkin/tethysapp-fimserve
+    tag: latest
+    pullPolicy: Always
+  tethys:
+    mode: single
+    standaloneApp: fimserve_viewer
+    env:
+      FIMSERV_ROOT:
+        value: /home/tethys/persist/fimserve
+      FIMSERVE_CACHE_MAX_GB:
+        value: '3'
+  externalDatabase:
+    host: ''
+    port: 5432
+    name: tethys_platform_fimserve
+    username: tethys_default
+  s3Static:
+    enabled: true
+    bucket: ''
+    region: us-east-1
+  secrets:
+    existingSecretName: ''
+    secretEnv:
+      - name: HYDROSHARE_CLIENT_ID
+        key: HYDROSHARE_CLIENT_ID
+      - name: HYDROSHARE_SECRET_ID
+        key: HYDROSHARE_SECRET_ID
+  serviceAccount:
+    create: false
+    name: fimserve-dask
+    roleArn: ''
+  ingress:
+    enabled: false
+  portalConfig:
+    settings:
+      ENABLE_OPEN_SIGNUP: false
+      AUTHENTICATION_BACKENDS:
+        - ciroh_portal_oidc.TethysPortalOpenIdConnect
+        - django.contrib.auth.backends.ModelBackend
+      OAUTH_CONFIG:
+        SOCIAL_AUTH_LOGIN_REDIRECT_URL: /
+  pdb:
+    enabled: true
+
+# Dask cluster owned by this app (needs the dask-kubernetes operator, already
+# installed). Workers run this same app image, bootstrap Django via a preload,
+# and reach jobs_db plus S3 exactly as the web pod does.
+dask:
+  enabled: true
+  serviceAccountName: fimserve-dask
+  binary: ${VIRTUAL_ENV:-/opt/conda/envs/tethys}/bin/dask
+  image:
+    repository: ''
+    tag: ''
+  scheduler:
+    resources:
+      requests: { cpu: 250m, memory: 1Gi }
+      limits: { memory: 2Gi }
+  worker:
+    nthreads: 1
+    memoryLimit: 8GiB
+    fimservRoot: /scratch/fimserve
+    nodeSelector: {}
+    resources:
+      requests: { cpu: '2', memory: 8Gi, ephemeral-storage: 20Gi }
+      limits: { memory: 12Gi, ephemeral-storage: 40Gi }
+  autoscaler:
+    # minimum 1, not 0: the operator's autoscaler misjudges a single long-running
+    # fire-and-forget job as idle and retires the worker every ~60s (killing the
+    # job mid-run). Pinning one worker keeps jobs reliable; it still scales up to
+    # maximum under load. True scale-to-zero needs the retire behavior fixed first.
+    minimum: 1
+    maximum: 3
