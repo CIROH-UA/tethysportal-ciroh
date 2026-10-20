@@ -57,6 +57,10 @@ portalConfig:
       - django.contrib.auth.backends.ModelBackend
     OAUTH_CONFIG:
       SOCIAL_AUTH_LOGIN_REDIRECT_URL: /
+      SOCIAL_AUTH_TETHYS_PORTAL_SCOPE:
+        - openid
+        - email
+        - profile
     STORAGES:
       staticfiles:
         BACKEND: ciroh_portal_static.LeadingSlashS3Storage
