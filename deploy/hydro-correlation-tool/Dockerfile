@@ -28,6 +28,12 @@ RUN --mount=type=cache,target=/cache/uv \
     && uv pip install . \
     && /opt/conda/envs/tethys/bin/python -c "import storages, boto3"
 
+# DA Analysis reference tables (~130 MB), baked in so scale-to-zero cold starts
+# don't re-download ~500 MB before DA works.
+ENV HCT_DA_CACHE_DIR=/opt/hct-da
+RUN mkdir -p ${HCT_DA_CACHE_DIR} \
+    && /opt/conda/envs/tethys/bin/python -c "from tethysapp.hydro_correlation_tool.fetchers import ensure_da_reference_tables; ensure_da_reference_tables()"
+
 FROM ${UVX_RUNTIME}
 
 USER root
@@ -37,5 +43,7 @@ RUN apt-get update \
 
 COPY --chown=1000:1000 --from=builder /opt/python /opt/python
 COPY --chown=1000:1000 --from=builder /opt/conda /opt/conda
+COPY --chown=1000:1000 --from=builder /opt/hct-da /opt/hct-da
+ENV HCT_DA_CACHE_DIR=/opt/hct-da
 
 USER 1000:1000

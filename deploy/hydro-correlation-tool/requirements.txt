@@ -5,3 +5,4 @@ hydroeval
 boto3
 pytz
 geopandas
+pyarrow
