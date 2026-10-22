@@ -71,8 +71,7 @@ through `portalConfig.siteSettings`, so `tethys site` sets it on every provision
   its root as a `post_logout_redirect_uri`. Newly registered apps get this on the
   next portal provision (helm upgrade), or set both in
   `/admin/oauth2_provider/application/`.
-* Sign out: `PortalLogoutMiddleware` (in each overlay's `MIDDLEWARE`; fimeval and
-  fimserve get it once their charts move here) sends the
+* Sign out: `PortalLogoutMiddleware` (in each overlay's `MIDDLEWARE`) sends the
   user to the portal's `/o/logout/` with their `id_token_hint` after the app logs
   them out, so the portal session ends too and the portal returns them to the
   app. It needs `OIDC_RP_INITIATED_LOGOUT_ENABLED` on the portal
