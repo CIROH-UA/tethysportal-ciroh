@@ -1,0 +1,10 @@
+apiVersion: v2
+name: fimeval
+description: FIMeval GUI, a standalone Tethys app with a Dask compute cluster.
+type: application
+version: 0.1.0
+appVersion: '0.1.0'
+dependencies:
+  - name: tethys-app
+    version: 0.1.5
+    repository: oci://ghcr.io/aquaveo/charts

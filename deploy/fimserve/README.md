@@ -8,16 +8,24 @@ web pod.
 
 Pieces:
 
-- Image: built from the app repo's own `Dockerfile`
-  (`Aquaveo/tethysapp-fimserve_viewer`, CIROH Tethys base) and pushed as
+- Image: built from `deploy/fimserve/Dockerfile` (CIROH Tethys base) with the
+  app source passed as the `app` build context, and pushed as
   `gioelkin/tethysapp-fimserve`, the same way fimeval's image is built.
-- Chart: the wrapper chart lives in the app repo at
-  `apps/tethysapp-fimserve_viewer/deploy/chart` (tethys-app subchart plus the
-  Dask cluster). The Dask worker runs this same image and bootstraps Django with
-  a `--preload` so it reaches `jobs_db` and S3 exactly as the web pod does.
+- Chart: `deploy/fimserve/chart` (tethys-app subchart plus the Dask cluster).
+  The Dask worker runs this same image and bootstraps Django with a `--preload`
+  so it reaches `jobs_db` and S3 exactly as the web pod does.
 - Values: `deploy/fimserve/values-prod.yaml`.
 - Ingress: `deploy/fimserve/ingress.yaml` (`fimserve.tethys.ciroh.org`, KEDA
   HTTP interceptor).
+
+## App source
+
+The app lives in `Aquaveo/fimserv-viewer` (it moved from the archived
+`Aquaveo/tethysapp-fimserve_viewer`). The Dask offload (`dask_worker.py`,
+`execution.py`, `scheduler.py`, `submitters.py`) is on its `feat/dask-offload`
+branch until that merges to `main`. Building source without the offload needs
+`--build-arg DASK_OFFLOAD=false` and a deploy with `--set dask.enabled=false`;
+jobs then run in a thread on the web pod.
 
 ## One-time prerequisites (admin)
 
@@ -34,19 +42,26 @@ Pieces:
 
 ## Build the image
 
-From the app repo (`Aquaveo/tethysapp-fimserve_viewer`, currently on
-`feat/dask-offload` until the offload code merges), build and push:
+From this repo, with the app source as the `app` build context:
 
 ```
-docker buildx build --platform linux/amd64 \
-  -t gioelkin/tethysapp-fimserve:latest --push .
+APP=https://github.com/Aquaveo/fimserv-viewer.git#feat/dask-offload   # #main once merged
+# or a local clone, e.g. APP=../apps/fimserv-viewer
+
+# tests (unittest for tests/, tethys manage test for the app package)
+docker build -f deploy/fimserve/Dockerfile --target test \
+  --build-context app=$APP -t fimserve:test deploy/fimserve
+docker run --rm fimserve:test
+
+docker buildx build --platform linux/amd64 -f deploy/fimserve/Dockerfile \
+  --build-context app=$APP -t gioelkin/tethysapp-fimserve:latest --push deploy/fimserve
 ```
 
 ## Deploy
 
 ```
-helm dependency build apps/tethysapp-fimserve_viewer/deploy/chart
-helm upgrade --install fimserve apps/tethysapp-fimserve_viewer/deploy/chart \
+helm dependency build deploy/fimserve/chart
+helm upgrade --install fimserve deploy/fimserve/chart \
   -f deploy/fimserve/values-prod.yaml --namespace cirohportal \
   --kube-context arn:aws:eks:us-east-1:456531024327:cluster/ciroh-portal-prod
 kubectl apply -f deploy/fimserve/ingress.yaml

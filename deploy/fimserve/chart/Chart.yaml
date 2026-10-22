@@ -1,0 +1,10 @@
+apiVersion: v2
+name: fimserve
+description: FIMserve Viewer, a standalone Tethys app with a scale-to-zero Dask compute cluster.
+type: application
+version: 0.1.0
+appVersion: '0.1.0'
+dependencies:
+  - name: tethys-app
+    version: 0.1.5
+    repository: oci://ghcr.io/aquaveo/charts

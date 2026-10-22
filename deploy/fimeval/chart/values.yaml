@@ -1,0 +1,72 @@
+# Generic FIMeval deploy values. Environment specifics (DB host, IAM role,
+# ingress host/annotations, node placement) go in an overlay passed with -f.
+
+tethys-app:
+  fullnameOverride: fimeval
+  image:
+    repository: gioelkin/tethysapp-fimeval-gui
+    tag: latest
+    pullPolicy: Always
+  tethys:
+    mode: single
+    standaloneApp: fimeval_gui
+  externalDatabase:
+    host: ''
+    port: 5432
+    name: tethys_platform
+    username: tethys_default
+  secrets:
+    existingSecretName: fimeval-secrets
+    secretEnv:
+      - name: HYDROSHARE_CLIENT_ID
+        key: HYDROSHARE_CLIENT_ID
+      - name: HYDROSHARE_SECRET_ID
+        key: HYDROSHARE_SECRET_ID
+  serviceAccount:
+    create: true
+    name: fimeval-dask
+    roleArn: ''
+  ingress:
+    enabled: false
+    className: ''
+    host: ''
+    annotations: {}
+  portalConfig:
+    settings:
+      AUTHENTICATION_BACKENDS:
+        - tethys_services.backends.hydroshare.HydroShareOAuth2
+      OAUTH_CONFIG:
+        OAUTH2_PROVIDER:
+          OIDC_ENABLED: true
+          PKCE_REQUIRED: true
+  pdb:
+    enabled: true
+
+# Dask cluster owned by this app (needs the dask-kubernetes operator).
+dask:
+  enabled: true
+  serviceAccountName: fimeval-dask
+  # unified dask CLI; scheduler/worker are subcommands
+  binary: /opt/conda/envs/tethys/bin/dask
+  image:
+    repository: ''
+    tag: ''
+  scheduler:
+    # Fail a task after one worker death (e.g. OOM) instead of Dask's default 3
+    # retries, so the UI gets a terminal error fast (FIMEVAL-BE29).
+    env:
+      DASK_DISTRIBUTED__SCHEDULER__ALLOWED_FAILURES: '1'
+    resources:
+      requests: { cpu: 500m, memory: 1Gi }
+      limits: { memory: 2Gi }
+  worker:
+    nthreads: 2
+    memoryLimit: 12GiB
+    nodeSelector: {}
+    env: {}
+    resources:
+      requests: { cpu: '2', memory: 12Gi, ephemeral-storage: 20Gi }
+      limits: { memory: 14Gi, ephemeral-storage: 40Gi }
+  autoscaler:
+    minimum: 0
+    maximum: 4

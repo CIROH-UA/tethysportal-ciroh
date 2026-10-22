@@ -1,0 +1,90 @@
+{{- if .Values.dask.enabled -}}
+apiVersion: kubernetes.dask.org/v1
+kind: DaskCluster
+metadata:
+  name: {{ include "fimeval.daskName" . }}
+spec:
+  scheduler:
+    service:
+      type: ClusterIP
+      selector:
+        dask.org/cluster-name: {{ include "fimeval.daskName" . }}
+        dask.org/component: scheduler
+      ports:
+        - name: tcp-comm
+          port: 8786
+          targetPort: tcp-comm
+          protocol: TCP
+        - name: http-dashboard
+          port: 8787
+          targetPort: http-dashboard
+          protocol: TCP
+    spec:
+      serviceAccountName: {{ .Values.dask.serviceAccountName }}
+      containers:
+        - name: scheduler
+          image: {{ include "fimeval.daskImage" . | quote }}
+          imagePullPolicy: {{ (index .Values "tethys-app").image.pullPolicy }}
+          args:
+            - {{ .Values.dask.binary | quote }}
+            - scheduler
+          env:
+            {{- range $k, $v := .Values.dask.scheduler.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          ports:
+            - name: tcp-comm
+              containerPort: 8786
+            - name: http-dashboard
+              containerPort: 8787
+          readinessProbe:
+            tcpSocket:
+              port: tcp-comm
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.dask.scheduler.resources | nindent 12 }}
+  worker:
+    replicas: 0
+    spec:
+      serviceAccountName: {{ .Values.dask.serviceAccountName }}
+      {{- with .Values.dask.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: worker
+          image: {{ include "fimeval.daskImage" . | quote }}
+          imagePullPolicy: {{ (index .Values "tethys-app").image.pullPolicy }}
+          args:
+            - {{ .Values.dask.binary | quote }}
+            - worker
+            - {{ include "fimeval.daskSchedulerAddress" . | quote }}
+            - --name=$(DASK_WORKER_NAME)
+            - --nthreads={{ .Values.dask.worker.nthreads }}
+            - --memory-limit={{ .Values.dask.worker.memoryLimit }}
+            - --local-directory=/scratch
+          env:
+            {{- range $k, $v := .Values.dask.worker.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: scratch
+              mountPath: /scratch
+          resources:
+            {{- toYaml .Values.dask.worker.resources | nindent 12 }}
+      volumes:
+        - name: scratch
+          emptyDir: {}
+---
+apiVersion: kubernetes.dask.org/v1
+kind: DaskAutoscaler
+metadata:
+  name: {{ include "fimeval.daskName" . }}
+spec:
+  cluster: {{ include "fimeval.daskName" . }}
+  minimum: {{ .Values.dask.autoscaler.minimum }}
+  maximum: {{ .Values.dask.autoscaler.maximum }}
+{{- end }}
