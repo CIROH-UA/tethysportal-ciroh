@@ -29,6 +29,10 @@ on:
         description: 'Comma-separated app keys to deploy (e.g. nrds,fimserve), or "all"'
         required: true
 
+# Reads only: the deploys use the AWS secrets, not the GITHUB_TOKEN.
+permissions:
+  contents: read
+
 env:
   AWS_REGION: us-east-1
   CLUSTER_NAME: ciroh-portal-prod
