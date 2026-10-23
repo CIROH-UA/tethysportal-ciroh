@@ -5,6 +5,12 @@ name: build_push_app_images
 # this workflow changes). Pull requests publish only the immutable <sha> tag;
 # push and manual dispatch also move :latest.
 #
+# Apps whose source lives in its own repo instead of a submodule (FIMeval,
+# FIMserve) check that repo out and pass it as the `app` named build context.
+# Their images are tagged <portal sha>-<app sha> since both trees go into them.
+# Changes in those app repos don't trigger this workflow; dispatch it with
+# apps=fimeval (and optionally source_ref) after merging there.
+#
 # To add an app, add one entry to APPS below.
 
 on:
@@ -16,6 +22,10 @@ on:
         default: 'all'
       ciroh_tethys_builder:
         description: 'CIROH Tethys builder base image to build on (blank = each app''s default)'
+        required: false
+        default: ''
+      source_ref:
+        description: 'Branch, tag or sha of the app repo for source_repo apps (blank = each app''s default)'
         required: false
         default: ''
   push:
@@ -35,13 +45,19 @@ env:
   DOCKER_HUB_ORG: awiciroh
   DEFAULT_BUILDER: awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
   # key = deploy/<key>/Dockerfile. builder is optional (defaults to DEFAULT_BUILDER);
-  # submodule_flags is optional.
+  # submodule_flags is optional. An app built from its own repo sets submodules to
+  # "" plus source_repo/source_ref (checked out as the `app` build context) and
+  # context (the docker build context, default ".").
   APPS: |
     [
       {"key": "cses",                   "repo": "tethysapp-cses",                   "submodules": "apps/Tethys-CSES",
        "builder": "awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd"},
       {"key": "fimbench",               "repo": "tethysapp-fimbench",               "submodules": "apps/fimbench",
        "builder": "awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd"},
+      {"key": "fimeval",                "repo": "tethysapp-fimeval-gui",            "submodules": "",
+       "source_repo": "Aquaveo/tethysapp-fimeval-gui", "source_ref": "main", "context": "deploy/fimeval"},
+      {"key": "fimserve",               "repo": "tethysapp-fimserve",               "submodules": "",
+       "source_repo": "Aquaveo/fimserv-viewer", "source_ref": "feat/dask-offload", "context": "deploy/fimserve"},
       {"key": "hydro-correlation-tool", "repo": "tethysapp-hydro-correlation-tool", "submodules": "apps/hydro-correlation-tool"},
       {"key": "hydrocompute",           "repo": "tethysapp-hydrocompute",           "submodules": "apps/tethysapp-hydrocompute",
        "submodule_flags": "--recursive"},
@@ -78,6 +94,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           WANTED: ${{ github.event.inputs.apps }}
           BUILDER_OVERRIDE: ${{ github.event.inputs.ciroh_tethys_builder }}
+          SOURCE_REF_OVERRIDE: ${{ github.event.inputs.source_ref }}
           BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: |
           if [ "$EVENT" = "workflow_dispatch" ]; then
@@ -96,15 +113,19 @@ jobs:
               if ($changed | index(".github/workflows/build_and_push_app_images.yml")) then [.[].key]
               else [ .[]
                      | . as $app
-                     | (["deploy/\($app.key)/"] + ($app.submodules | split(" "))) as $paths
+                     | (["deploy/\($app.key)/"] + ($app.submodules | split(" ") | map(select(. != "")))) as $paths
                      | select(any($changed[]; . as $f | any($paths[]; . as $p | $f == $p or ($f | startswith($p)))))
                      | .key ]
               end' <<<"$APPS")
           fi
-          matrix=$(jq -c --argjson keys "$keys" --arg default "$DEFAULT_BUILDER" --arg override "$BUILDER_OVERRIDE" '
+          matrix=$(jq -c --argjson keys "$keys" --arg default "$DEFAULT_BUILDER" --arg override "$BUILDER_OVERRIDE" \
+                         --arg ref_override "$SOURCE_REF_OVERRIDE" '
             { include: [ .[] | select(.key as $k | $keys | index($k))
                          | .builder = (if $override != "" then $override else (.builder // $default) end)
-                         | .submodule_flags = (.submodule_flags // "") ] }' <<<"$APPS")
+                         | .submodule_flags = (.submodule_flags // "")
+                         | .source_repo = (.source_repo // "")
+                         | .source_ref = (if .source_repo != "" and $ref_override != "" then $ref_override else (.source_ref // "") end)
+                         | .context = (.context // ".") ] }' <<<"$APPS")
           echo "Matrix: $matrix"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "any=$(jq '.include | length > 0' <<<"$matrix")" >> "$GITHUB_OUTPUT"
@@ -137,7 +158,17 @@ jobs:
           submodules: 'false'
 
       - name: Check out the app submodule(s)
+        if: matrix.submodules != ''
         run: git submodule update --init ${{ matrix.submodule_flags }} --depth 1 ${{ matrix.submodules }}
+
+      - name: Check out the app repo
+        if: matrix.source_repo != ''
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.source_repo }}
+          ref: ${{ matrix.source_ref }}
+          path: _app_src
+          fetch-depth: 1
 
       - name: Set image tags
         run: |
@@ -145,6 +176,10 @@ jobs:
             SHA="${{ github.event.pull_request.head.sha }}"
           else
             SHA="${GITHUB_SHA}"
+          fi
+          if [ -n "${{ matrix.source_repo }}" ]; then
+            SHA="${SHA}-$(git -C _app_src rev-parse --short=7 HEAD)"
+            echo "BUILD_CONTEXTS=app=${GITHUB_WORKSPACE}/_app_src" >> "$GITHUB_ENV"
           fi
           {
             echo "IMAGE_TAGS<<EOF"
@@ -178,8 +213,9 @@ jobs:
         if: steps.has_test.outputs.test == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ env.DOCKERFILE }}
+          build-contexts: ${{ env.BUILD_CONTEXTS }}
           platforms: linux/amd64
           target: test
           load: true
@@ -195,8 +231,9 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ env.DOCKERFILE }}
+          build-contexts: ${{ env.BUILD_CONTEXTS }}
           platforms: linux/amd64
           push: true
           build-args: |

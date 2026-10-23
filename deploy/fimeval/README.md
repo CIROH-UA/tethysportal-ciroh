@@ -21,7 +21,12 @@ shared database.
 
 CI publishes the CIROH base as `awiciroh/ciroh-tethys:builder` (see
 `../ciroh-tethys`). Build the app on it so the login backend, S3 static fix, and
-login templates ship in the app image (no wrapper), and upgrade:
+login templates ship in the app image (no wrapper), and upgrade.
+
+CI (`build_push_app_images`) builds and tests the image from the app repo's
+`main` and pushes `awiciroh/tethysapp-fimeval-gui:<portal sha>-<app sha>`. It runs
+when `deploy/fimeval/` changes; after merging in the app repo, run it by hand:
+`gh workflow run build_push_app_images -f apps=fimeval`. To build locally:
 
 ```bash
 # from this repo, with the app source passed as the `app` build context
