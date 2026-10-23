@@ -12,11 +12,11 @@ it against the built image, and you can run it locally too.
 - **`smoke_all_apps.py`** — imports every installed app (its `app`, controllers, and deep native deps
   like `fimserve`/`osgeo`), so a shared-pin regression is caught before the image ships. CI runs it
   after the Grype scan and **blocks the push/deploy** on any failure. Run it yourself against a locally
-  built image before a pre-merge (`gioelkin`) deploy:
+  built image before deploying it:
 
   ```bash
   # build first, e.g.:  docker compose -f docker-compose.dev.yml build web
-  #   (produces awiciroh/tethysapp-ciroh-portal:dev — swap in your gioelkin tag as needed)
+  #   (produces awiciroh/tethysapp-ciroh-portal:dev)
   docker run --rm \
     -e DJANGO_SETTINGS_MODULE=tethys_portal.settings -e TETHYS_SECRET_KEY=ci-smoke \
     -v "$PWD/dev/smoke_all_apps.py:/tmp/smoke_all_apps.py:ro" \

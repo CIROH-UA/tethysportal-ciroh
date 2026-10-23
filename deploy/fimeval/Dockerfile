@@ -2,7 +2,7 @@
 # Build from the portal repo with the app source as a named context:
 #   docker build -f deploy/fimeval/Dockerfile \
 #     --build-context app=<path to tethysapp-fimeval-gui> deploy/fimeval
-ARG UVX_BUILDER=ghcr.io/aquaveo/tethys-uvx:builder-a3148d5
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base-a3148d5
 
 FROM ${UVX_BUILDER} AS builder

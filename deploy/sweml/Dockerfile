@@ -3,7 +3,7 @@
 # the S3 static fix, and the branded login templates ship in the image. Build
 # context is the portal repo root, so the app comes from the apps/tethysapp-sweml
 # submodule (Aquaveo/tethysapp-sweml) and the deps come from deploy/sweml.
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_9aa1fb30f333da7bead57939b0ac0651b0ea3090
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder

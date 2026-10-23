@@ -4,7 +4,7 @@
 # portal repo with the app source as a named context:
 #   docker build -f deploy/fimserve/Dockerfile \
 #     --build-context app=<path or git URL of the app repo> deploy/fimserve
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_9aa1fb30f333da7bead57939b0ac0651b0ea3090
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder

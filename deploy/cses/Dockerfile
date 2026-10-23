@@ -3,7 +3,7 @@
 # the S3 static fix, and the branded login templates ship in the image. Build
 # context is the portal repo root, so the app comes from the apps/Tethys-CSES
 # submodule (Aquaveo/Tethys-CSES) and the deps come from deploy/cses.
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_2f82ca658945cb6f69818b3d98ed820b646cef99
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder

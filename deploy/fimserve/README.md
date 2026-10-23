@@ -9,8 +9,8 @@ web pod.
 Pieces:
 
 - Image: built from `deploy/fimserve/Dockerfile` (CIROH Tethys base) with the
-  app source passed as the `app` build context, and pushed as
-  `gioelkin/tethysapp-fimserve`, the same way fimeval's image is built.
+  app source passed as the `app` build context. CI builds it and pushes
+  `awiciroh/tethysapp-fimserve`, the same way fimeval's image is built.
 - Chart: `deploy/fimserve/chart` (tethys-app subchart plus the Dask cluster).
   The Dask worker runs this same image and bootstraps Django with a `--preload`
   so it reaches `jobs_db` and S3 exactly as the web pod does.
@@ -60,8 +60,9 @@ docker build -f deploy/fimserve/Dockerfile --target test \
   --build-context app=$APP -t fimserve:test deploy/fimserve
 docker run --rm fimserve:test
 
+# local image only; deployed images come from CI (awiciroh/tethysapp-fimserve)
 docker buildx build --platform linux/amd64 -f deploy/fimserve/Dockerfile \
-  --build-context app=$APP -t gioelkin/tethysapp-fimserve:latest --push deploy/fimserve
+  --build-context app=$APP -t fimserve:local --load deploy/fimserve
 ```
 
 ## Deploy

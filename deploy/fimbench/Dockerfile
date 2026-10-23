@@ -4,7 +4,7 @@
 # Build context is the portal repo root; the app comes from the apps/fimbench
 # submodule (Aquaveo/fimbench-gui). React frontend builds with Vite into the
 # app's public/ tree, which uv pip install picks up via package-data.
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7b6f2eb3f4ce67d81e1f10fc2ff7fce6fae14257
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder

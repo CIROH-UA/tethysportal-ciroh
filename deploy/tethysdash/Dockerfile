@@ -8,7 +8,7 @@
 # BUILD time by reading reactapp/config/production.env (which the app gitignores),
 # so deploy/tethysdash/production.env is copied in before `npm run build` to point
 # the SPA at the single-app root ("/") and at the per-subdomain WebSocket.
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_9aa1fb30f333da7bead57939b0ac0651b0ea3090
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder

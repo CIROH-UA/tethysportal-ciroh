@@ -19,9 +19,9 @@ shared database.
 
 ## Deploy (prod)
 
-CI publishes the CIROH base as `awiciroh/ciroh-tethys:builder` (see
-`../ciroh-tethys`). Build the app on it so the login backend, S3 static fix, and
-login templates ship in the app image (no wrapper), and upgrade.
+The image builds on the CIROH base (`awiciroh/ciroh-tethys:builder_<sha>`, see
+`../ciroh-tethys`), so the login backend, S3 static fix, and login templates ship
+in the app image (no wrapper).
 
 CI (`build_push_app_images`) builds and tests the image from the app repo's
 `main` and pushes `awiciroh/tethysapp-fimeval-gui:<portal sha>-<app sha>`. It runs
@@ -34,14 +34,12 @@ APP=../apps/tethysapp-fimeval-gui   # or a git URL, e.g. https://github.com/Aqua
 
 # backend tests (SQLite, moto); the runner exits 0 even on failure, so read the summary
 docker build -f deploy/fimeval/Dockerfile --target test \
-  --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
   --build-context app=$APP -t fimeval:test deploy/fimeval
 docker run --rm fimeval:test
 
+# local image only; deployed images come from CI (awiciroh/tethysapp-fimeval-gui)
 docker build -f deploy/fimeval/Dockerfile \
-  --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
-  --build-context app=$APP -t gioelkin/tethysapp-fimeval-gui:ciroh deploy/fimeval
-docker push gioelkin/tethysapp-fimeval-gui:ciroh
+  --build-context app=$APP -t fimeval:local deploy/fimeval
 
 helm dependency build deploy/fimeval/chart
 helm upgrade --install fimeval \

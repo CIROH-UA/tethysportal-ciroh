@@ -9,7 +9,7 @@
 # deps come from deploy/snow-inspector/requirements.txt instead. No GDAL and no
 # npm build are needed: the app is server rendered and reads public NASA
 # GIBS/Earthdata tiles.
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_9aa1fb30f333da7bead57939b0ac0651b0ea3090
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder
