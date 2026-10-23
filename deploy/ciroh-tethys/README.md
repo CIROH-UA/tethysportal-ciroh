@@ -20,6 +20,18 @@ this base is built from `tethys-uvx:builder`.
 The app Dockerfile's runtime base (`UVX_RUNTIME`) does not need to change; the
 CIROH files ride in through the builder's `/opt/conda`.
 
+## Provision hook
+
+`init.d/50-syncstores.sh` lands in `/opt/portal/init.d/`, which the base
+`provision.sh` runs after `tethys db migrate`. It runs `tethys syncstores all`, so
+each persistent store's initializer, and with it the app's own schema migrations
+(TethysDash's Alembic revisions, for example), runs on every upgrade. Without it a
+new app version can start against the old schema. A store with no service linked
+is skipped; any other syncstores error fails the provision job, so Helm stops
+before the new image rolls out. `/opt/portal` is outside `/opt/conda`, so each app
+Dockerfile copies it into its runtime stage (`COPY --from=builder /opt/portal
+/opt/portal`).
+
 ## Build
 
 CI builds and publishes this base to Docker Hub as `awiciroh/ciroh-tethys`. The
@@ -29,14 +41,13 @@ that touches `deploy/ciroh-tethys/` or `deploy/oidc/`, and on demand via
 `:builder` (floating) and `:builder_<sha>` (immutable); build apps against the
 immutable tag for reproducibility.
 
-To build it by hand, run from `deploy/` so the shared files under `oidc/` are in
-the build context:
+To build it locally (deployed images come from CI), run from the repo root so the
+shared files under `deploy/oidc/` are in the build context:
 
 ```bash
-docker build -t awiciroh/ciroh-tethys:builder \
+docker build -t ciroh-tethys:local \
   --build-arg TETHYS_UVX_BUILDER=ghcr.io/aquaveo/tethys-uvx:builder \
-  -f ciroh-tethys/Dockerfile deploy
-docker push awiciroh/ciroh-tethys:builder
+  -f deploy/ciroh-tethys/Dockerfile deploy
 ```
 
 ## How apps consume it

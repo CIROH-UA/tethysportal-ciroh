@@ -11,5 +11,9 @@ COPY --chmod=0644 oidc/templates/login.html oidc/templates/social_buttons.html \
      ${SP}/tethys_portal/templates/tethys_portal/accounts/
 COPY --chmod=0644 oidc/templates/accounts_base.html \
      ${SP}/tethys_portal/templates/tethys_portal/accounts/base.html
+# Provision hook: syncstores, so store initializers (schema migrations) run on every
+# upgrade. The base provision.sh runs /opt/portal/init.d/*.sh; app Dockerfiles copy
+# /opt/portal into their runtime stage.
+COPY --chmod=0755 ciroh-tethys/init.d/ /opt/portal/init.d/
 # Fail the build if the baked static backend's dependencies are missing.
 RUN /opt/conda/envs/tethys/bin/python -c "import storages, boto3"
