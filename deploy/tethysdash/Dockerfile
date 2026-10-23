@@ -41,8 +41,11 @@ RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
 # TethysDash discovers visualizations through installed plugin packages (intake
 # entry points), so the dashboards the monolithic portal shipped only render when
 # these same plugins are baked into the image.
+# ciroh_plugins leaves pygeohydro/pynhd unpinned; without the floor, a newer pynhd
+# makes uv fall back to pygeohydro 0.14, which breaks on the current async-retriever.
 RUN --mount=type=cache,target=/cache/uv \
     uv pip install \
+        "pygeohydro>=0.19" \
         git+https://github.com/FIRO-Tethys/ciroh_plugins.git \
         git+https://github.com/FIRO-Tethys/tethysdash_plugin_usace.git \
         git+https://github.com/FIRO-Tethys/tethysdash_plugin_cnrfc.git \
