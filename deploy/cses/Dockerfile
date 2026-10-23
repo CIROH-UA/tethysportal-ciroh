@@ -3,7 +3,7 @@
 # the S3 static fix, and the branded login templates ship in the image. Build
 # context is the portal repo root, so the app comes from the apps/Tethys-CSES
 # submodule (Aquaveo/Tethys-CSES) and the deps come from deploy/cses.
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_639eda75d3773cbd01655294c4b09d39ce734dff
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder
@@ -43,5 +43,6 @@ RUN apt-get update \
 
 COPY --chown=1000:1000 --from=builder /opt/python /opt/python
 COPY --chown=1000:1000 --from=builder /opt/conda /opt/conda
+COPY --from=builder /opt/portal /opt/portal
 
 USER 1000:1000

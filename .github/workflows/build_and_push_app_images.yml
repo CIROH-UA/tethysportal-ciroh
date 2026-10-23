@@ -49,7 +49,7 @@ on:
 
 env:
   DOCKER_HUB_ORG: awiciroh
-  DEFAULT_BUILDER: awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
+  DEFAULT_BUILDER: awiciroh/ciroh-tethys:builder_639eda75d3773cbd01655294c4b09d39ce734dff
   # Keep DEFAULT_BUILDER and `ARG UVX_BUILDER` in deploy/*/Dockerfile on the same base.
   # key = deploy/<key>/Dockerfile. builder is optional (defaults to DEFAULT_BUILDER;
   # set it only for an app that can't move to the default yet, and say why);

@@ -5,7 +5,7 @@
 # submodule (CIROH-UA/nrds-client, package tethysapp.nrds) and deps come from
 # deploy/nrds. The slim hydrofabric index is gitignored/generated, so it must be
 # built here before install (else the parquet 403s from S3 at runtime).
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_639eda75d3773cbd01655294c4b09d39ce734dff
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder
@@ -39,5 +39,6 @@ RUN apt-get update \
 
 COPY --chown=1000:1000 --from=builder /opt/python /opt/python
 COPY --chown=1000:1000 --from=builder /opt/conda /opt/conda
+COPY --from=builder /opt/portal /opt/portal
 
 USER 1000:1000
