@@ -33,15 +33,15 @@ on:
 
 env:
   DOCKER_HUB_ORG: awiciroh
-  DEFAULT_BUILDER: awiciroh/ciroh-tethys:builder_9aa1fb30f333da7bead57939b0ac0651b0ea3090
+  DEFAULT_BUILDER: awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd
   # key = deploy/<key>/Dockerfile. builder is optional (defaults to DEFAULT_BUILDER);
   # submodule_flags is optional.
   APPS: |
     [
       {"key": "cses",                   "repo": "tethysapp-cses",                   "submodules": "apps/Tethys-CSES",
-       "builder": "awiciroh/ciroh-tethys:builder_2f82ca658945cb6f69818b3d98ed820b646cef99"},
+       "builder": "awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd"},
       {"key": "fimbench",               "repo": "tethysapp-fimbench",               "submodules": "apps/fimbench",
-       "builder": "awiciroh/ciroh-tethys:builder_7b6f2eb3f4ce67d81e1f10fc2ff7fce6fae14257"},
+       "builder": "awiciroh/ciroh-tethys:builder_7f91b35f42883e079a11e9d94429201d51bc8acd"},
       {"key": "hydro-correlation-tool", "repo": "tethysapp-hydro-correlation-tool", "submodules": "apps/hydro-correlation-tool"},
       {"key": "hydrocompute",           "repo": "tethysapp-hydrocompute",           "submodules": "apps/tethysapp-hydrocompute",
        "submodule_flags": "--recursive"},
