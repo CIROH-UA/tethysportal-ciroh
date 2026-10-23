@@ -11,11 +11,10 @@ name: build_push_app_images
 # Pull requests publish only the immutable <sha> tag; push and manual dispatch
 # also move :latest.
 #
-# Apps whose source lives in its own repo instead of a submodule (FIMeval,
-# FIMserve) check that repo out and pass it as the `app` named build context.
-# Their images are tagged <portal sha>-<app sha> since both trees go into them.
-# Changes in those app repos don't trigger this workflow; dispatch it with
-# apps=fimeval (and optionally source_ref) after merging there.
+# Every app comes from a submodule. An app that can't be one can set source_repo
+# instead (see APPS): that repo is checked out and passed as the `app` named
+# build context, and the image is tagged <portal sha>-<app sha>. Changes in such
+# a repo don't trigger this workflow; dispatch it (optionally with source_ref).
 #
 # To add an app, add one entry to APPS below.
 
@@ -53,17 +52,15 @@ env:
   # Keep DEFAULT_BUILDER and `ARG UVX_BUILDER` in deploy/*/Dockerfile on the same base.
   # key = deploy/<key>/Dockerfile. builder is optional (defaults to DEFAULT_BUILDER;
   # set it only for an app that can't move to the default yet, and say why);
-  # submodule_flags is optional. An app built from its own repo sets submodules to
-  # "" plus source_repo/source_ref (checked out as the `app` build context) and
-  # context (the docker build context, default ".").
+  # submodule_flags is optional. An app that can't be a submodule sets submodules
+  # to "" plus source_repo/source_ref (checked out as the `app` build context) and
+  # context (the docker build context, default "."); none does today.
   APPS: |
     [
       {"key": "cses",                   "repo": "tethysapp-cses",                   "submodules": "apps/Tethys-CSES"},
       {"key": "fimbench",               "repo": "tethysapp-fimbench",               "submodules": "apps/fimbench"},
-      {"key": "fimeval",                "repo": "tethysapp-fimeval-gui",            "submodules": "",
-       "source_repo": "Aquaveo/tethysapp-fimeval-gui", "source_ref": "main", "context": "deploy/fimeval"},
-      {"key": "fimserve",               "repo": "tethysapp-fimserve",               "submodules": "",
-       "source_repo": "Aquaveo/fimserv-viewer", "source_ref": "feat/dask-offload", "context": "deploy/fimserve"},
+      {"key": "fimeval",                "repo": "tethysapp-fimeval-gui",            "submodules": "apps/tethysapp-fimeval-gui"},
+      {"key": "fimserve",               "repo": "tethysapp-fimserve",               "submodules": "apps/fimserv-viewer"},
       {"key": "hydro-correlation-tool", "repo": "tethysapp-hydro-correlation-tool", "submodules": "apps/hydro-correlation-tool"},
       {"key": "hydrocompute",           "repo": "tethysapp-hydrocompute",           "submodules": "apps/tethysapp-hydrocompute",
        "submodule_flags": "--recursive"},

@@ -41,3 +41,11 @@
 	path = apps/ngiab-client
 	url = https://github.com/CIROH-UA/ngiab-client
 	branch = feat/storage-backed-model-runs
+[submodule "apps/fimserv-viewer"]
+	path = apps/fimserv-viewer
+	url = https://github.com/Aquaveo/fimserv-viewer.git
+	branch = feat/dask-offload
+[submodule "apps/tethysapp-fimeval-gui"]
+	path = apps/tethysapp-fimeval-gui
+	url = https://github.com/Aquaveo/tethysapp-fimeval-gui.git
+	branch = main

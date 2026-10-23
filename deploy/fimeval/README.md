@@ -23,23 +23,23 @@ The image builds on the CIROH base (`awiciroh/ciroh-tethys:builder_<sha>`, see
 `../ciroh-tethys`), so the login backend, S3 static fix, and login templates ship
 in the app image (no wrapper).
 
-CI (`build_push_app_images`) builds and tests the image from the app repo's
-`main` and pushes `awiciroh/tethysapp-fimeval-gui:<portal sha>-<app sha>`. It runs
-when `deploy/fimeval/` changes; after merging in the app repo, run it by hand:
-`gh workflow run build_push_app_images -f apps=fimeval`. To build locally:
+The app comes from the `apps/tethysapp-fimeval-gui` submodule
+(`Aquaveo/tethysapp-fimeval-gui`, tracking `main`). CI (`build_push_app_images`)
+builds and tests the image when `deploy/fimeval/` or the submodule changes, and
+pushes `awiciroh/tethysapp-fimeval-gui:<portal sha>`. To ship app changes, bump
+the submodule in a portal PR (`git submodule update --remote
+apps/tethysapp-fimeval-gui`, then commit it). To build locally:
 
 ```bash
-# from this repo, with the app source passed as the `app` build context
-APP=../apps/tethysapp-fimeval-gui   # or a git URL, e.g. https://github.com/Aquaveo/tethysapp-fimeval-gui.git#main
+# from this repo, with the submodule checked out
+git submodule update --init apps/tethysapp-fimeval-gui
 
 # backend tests (SQLite, moto); the runner exits 0 even on failure, so read the summary
-docker build -f deploy/fimeval/Dockerfile --target test \
-  --build-context app=$APP -t fimeval:test deploy/fimeval
+docker build -f deploy/fimeval/Dockerfile --target test -t fimeval:test .
 docker run --rm fimeval:test
 
 # local image only; deployed images come from CI (awiciroh/tethysapp-fimeval-gui)
-docker build -f deploy/fimeval/Dockerfile \
-  --build-context app=$APP -t fimeval:local deploy/fimeval
+docker build -f deploy/fimeval/Dockerfile -t fimeval:local .
 
 helm dependency build deploy/fimeval/chart
 helm upgrade --install fimeval \

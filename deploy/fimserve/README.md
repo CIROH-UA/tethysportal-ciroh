@@ -9,8 +9,8 @@ web pod.
 Pieces:
 
 - Image: built from `deploy/fimserve/Dockerfile` (CIROH Tethys base) with the
-  app source passed as the `app` build context. CI builds it and pushes
-  `awiciroh/tethysapp-fimserve`, the same way fimeval's image is built.
+  app from the `apps/fimserv-viewer` submodule. CI builds it and pushes
+  `awiciroh/tethysapp-fimserve`, like the other apps.
 - Chart: `deploy/fimserve/chart` (tethys-app subchart plus the Dask cluster).
   The Dask worker runs this same image and bootstraps Django with a `--preload`
   so it reaches `jobs_db` and S3 exactly as the web pod does.
@@ -21,9 +21,11 @@ Pieces:
 ## App source
 
 The app lives in `Aquaveo/fimserv-viewer` (it moved from the archived
-`Aquaveo/tethysapp-fimserve_viewer`). The Dask offload (`dask_worker.py`,
-`execution.py`, `scheduler.py`, `submitters.py`) is on its `feat/dask-offload`
-branch until that merges to `main`. Building source without the offload needs
+`Aquaveo/tethysapp-fimserve_viewer`), checked out as the `apps/fimserv-viewer`
+submodule. The Dask offload (`dask_worker.py`, `execution.py`, `scheduler.py`,
+`submitters.py`) is on its `feat/dask-offload` branch until that merges to
+`main`; the submodule tracks that branch (switch `branch` in `.gitmodules` to
+`main` once it merges). Building source without the offload needs
 `--build-arg DASK_OFFLOAD=false` and a deploy with `--set dask.enabled=false`;
 jobs then run in a thread on the web pod.
 
@@ -42,27 +44,26 @@ jobs then run in a thread on the web pod.
 
 ## Build the image
 
-CI (`build_push_app_images`) builds and tests the image from the app repo's
-`feat/dask-offload` (switch `source_ref` in the workflow's APPS to `main` once it
-merges) and pushes `awiciroh/tethysapp-fimserve:<portal sha>-<app sha>`. It runs
-when `deploy/fimserve/` changes; after changes in the app repo, run it by hand:
-`gh workflow run build_push_app_images -f apps=fimserve` (add
-`-f source_ref=<branch>` to build another branch). To build locally:
-
-From this repo, with the app source as the `app` build context:
+CI (`build_push_app_images`) builds and tests the image when `deploy/fimserve/`
+or the submodule changes, and pushes `awiciroh/tethysapp-fimserve:<portal sha>`.
+To ship app changes, bump the submodule in a portal PR:
 
 ```
-APP=https://github.com/Aquaveo/fimserv-viewer.git#feat/dask-offload   # #main once merged
-# or a local clone, e.g. APP=../apps/fimserv-viewer
+git submodule update --init apps/fimserv-viewer
+git submodule update --remote apps/fimserv-viewer   # tip of the tracked branch
+git add apps/fimserv-viewer && git commit -m "Bump FIMserve"
+```
 
+To build locally, from this repo with the submodule checked out:
+
+```
 # tests (unittest for tests/, tethys manage test for the app package)
-docker build -f deploy/fimserve/Dockerfile --target test \
-  --build-context app=$APP -t fimserve:test deploy/fimserve
+docker build -f deploy/fimserve/Dockerfile --target test -t fimserve:test .
 docker run --rm fimserve:test
 
 # local image only; deployed images come from CI (awiciroh/tethysapp-fimserve)
 docker buildx build --platform linux/amd64 -f deploy/fimserve/Dockerfile \
-  --build-context app=$APP -t fimserve:local --load deploy/fimserve
+  -t fimserve:local --load .
 ```
 
 ## Deploy
