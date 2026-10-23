@@ -15,9 +15,6 @@ FROM ${UVX_BUILDER} AS builder
 
 ENV UV_CACHE_DIR=/cache/uv
 ENV npm_config_cache=/cache/npm
-# The app submodule ships without usable git metadata in the build context, so
-# pin the version for setuptools_scm instead of computing it from git.
-ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TETHYSDASH=0.19.12
 
 WORKDIR ${TETHYS_HOME}
 

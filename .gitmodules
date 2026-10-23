@@ -21,10 +21,6 @@
 	path = apps/fimbench
 	url = https://github.com/Aquaveo/fimbench-gui.git
 	branch = main
-[submodule "apps/tethysapp-fimserve_viewer"]
-	path = apps/tethysapp-fimserve_viewer
-	url = https://github.com/Aquaveo/tethysapp-fimserve_viewer.git
-	branch = main
 [submodule "apps/usgs_mrms_tethys_app"]
 	path = apps/usgs_mrms_tethys_app
 	url = https://github.com/Aquaveo/usgs_mrms_tethys_app.git
