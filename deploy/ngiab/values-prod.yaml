@@ -1,6 +1,6 @@
 image:
   repository: awiciroh/tethysapp-ngiab
-  tag: aa8f2117ace2fb76c3359ffa1c357f4a9fad5fb9
+  tag: 68a9d315088d80f53738f453a4156c8e32dd0db2
   pullPolicy: Always
 tethys:
   mode: single

@@ -1,6 +1,6 @@
 image:
   repository: awiciroh/tethysapp-tethysdash
-  tag: 59609767b9c41014ec72d76c8173c2774fc17e56
+  tag: 68a9d315088d80f53738f453a4156c8e32dd0db2
   pullPolicy: Always
 tethys:
   mode: single
