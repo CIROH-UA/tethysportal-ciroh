@@ -1,0 +1,72 @@
+name: Update an app
+description: Ship a newer version of one of the portal's apps.
+title: "Update <app> to <branch, tag or commit>"
+labels: [app-update]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Once a maintainer adds the `approved` label, a bot opens a pull request that
+        moves the app to the version below, builds its image, and pins the new image.
+        Merging that PR deploys it (after a second approval).
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      # Keys of the APPS list in .github/workflows/build_and_push_app_images.yml.
+      options:
+        - cses
+        - fimbench
+        - fimeval
+        - fimserve
+        - hydro-correlation-tool
+        - hydrocompute
+        - ngiab
+        - nrds
+        - snow-inspector
+        - sweml
+        - tethysdash
+        - usgs-mrms
+    validations:
+      required: true
+  - type: input
+    id: ref
+    attributes:
+      label: Version
+      description: >
+        A branch, tag or commit of the app's repo. Leave blank for the latest commit of
+        the branch the portal tracks (usually main). For usgs-mrms, this is the app
+        repo; its mrms_usgs_events library moves to its tracked branch.
+      placeholder: "main, v1.4.0 or 4ce282b"
+  - type: textarea
+    id: changes
+    attributes:
+      label: What changes
+      description: What users will see, or a link to the app's release notes or merged PRs.
+    validations:
+      required: true
+  - type: dropdown
+    id: migration
+    attributes:
+      label: Does it change the app's database?
+      description: >
+        Store migrations run automatically on deploy (tethys syncstores). Say yes if
+        they need anything else, such as a manual step or a backfill.
+      options:
+        - "No"
+        - "Yes, handled by the app's initializer"
+        - "Yes, needs a manual step (describe below)"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: New settings, secrets or other deploy steps
+      description: New app settings, API keys, environment variables, or anything else to do before or after deploying.
+      placeholder: "None"
+  - type: input
+    id: contact
+    attributes:
+      label: Contact
+      description: Who to ask about this release (GitHub handle or email).

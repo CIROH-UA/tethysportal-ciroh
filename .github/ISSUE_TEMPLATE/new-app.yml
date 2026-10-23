@@ -1,0 +1,68 @@
+name: Add a new app
+description: Request a new standalone app on the CIROH portal.
+title: "Add <app name>"
+labels: [new-app]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Each app runs as its own Tethys portal at `<name>.tethys.ciroh.org`, signs in
+        through the CIROH portal, and scales to zero when idle. A maintainer reviews
+        the request and sets it up; see the checklist at the end.
+  - type: input
+    id: name
+    attributes:
+      label: App name
+      placeholder: "Snow Inspector"
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Repository
+      description: The app's git repository, and the branch to deploy.
+      placeholder: "https://github.com/org/tethysapp-example (main)"
+    validations:
+      required: true
+  - type: input
+    id: subdomain
+    attributes:
+      label: Subdomain
+      description: The address it should serve at.
+      placeholder: "example.tethys.ciroh.org"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What it does, and who it's for
+    validations:
+      required: true
+  - type: checkboxes
+    id: needs
+    attributes:
+      label: What the app needs
+      options:
+        - label: A database (persistent stores)
+        - label: Files on S3
+        - label: Background compute (Dask)
+        - label: API keys or other secrets
+        - label: System packages beyond Python (for example GDAL)
+        - label: A JavaScript build step (React, webpack, Vite)
+  - type: textarea
+    id: details
+    attributes:
+      label: Details for the boxes above
+      description: Store names and initializers, buckets, which keys, packages, build commands.
+  - type: input
+    id: contact
+    attributes:
+      label: Contact
+      description: Who maintains the app (GitHub handle or email).
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Once you submit, a bot posts the maintainers' setup checklist on the issue, so
+        progress is tracked there.

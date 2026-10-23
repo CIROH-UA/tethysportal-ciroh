@@ -1,0 +1,178 @@
+name: app_requests
+# Turns app issues (.github/ISSUE_TEMPLATE) into work:
+#   * "Add a new app" issues get the maintainers' setup checklist as a comment.
+#   * "Update an app" issues, once someone with write access adds the `approved`
+#     label, get a pull request that moves the app's submodule to the requested
+#     version. build_push_app_images builds the app on that PR, then
+#     app_update_pin pins the new image in the app's overlay; merging deploys it
+#     through deploy_apps (behind the production approval).
+#
+# The PR is opened with APP_REQUEST_TOKEN (a GitHub App token or fine-grained PAT
+# with contents and pull-requests write), because pushes and PRs made with the
+# built-in GITHUB_TOKEN don't trigger the build and dry-run workflows.
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  new-app-checklist:
+    if: github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'new-app')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Post the setup checklist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body-file - <<'EOF'
+          Thanks! A maintainer will review this. Setup checklist (see `deploy/oidc/README.md`):
+
+          - [ ] Add the repo as a submodule under `apps/`
+          - [ ] `deploy/<key>/Dockerfile` on the CIROH base, starting from the closest existing app
+          - [ ] Entry in `APPS` in `.github/workflows/build_and_push_app_images.yml`
+          - [ ] Database `tethys_platform_<key>` on RDS (admin)
+          - [ ] Portal OIDC client for the subdomain; keys in `ciroh-portal-secrets` (admin)
+          - [ ] Other secrets in `ciroh-portal-secrets` (admin)
+          - [ ] `deploy/<key>/values-prod.yaml` and `ingress.yaml`
+          - [ ] Add the app to `.github/ISSUE_TEMPLATE/update-app.yml`
+          - [ ] Merge, approve the deploy, and sign in at the subdomain
+          EOF
+
+  update-pr:
+    if: >-
+      github.event.action == 'labeled' && github.event.label.name == 'approved'
+      && contains(github.event.issue.labels.*.name, 'app-update')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    # One bot PR per issue at a time.
+    concurrency:
+      group: app-update-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - name: Check who approved
+        env:
+          SENDER: ${{ github.event.sender.login }}
+        run: |
+          perm=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" -q .permission)
+          case "$perm" in
+            admin|maintain|write) echo "Approved by $SENDER ($perm)" ;;
+            *) gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" \
+                 --body "@$SENDER the \`approved\` label only starts an update when added by someone with write access."
+               exit 1 ;;
+          esac
+
+      - name: Check the token is configured
+        env:
+          HAS_TOKEN: ${{ secrets.APP_REQUEST_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TOKEN" != "true" ]; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" \
+              --body "Can't open the update PR: the \`APP_REQUEST_TOKEN\` secret isn't set. A repo admin needs to add it (see \`.github/workflows/app_requests.yml\`)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.APP_REQUEST_TOKEN }}
+          fetch-depth: 1
+          submodules: 'false'
+
+      - name: Read the request
+        id: req
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          APPS=$(yq -r '.env.APPS' .github/workflows/build_and_push_app_images.yml)
+          export APPS
+          if ! python3 .github/scripts/parse_update_request.py > "$RUNNER_TEMP/req" 2> "$RUNNER_TEMP/err"; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Can't start this update: $(cat "$RUNNER_TEMP/err")"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/req" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Move the submodules
+        id: bump
+        env:
+          APP: ${{ steps.req.outputs.app }}
+          REF: ${{ steps.req.outputs.ref }}
+          SUBMODULES: ${{ steps.req.outputs.submodules }}
+        run: |
+          set -euo pipefail
+          first=1; changed=0; : > "$RUNNER_TEMP/log"
+          for path in $SUBMODULES; do
+            git submodule update --init "$path"
+            name=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk -v p="$path" '$2 == p {sub(/^submodule\./, "", $1); sub(/\.path$/, "", $1); print $1}')
+            tracked=$(git config -f .gitmodules --get "submodule.$name.branch" || true)
+            # The requested version applies to the app's own repo (the first
+            # submodule); any others move to their tracked branch.
+            want="$tracked"
+            if [ "$first" = 1 ] && [ -n "$REF" ]; then want="$REF"; fi
+            if [ -z "$want" ]; then want=$(git -C "$path" remote show origin | sed -n 's/.*HEAD branch: //p'); fi
+            if ! git -C "$path" fetch -q origin "$want"; then
+              gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Can't find \`$want\` in \`$path\`'s repo."
+              exit 1
+            fi
+            old=$(git -C "$path" rev-parse HEAD)
+            new=$(git -C "$path" rev-parse FETCH_HEAD)
+            if [ "$old" != "$new" ]; then
+              git -C "$path" checkout -q "$new"
+              git add "$path"
+              changed=1
+              url=$(git -C "$path" remote get-url origin | sed 's#\.git$##')
+              {
+                echo "**\`$path\`** → \`$want\`: [\`${old:0:7}...${new:0:7}\`]($url/compare/$old...$new)"
+                echo
+                git -C "$path" log -50 --format='- %h %s' "$old..$new"
+                echo
+              } >> "$RUNNER_TEMP/log"
+            fi
+            first=0
+          done
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          if [ "$changed" = 0 ]; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Nothing to do: $APP is already at that version."
+          fi
+
+      - name: Open the pull request
+        if: steps.bump.outputs.changed == '1'
+        env:
+          APP: ${{ steps.req.outputs.app }}
+          REF: ${{ steps.req.outputs.ref }}
+          PR_TOKEN: ${{ secrets.APP_REQUEST_TOKEN }}
+        run: |
+          set -euo pipefail
+          branch="app-update/$APP-$ISSUE"
+          version=${REF:-the tip of its tracked branch}
+          git config user.name "github-actions[bot]"
+          git config user.email "41898729+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -q -m "Update $APP to $version" -m "Requested in #$ISSUE."
+          git push -f origin "$branch"
+          {
+            echo "Updates **$APP** to $version, as requested in #$ISSUE."
+            echo
+            cat "$RUNNER_TEMP/log"
+            echo "Next: \`build_push_app_images\` builds $APP on this PR, then \`app_update_pin\` commits the new image tag to \`deploy/$APP/values-prod.yaml\` and \`deploy_apps\` dry-runs the upgrade. Review the changes and the issue's notes (database, settings) before merging; merging deploys after the production approval."
+            echo
+            echo "Closes #$ISSUE"
+          } > "$RUNNER_TEMP/body"
+          existing=$(GH_TOKEN="$PR_TOKEN" gh pr list -R "$GITHUB_REPOSITORY" --head "$branch" --json url -q '.[0].url')
+          if [ -n "$existing" ]; then
+            GH_TOKEN="$PR_TOKEN" gh pr edit "$existing" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/body"
+            url="$existing"
+          else
+            url=$(GH_TOKEN="$PR_TOKEN" gh pr create -R "$GITHUB_REPOSITORY" --base main --head "$branch" \
+              --title "Update $APP to $version" --body-file "$RUNNER_TEMP/body")
+          fi
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Opened $url. It pins the new image once the build passes."
