@@ -84,6 +84,20 @@ jobs:
           echo "Apps to deploy: $keys"
           echo "apps=$keys" >> "$GITHUB_OUTPUT"
 
+      # GitHub creates a missing environment on first use with no protection, which
+      # would deploy without approval. Refuse until an admin has set reviewers.
+      - name: Check the production environment requires approval
+        if: github.event_name != 'pull_request' && steps.pick.outputs.apps != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rules=$(gh api "repos/$GITHUB_REPOSITORY/environments/production" \
+            -q '[.protection_rules[].type] | join(",")' 2>/dev/null || true)
+          if [[ ",$rules," != *",required_reviewers,"* ]]; then
+            echo "::error::The production environment is missing or has no required reviewers. A repo admin must add them (Settings > Environments > production) before apps deploy."
+            exit 1
+          fi
+
   dry-run:
     needs: changes
     if: github.event_name == 'pull_request' && needs.changes.outputs.apps != '[]'
