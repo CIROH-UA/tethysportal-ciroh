@@ -1,0 +1,128 @@
+name: deploy_apps
+# Deploy the standalone apps to ciroh-portal-prod with helm. git is the source of
+# truth: each app's deploy/<app>/values-prod.yaml pins its image tag, so a deploy
+# applies what is committed. Only apps whose deployed files changed are deployed:
+# deploy/<app>/values-prod.yaml, ingress.yaml or chart/. Bumping an app means a
+# PR that changes its overlay tag (after build_push_app_images built that tag).
+#
+# Pull requests run a server-side dry run of the same upgrade and ingress apply,
+# and check the pinned image exists, so a broken overlay fails the PR, not prod.
+# Pushes to main deploy for real, each app waiting for approval in the
+# `production` environment. Manual dispatch deploys the listed apps.
+#
+# Apps with a chart in deploy/<app>/chart (FIMeval, FIMserve) also run a Dask
+# cluster. The Dask operator doesn't replace running scheduler/worker pods when
+# the image changes, so when it changed the cluster is deleted and the release
+# upgraded again to recreate it.
+#
+# The portal itself (charts/ciroh) is deployed by helm_deploy.yml.
+
+on:
+  push:
+    branches: [main]
+    paths: ['deploy/**']
+  pull_request:
+    paths: ['deploy/**']
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Comma-separated app keys to deploy (e.g. nrds,fimserve), or "all"'
+        required: true
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: ciroh-portal-prod
+  NAMESPACE: cirohportal
+  TETHYS_APP_CHART: oci://ghcr.io/aquaveo/charts/tethys-app
+  TETHYS_APP_CHART_VERSION: 0.1.5
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.pick.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'false'
+
+      - name: Pick the apps to deploy
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          WANTED: ${{ github.event.inputs.apps }}
+        run: |
+          # An app is a deploy/<key>/ with a values-prod.yaml.
+          all=$(for f in deploy/*/values-prod.yaml; do basename "$(dirname "$f")"; done | jq -Rsc 'split("\n") | map(select(. != ""))')
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ "$WANTED" = "all" ]; then
+              keys="$all"
+            else
+              keys=$(jq -cR 'split(",") | map(gsub("^ +| +$"; "")) | map(select(. != ""))' <<<"$WANTED")
+              bad=$(jq -r --argjson all "$all" 'map(select(. as $k | $all | index($k) | not)) | join(", ")' <<<"$keys")
+              if [ -n "$bad" ]; then echo "::error::Unknown apps: $bad"; exit 1; fi
+            fi
+          else
+            if [ "$EVENT" = "pull_request" ]; then
+              OLD=$(git merge-base "$PR_BASE" "$PR_HEAD"); NEW="$PR_HEAD"
+            else
+              OLD="$BEFORE"; NEW="$GITHUB_SHA"
+            fi
+            if [ -z "$OLD" ] || ! git cat-file -e "$OLD^{commit}" 2>/dev/null; then
+              echo "::error::No previous commit to compare with; dispatch with the apps to deploy."
+              exit 1
+            fi
+            echo "Comparing $OLD..$NEW"
+            keys=$(git diff --name-only "$OLD" "$NEW" \
+              | sed -nE 's#^deploy/([^/]+)/(values-prod\.yaml|ingress\.yaml|chart/.*)$#\1#p' \
+              | sort -u | jq -Rsc --argjson all "$all" 'split("\n") | map(select(. != "" and (. as $k | $all | index($k))))')
+          fi
+          echo "Apps to deploy: $keys"
+          echo "apps=$keys" >> "$GITHUB_OUTPUT"
+
+  dry-run:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.changes.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'false'
+      - uses: ./.github/actions/deploy-app
+        with:
+          app: ${{ matrix.app }}
+          dry-run: 'true'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  deploy:
+    needs: changes
+    if: github.event_name != 'pull_request' && needs.changes.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    environment: production
+    # One deploy per app at a time; a later push waits instead of racing helm.
+    concurrency:
+      group: deploy-app-${{ matrix.app }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.changes.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'false'
+      - uses: ./.github/actions/deploy-app
+        with:
+          app: ${{ matrix.app }}
+          dry-run: 'false'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
