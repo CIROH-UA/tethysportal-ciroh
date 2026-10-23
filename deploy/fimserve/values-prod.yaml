@@ -1,8 +1,8 @@
 tethys-app:
   fullnameOverride: fimserve
   image:
-    repository: gioelkin/tethysapp-fimserve
-    tag: latest
+    repository: awiciroh/tethysapp-fimserve
+    tag: "59609767b9c41014ec72d76c8173c2774fc17e56-c346123"
     pullPolicy: Always
   tethys:
     mode: single

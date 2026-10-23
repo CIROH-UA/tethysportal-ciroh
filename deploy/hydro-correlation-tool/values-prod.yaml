@@ -1,6 +1,6 @@
 image:
-  repository: gioelkin/tethysapp-hydro-correlation-tool
-  tag: hct-c269702 
+  repository: awiciroh/tethysapp-hydro-correlation-tool
+  tag: aa8f2117ace2fb76c3359ffa1c357f4a9fad5fb9
   pullPolicy: Always
 tethys:
   mode: single

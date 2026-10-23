@@ -1,6 +1,6 @@
 image:
   repository: awiciroh/tethysapp-snow-inspector
-  tag: latest
+  tag: aa8f2117ace2fb76c3359ffa1c357f4a9fad5fb9
   pullPolicy: Always
 tethys:
   mode: single

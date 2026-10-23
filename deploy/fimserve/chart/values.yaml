@@ -4,7 +4,7 @@
 tethys-app:
   fullnameOverride: fimserve
   image:
-    repository: gioelkin/tethysapp-fimserve
+    repository: awiciroh/tethysapp-fimserve
     tag: latest
     pullPolicy: Always
   tethys:
