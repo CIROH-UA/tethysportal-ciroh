@@ -1,7 +1,7 @@
 tethys-app:
   image:
     repository: awiciroh/tethysapp-fimeval-gui
-    tag: "db779dfe43d1f5df0d5958e325dc16ef1654de2d-19a5ff3"
+    tag: "332ba8e66971ee00bd273c0df8ef7e93bd89d4e2"
     pullPolicy: IfNotPresent
   tethys:
     mode: single

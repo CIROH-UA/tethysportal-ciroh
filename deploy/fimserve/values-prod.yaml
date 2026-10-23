@@ -2,7 +2,7 @@ tethys-app:
   fullnameOverride: fimserve
   image:
     repository: awiciroh/tethysapp-fimserve
-    tag: "fe59bea7512f3b40817814182d9a5b4aec8f4ef6-98d4306"
+    tag: "332ba8e66971ee00bd273c0df8ef7e93bd89d4e2"
     pullPolicy: Always
   tethys:
     mode: single
