@@ -1,0 +1,101 @@
+name: deploy-app
+description: >
+  helm upgrade one standalone app (deploy/<app>) on ciroh-portal-prod and apply its
+  ingress, or do both as a server-side dry run. Expects AWS_REGION, CLUSTER_NAME,
+  NAMESPACE, TETHYS_APP_CHART and TETHYS_APP_CHART_VERSION in the job env.
+inputs:
+  app:
+    description: App key (deploy/<app>)
+    required: true
+  dry-run:
+    description: '"true" for a server-side dry run, "false" to deploy'
+    required: true
+  aws-access-key-id:
+    required: true
+  aws-secret-access-key:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - uses: azure/setup-helm@v4
+      with:
+        version: 'v3.14.0'
+
+    - name: Set up the cluster context
+      shell: bash
+      run: aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
+
+    - name: Check the pinned image exists
+      shell: bash
+      env:
+        APP: ${{ inputs.app }}
+      run: |
+        # A local chart nests the tethys-app values under tethys-app:.
+        values="deploy/$APP/values-prod.yaml"
+        image=$(yq -r '(.image // .["tethys-app"].image) | .repository + ":" + .tag' "$values")
+        echo "Image: $image"
+        if ! docker manifest inspect "$image" > /dev/null; then
+          echo "::error::$image is not on Docker Hub. Point $values at a tag build_push_app_images built."
+          exit 1
+        fi
+
+    - name: helm upgrade
+      shell: bash
+      env:
+        APP: ${{ inputs.app }}
+        DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        set -euo pipefail
+        if [ -d "deploy/$APP/chart" ]; then
+          chart=(deploy/$APP/chart)
+          helm dependency build "deploy/$APP/chart"
+        else
+          chart=("$TETHYS_APP_CHART" --version "$TETHYS_APP_CHART_VERSION")
+        fi
+        upgrade() {
+          helm upgrade --install "$APP" "${chart[@]}" -n "$NAMESPACE" \
+            -f "deploy/$APP/values-prod.yaml" --timeout 30m "$@"
+        }
+        if [ "$DRY_RUN" = "true" ]; then
+          upgrade --dry-run=server > /dev/null
+          echo "Dry run of $APP's upgrade passed"
+          exit 0
+        fi
+
+        # The Dask operator doesn't roll its pods on an image change; note the
+        # image before the upgrade to tell whether the cluster must be recreated.
+        dask="$APP-dask"
+        dask_image() {
+          kubectl -n "$NAMESPACE" get daskcluster "$dask" \
+            -o jsonpath='{.spec.worker.spec.containers[0].image}' 2>/dev/null || true
+        }
+        before=$(dask_image)
+        upgrade
+        after=$(dask_image)
+        if [ -n "$before" ] && [ "$before" != "$after" ]; then
+          echo "Dask image changed ($before -> $after); recreating $dask"
+          kubectl -n "$NAMESPACE" delete daskcluster "$dask" --wait
+          upgrade
+        fi
+        helm -n "$NAMESPACE" status "$APP" | head -8
+
+    - name: Apply the ingress
+      shell: bash
+      env:
+        APP: ${{ inputs.app }}
+        DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        f="deploy/$APP/ingress.yaml"
+        [ -f "$f" ] || { echo "No $f"; exit 0; }
+        if [ "$DRY_RUN" = "true" ]; then
+          kubectl apply --dry-run=server -f "$f"
+        else
+          kubectl apply -f "$f"
+        fi

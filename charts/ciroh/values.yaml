@@ -142,6 +142,10 @@ portalConfig:
         OIDC_ENABLED: true
         PKCE_REQUIRED: true
         OAUTH2_VALIDATOR_CLASS: portal_oidc.CirohOIDCValidator
+        # Apps end the portal session on logout (/o/logout/, see deploy/oidc).
+        # No "log out of the portal too?" prompt when the app sends a valid id_token_hint.
+        OIDC_RP_INITIATED_LOGOUT_ENABLED: true
+        OIDC_RP_INITIATED_LOGOUT_ALWAYS_PROMPT: false
         SCOPES:
           openid: OpenID Connect scope
           profile: Username and name

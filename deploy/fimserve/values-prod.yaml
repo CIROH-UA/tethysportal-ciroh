@@ -1,8 +1,8 @@
 tethys-app:
   fullnameOverride: fimserve
   image:
-    repository: gioelkin/tethysapp-fimserve
-    tag: latest
+    repository: awiciroh/tethysapp-fimserve
+    tag: "332ba8e66971ee00bd273c0df8ef7e93bd89d4e2"
     pullPolicy: Always
   tethys:
     mode: single
@@ -45,6 +45,9 @@ tethys-app:
       AUTHENTICATION_BACKENDS:
         - ciroh_portal_oidc.TethysPortalOpenIdConnect
         - django.contrib.auth.backends.ModelBackend
+      MIDDLEWARE:
+        # Signing out of the app also ends the portal session (see deploy/oidc).
+        - ciroh_portal_oidc.PortalLogoutMiddleware
       OAUTH_CONFIG:
         SOCIAL_AUTH_LOGIN_REDIRECT_URL: /
         SOCIAL_AUTH_TETHYS_PORTAL_SCOPE:

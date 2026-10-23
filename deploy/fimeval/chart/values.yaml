@@ -4,7 +4,7 @@
 tethys-app:
   fullnameOverride: fimeval
   image:
-    repository: gioelkin/tethysapp-fimeval-gui
+    repository: awiciroh/tethysapp-fimeval-gui
     tag: latest
     pullPolicy: Always
   tethys:

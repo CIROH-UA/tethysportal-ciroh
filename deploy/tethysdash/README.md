@@ -69,9 +69,9 @@ progress messages; the cache backs the per session chat rate limit.
 
 The app declares one required persistent store, `primary_db`, whose initializer
 runs Alembic migrations to build the dashboard, grid item, permission, and message
-tables. The `tethys-app` chart provision job runs `syncstores`, which invokes that
-initializer, so the schema is created on first deploy once the database exists and
-is reachable.
+tables. The provision job runs `syncstores` through the `ciroh-tethys` base's hook
+(`deploy/ciroh-tethys/init.d/50-syncstores.sh`), which invokes that initializer, so
+the schema is created on first deploy and migrated on every upgrade.
 
 Create the `tethys_platform_tethysdash` database once, owned by `tethys_default`,
 before the first deploy.

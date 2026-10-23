@@ -19,28 +19,42 @@ shared database.
 
 ## Deploy (prod)
 
-CI publishes the CIROH base as `awiciroh/ciroh-tethys:builder` (see
-`../ciroh-tethys`). Build the app on it so the login backend, S3 static fix, and
-login templates ship in the app image (no wrapper), and upgrade:
+The image builds on the CIROH base (`awiciroh/ciroh-tethys:builder_<sha>`, see
+`../ciroh-tethys`), so the login backend, S3 static fix, and login templates ship
+in the app image (no wrapper).
+
+The app comes from the `apps/tethysapp-fimeval-gui` submodule
+(`Aquaveo/tethysapp-fimeval-gui`, tracking `main`). CI (`build_push_app_images`)
+builds and tests the image when `deploy/fimeval/` or the submodule changes, and
+pushes `awiciroh/tethysapp-fimeval-gui:<portal sha>`. To ship app changes, bump
+the submodule in a portal PR (`git submodule update --remote
+apps/tethysapp-fimeval-gui`, then commit it). To build locally:
 
 ```bash
-# from this repo, with the app source passed as the `app` build context
-APP=../apps/tethysapp-fimeval-gui   # or a git URL, e.g. https://github.com/Aquaveo/tethysapp-fimeval-gui.git#main
+# from this repo, with the submodule checked out
+git submodule update --init apps/tethysapp-fimeval-gui
 
 # backend tests (SQLite, moto); the runner exits 0 even on failure, so read the summary
-docker build -f deploy/fimeval/Dockerfile --target test \
-  --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
-  --build-context app=$APP -t fimeval:test deploy/fimeval
+docker build -f deploy/fimeval/Dockerfile --target test -t fimeval:test .
 docker run --rm fimeval:test
 
-docker build -f deploy/fimeval/Dockerfile \
-  --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
-  --build-context app=$APP -t gioelkin/tethysapp-fimeval-gui:ciroh deploy/fimeval
-docker push gioelkin/tethysapp-fimeval-gui:ciroh
+# local image only; deployed images come from CI (awiciroh/tethysapp-fimeval-gui)
+docker build -f deploy/fimeval/Dockerfile -t fimeval:local .
 
 helm dependency build deploy/fimeval/chart
 helm upgrade --install fimeval \
   deploy/fimeval/chart -n cirohportal -f deploy/fimeval/values-prod.yaml
+```
+
+After an image change, recreate the Dask cluster. The Dask operator doesn't
+replace running scheduler/worker pods when the DaskCluster image changes, so
+without this the workers keep the old app code and jobs from the new web pod
+fail on them. It interrupts running jobs, so do it when none are running:
+
+```
+kubectl -n cirohportal delete daskcluster fimeval-dask
+helm upgrade fimeval deploy/fimeval/chart -n cirohportal -f deploy/fimeval/values-prod.yaml
+kubectl -n cirohportal get deploy | grep fimeval-dask   # same image as the web pod
 ```
 
 Create the `tethys_platform_fimeval` database once, owned by `tethys_default`,

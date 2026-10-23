@@ -21,10 +21,6 @@
 	path = apps/fimbench
 	url = https://github.com/Aquaveo/fimbench-gui.git
 	branch = main
-[submodule "apps/tethysapp-fimserve_viewer"]
-	path = apps/tethysapp-fimserve_viewer
-	url = https://github.com/Aquaveo/tethysapp-fimserve_viewer.git
-	branch = main
 [submodule "apps/usgs_mrms_tethys_app"]
 	path = apps/usgs_mrms_tethys_app
 	url = https://github.com/Aquaveo/usgs_mrms_tethys_app.git
@@ -45,3 +41,11 @@
 	path = apps/ngiab-client
 	url = https://github.com/CIROH-UA/ngiab-client
 	branch = feat/storage-backed-model-runs
+[submodule "apps/fimserv-viewer"]
+	path = apps/fimserv-viewer
+	url = https://github.com/Aquaveo/fimserv-viewer.git
+	branch = feat/dask-offload
+[submodule "apps/tethysapp-fimeval-gui"]
+	path = apps/tethysapp-fimeval-gui
+	url = https://github.com/Aquaveo/tethysapp-fimeval-gui.git
+	branch = main

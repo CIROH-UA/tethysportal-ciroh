@@ -47,15 +47,18 @@ ENV POSTGIS_SERVICE_NAME="tethys_postgis"
 COPY --from=builder /opt/python /opt/python
 COPY --from=builder /opt/conda /opt/conda
 COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
-# Portal-owned S3 storage backend (base no longer ships it); on PYTHONPATH=/opt/portal.
-COPY conf/portal_storage.py /opt/portal/portal_storage.py
-# Portal-owned OIDC validator: adds preferred_username/name/email claims so apps
-# show the real name instead of the sub UUID; on PYTHONPATH=/opt/portal.
-COPY conf/portal_oidc.py /opt/portal/portal_oidc.py
+# Explicit modes so a checkout with private (0600) files still yields files the
+# portal user (1000) can read. Keep the 0755 copies first: --chmod also applies to
+# the /opt/portal directory it creates, and a 0644 directory can't be entered.
 # Portal-owned config hook: OAuth secrets from env (base portal-config.sh runs it).
 COPY --chmod=0755 conf/portal-config.d/ /opt/portal/portal-config.d/
 # Portal-owned provision hook: link app stores + syncstores (base provision.sh runs it).
 COPY --chmod=0755 conf/init.d/ /opt/portal/init.d/
+# Portal-owned S3 storage backend (base no longer ships it); on PYTHONPATH=/opt/portal.
+COPY --chmod=0644 conf/portal_storage.py /opt/portal/portal_storage.py
+# Portal-owned OIDC validator: adds preferred_username/name/email claims so apps
+# show the real name instead of the sub UUID; on PYTHONPATH=/opt/portal.
+COPY --chmod=0644 conf/portal_oidc.py /opt/portal/portal_oidc.py
 
 # NOTE: the DB bootstrap + portal seed are DEV-ONLY tools and live in dev/ — they are
 # deliberately NOT baked into this image. The docker-compose dev stack mounts dev/ and

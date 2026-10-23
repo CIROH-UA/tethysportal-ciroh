@@ -43,20 +43,36 @@ through `portalConfig.siteSettings`, so `tethys site` sets it on every provision
 2. Store the credentials in `ciroh-portal-secrets` (the app reuses that secret):
    keys `FIMEVAL_OIDC_CLIENT_ID` and `FIMEVAL_OIDC_CLIENT_SECRET` for fimeval.
 
-3. Build the app on the `ciroh-tethys` base (see `../ciroh-tethys` to build the
-   base first), from the app repo:
-
-   ```bash
-   docker build --build-arg UVX_BUILDER=awiciroh/ciroh-tethys:builder \
-     -t gioelkin/tethysapp-fimeval-gui:ciroh .
-   docker push gioelkin/tethysapp-fimeval-gui:ciroh
-   ```
+3. Add `deploy/<app>/Dockerfile` (`ARG UVX_BUILDER` set to the same
+   `ciroh-tethys` base as `DEFAULT_BUILDER`) and an entry in the APPS list of
+   `.github/workflows/build_and_push_app_images.yml`. CI builds the app on the
+   base and pushes `awiciroh/<repo>:<sha>`.
 
 4. The app's overlay (`deploy/<app>/values-prod.yaml`) points `image` at that
    image, maps the two secret keys to `TETHYS_PORTAL_OIDC_KEY` and
    `TETHYS_PORTAL_OIDC_SECRET`, sets `AUTHENTICATION_BACKENDS` to the OIDC backend
    plus `ModelBackend` (break-glass admin), sets `ENABLE_OPEN_SIGNUP: false`, and
    swaps `STORAGES.staticfiles.BACKEND` to `LeadingSlashS3Storage`.
+
+## Single sign-on behaviour
+
+* Sign in: the app login page (`templates/login.html`) goes straight to the portal
+  when "CIROH Portal" is the only sign-in method, so a user already signed in on
+  the portal lands in the app without clicking. It stays on the page when a
+  message is shown (failed sign-in, logout notice) and redirects at most once per
+  30 s, so it cannot loop.
+* No consent screen and logout return: the portal's provision hook
+  (`conf/init.d/60-oidc-clients.sh`) marks every client with a
+  `/oauth2/complete/tethys_portal/` redirect as `skip_authorization` and allows
+  its root as a `post_logout_redirect_uri`. Newly registered apps get this on the
+  next portal provision (helm upgrade), or set both in
+  `/admin/oauth2_provider/application/`.
+* Sign out: `PortalLogoutMiddleware` (in each overlay's `MIDDLEWARE`) sends the
+  user to the portal's `/o/logout/` with their `id_token_hint` after the app logs
+  them out, so the portal session ends too and the portal returns them to the
+  app. It needs `OIDC_RP_INITIATED_LOGOUT_ENABLED` on the portal
+  (`charts/ciroh/values.yaml`). Other apps the user has open keep their own
+  session until it expires; the portal has no back-channel logout.
 
 ## Environment read by the OIDC backend
 
