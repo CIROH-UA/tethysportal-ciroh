@@ -75,6 +75,17 @@ helm upgrade --install fimserve deploy/fimserve/chart \
 kubectl apply -f deploy/fimserve/ingress.yaml
 ```
 
+After an image change, recreate the Dask cluster. The Dask operator doesn't
+replace running scheduler/worker pods when the DaskCluster image changes, so
+without this the workers keep the old app code and jobs from the new web pod
+fail on them. It interrupts running jobs, so do it when none are running:
+
+```
+kubectl -n cirohportal delete daskcluster fimserve-dask
+helm upgrade fimserve deploy/fimserve/chart -n cirohportal -f deploy/fimserve/values-prod.yaml
+kubectl -n cirohportal get deploy | grep fimserve-dask   # same image as the web pod
+```
+
 ## Post-deploy config (admin, once)
 
 The standalone DB starts empty, so configure these in the app admin, then the
