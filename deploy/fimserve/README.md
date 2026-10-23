@@ -42,6 +42,13 @@ jobs then run in a thread on the web pod.
 
 ## Build the image
 
+CI (`build_push_app_images`) builds and tests the image from the app repo's
+`feat/dask-offload` (switch `source_ref` in the workflow's APPS to `main` once it
+merges) and pushes `awiciroh/tethysapp-fimserve:<portal sha>-<app sha>`. It runs
+when `deploy/fimserve/` changes; after changes in the app repo, run it by hand:
+`gh workflow run build_push_app_images -f apps=fimserve` (add
+`-f source_ref=<branch>` to build another branch). To build locally:
+
 From this repo, with the app source as the `app` build context:
 
 ```
