@@ -18,7 +18,7 @@ tethys-app:
     name: tethys_platform_fimserve
     username: tethys_default
   ephemeralStorage:
-    className: gp2
+    className: gp3
   s3Static:
     enabled: true
     bucket: ciroh-portal-assets
@@ -71,6 +71,16 @@ tethys-app:
 dask:
   enabled: true
   serviceAccountName: ciroh-portal
+  # Always on; idles at ~10m CPU / ~70Mi.
+  scheduler:
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
   worker:
     nodeSelector:
       karpenter.sh/capacity-type: spot
+    # The autoscaler keeps one worker up at all times (see chart/values.yaml), and
+    # it idles at ~25m CPU / ~190Mi. Reserve a quarter of the old 2 CPU / 8Gi so it
+    # doesn't hold a node by itself; a job can still burst to the 12Gi limit
+    # (memoryLimit 8GiB), with the risk of eviction if the node is full.
+    resources:
+      requests: { cpu: 500m, memory: 2Gi, ephemeral-storage: 20Gi }

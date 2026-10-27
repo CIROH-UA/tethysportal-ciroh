@@ -12,7 +12,7 @@ externalDatabase:
   name: tethys_platform_snow_inspector
   username: tethys_default
 ephemeralStorage:
-  className: gp2
+  className: gp3
 s3Static:
   enabled: true
   bucket: ciroh-portal-assets

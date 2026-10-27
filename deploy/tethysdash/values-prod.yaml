@@ -12,7 +12,7 @@ externalDatabase:
   name: tethys_platform_tethysdash
   username: tethys_default
 ephemeralStorage:
-  className: gp2
+  className: gp3
 s3Static:
   enabled: true
   bucket: ciroh-portal-assets
@@ -72,3 +72,9 @@ scaleToZero:
   scaledownPeriod: 300
 pdb:
   enabled: true
+# Idles at ~30m CPU / ~300Mi; the chart default (1 CPU / 2Gi) made every cold
+# start ask Karpenter for a much bigger node than it needs. Limits stay as is.
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi

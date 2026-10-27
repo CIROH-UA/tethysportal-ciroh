@@ -52,3 +52,9 @@ import {
   to = module.ciroh_portal.aws_vpc_endpoint.s3
   id = "vpce-0139ac1cfa57b0b32"
 }
+
+# Created with kubectl so the apps could move to gp3 before an apply; adopt it.
+import {
+  to = module.ciroh_portal.kubernetes_storage_class_v1.gp3
+  id = "gp3"
+}

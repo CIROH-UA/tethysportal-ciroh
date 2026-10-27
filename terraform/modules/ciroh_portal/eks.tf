@@ -6,10 +6,10 @@ module "eks" {
   kubernetes_version  = var.kubernetes_version
 
   endpoint_public_access  = true
-  # Only the audit log. The module default also ships api + authenticator,
-  # which were ~70 GB/month of CloudWatch ingestion with little use. Retention
-  # (30d) is set on the log group directly since create_cloudwatch_log_group = false.
-  enabled_log_types = ["audit"]
+  # No control-plane logs. The module default ships api + audit + authenticator,
+  # ~90 GB/month of CloudWatch ingestion that nothing read (GuardDuty's EKS audit
+  # monitoring is off too). Turn "audit" back on here when an investigation needs it.
+  enabled_log_types = []
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
