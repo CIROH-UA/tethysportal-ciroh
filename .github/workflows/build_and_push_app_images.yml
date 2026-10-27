@@ -103,9 +103,10 @@ jobs:
       matrix: ${{ steps.pick.outputs.matrix }}
       any: ${{ steps.pick.outputs.any }}
     steps:
+      # The workflow's own commit, never inputs.ref: a call names its apps, so
+      # nothing here reads the checkout (the builds below check out inputs.ref).
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
           fetch-depth: 0
           submodules: 'false'
 
