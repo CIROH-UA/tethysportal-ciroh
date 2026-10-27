@@ -22,7 +22,7 @@ terraform {
     }
   }
 
-  required_version = ">= 1.4.0"
+  required_version = ">= 1.5.0"
 }
 
 
@@ -39,6 +39,9 @@ module "ciroh_portal" {
   helm_ci_path        = "../../charts/ciroh/ci"
   environment         = "prod"
   single_nat_gate_way = false
-  use_elastic_ips     = true
-  eips                = ["eipalloc-06eeeb09d3f32a313", "eipalloc-0596c82ab483a5d45"]
+}
+
+import {
+  to = module.ciroh_portal.aws_vpc_endpoint.s3
+  id = "vpce-0139ac1cfa57b0b32"
 }

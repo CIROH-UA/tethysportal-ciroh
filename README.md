@@ -94,8 +94,6 @@ helm_repo = "https://docs.ciroh.org/tethysportal-ciroh"
 helm_ci_path = "../../charts/ciroh/ci"
 environment = "prod"
 single_nat_gate_way = false
-use_elastic_ips = true
-eips = ["...", "..."]
 ```
 
 ### 2.5 · Database roles & bootstrap

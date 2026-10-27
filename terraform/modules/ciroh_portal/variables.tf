@@ -6,18 +6,11 @@ variable "helm_chart" {}
 variable "helm_repo" {}
 variable "helm_ci_path" {}
 variable "environment" {}
-variable "use_elastic_ips" {}
 variable "single_nat_gate_way" {}
 variable "deploy_portal" {
   type    = bool
   default = false
 }
-variable "eips" {
-  type = list(string)
-  description = "List of Elastic IP IDs"
-  default = [] # Optional: Provide a default value if needed
-}
-
 variable "kubernetes_version" {
   type        = string
   description = "EKS control plane version. Node groups and Karpenter AMIs follow this."
