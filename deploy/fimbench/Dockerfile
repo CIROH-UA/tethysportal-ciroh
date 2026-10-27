@@ -4,7 +4,7 @@
 # Build context is the portal repo root; the app comes from the apps/fimbench
 # submodule (Aquaveo/fimbench-gui). React frontend builds with Vite into the
 # app's public/ tree, which uv pip install picks up via package-data.
-ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_7b6f2eb3f4ce67d81e1f10fc2ff7fce6fae14257
+ARG UVX_BUILDER=awiciroh/ciroh-tethys:builder_639eda75d3773cbd01655294c4b09d39ce734dff
 ARG UVX_RUNTIME=ghcr.io/aquaveo/tethys-uvx:runtime-base
 
 FROM ${UVX_BUILDER} AS builder
@@ -40,5 +40,6 @@ FROM ${UVX_RUNTIME}
 # so nothing runs as root and no chmod is needed. tethys-uvx runs rootless.
 COPY --chown=1000:1000 --from=builder /opt/python /opt/python
 COPY --chown=1000:1000 --from=builder /opt/conda /opt/conda
+COPY --from=builder /opt/portal /opt/portal
 
 USER 1000:1000

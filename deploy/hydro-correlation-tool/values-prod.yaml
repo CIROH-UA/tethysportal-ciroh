@@ -1,6 +1,6 @@
 image:
-  repository: gioelkin/tethysapp-hydro-correlation-tool
-  tag: hct-c269702 
+  repository: awiciroh/tethysapp-hydro-correlation-tool
+  tag: 3f0fe1c29a0606a1224fe5568e970529b1f4a60e
   pullPolicy: Always
 tethys:
   mode: single
@@ -42,6 +42,9 @@ portalConfig:
     AUTHENTICATION_BACKENDS:
       - ciroh_portal_oidc.TethysPortalOpenIdConnect
       - django.contrib.auth.backends.ModelBackend
+    MIDDLEWARE:
+      # Signing out of the app also ends the portal session (see deploy/oidc).
+      - ciroh_portal_oidc.PortalLogoutMiddleware
     OAUTH_CONFIG:
       SOCIAL_AUTH_LOGIN_REDIRECT_URL: /
       SOCIAL_AUTH_TETHYS_PORTAL_SCOPE:

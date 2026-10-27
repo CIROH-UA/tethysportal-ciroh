@@ -1,0 +1,88 @@
+name: deploy-portal
+description: >
+  helm upgrade the portal release (charts/ciroh) on ciroh-portal-prod with an exact
+  image tag, or do it as a server-side dry run. Expects AWS_REGION, CLUSTER_NAME,
+  NAMESPACE, PORTAL_SECRET_NAME, RELEASE_NAME and IMAGE_REPO in the job env.
+inputs:
+  image-tag:
+    description: Tag of the portal image to deploy
+    required: true
+  dry-run:
+    description: '"true" for a server-side dry run, "false" to deploy'
+    required: true
+  aws-access-key-id:
+    required: true
+  aws-secret-access-key:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - uses: azure/setup-helm@v4
+      with:
+        version: 'v3.14.0'
+
+    - name: Set up the cluster context
+      shell: bash
+      run: aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
+
+    - name: Verify the portal secret exists
+      shell: bash
+      run: |
+        if ! kubectl get secret "${PORTAL_SECRET_NAME}" -n "${NAMESPACE}" > /dev/null 2>&1; then
+          echo "::error::Secret ${PORTAL_SECRET_NAME} not found in namespace ${NAMESPACE}."
+          echo "Create it once with the portal credentials before deploying:"
+          echo "  kubectl create secret generic ${PORTAL_SECRET_NAME} -n ${NAMESPACE} \\"
+          echo "    --from-literal=TETHYS_SECRET_KEY=... \\"
+          echo "    --from-literal=TETHYS_DB_PASSWORD=... \\"
+          echo "    --from-literal=TETHYS_PS_CONNECTION=user:pass@host:port \\"
+          echo "    --from-literal=HYDROSHARE_CLIENT_ID=... \\"
+          echo "    --from-literal=HYDROSHARE_SECRET_ID=... \\"
+          echo "    --from-file=OIDC_RSA_PRIVATE_KEY=key.pem \\"
+          echo "    --from-literal=CSES_ACCESS_KEY_ID=..."
+          exit 1
+        fi
+
+    - name: Check the image exists
+      shell: bash
+      env:
+        TAG: ${{ inputs.image-tag }}
+      run: |
+        if ! docker manifest inspect "$IMAGE_REPO:$TAG" > /dev/null; then
+          echo "::error::$IMAGE_REPO:$TAG is not on Docker Hub."
+          exit 1
+        fi
+
+    - name: Build chart dependencies
+      shell: bash
+      run: helm dependency build charts/ciroh
+
+    # Provisioning is a pre-upgrade hook Job that runs provision.sh (migrate +
+    # services + static + bootstrap + init.d hooks incl. store link + syncstores);
+    # the upgrade runs it, so there's no separate provision step.
+    - name: helm upgrade
+      shell: bash
+      env:
+        TAG: ${{ inputs.image-tag }}
+        DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        args=()
+        [ "$DRY_RUN" = "true" ] && args=(--dry-run=server)
+        helm upgrade "$RELEASE_NAME" charts/ciroh --install "${args[@]}" \
+          --timeout=3600s \
+          -f charts/ciroh/ci/prod_aws_values.yaml \
+          --set secrets.existingSecretName="$PORTAL_SECRET_NAME" \
+          --set image.repository="$IMAGE_REPO" \
+          --set image.tag="$TAG" \
+          --namespace "$NAMESPACE" > "$RUNNER_TEMP/helm.out"
+        if [ "$DRY_RUN" = "true" ]; then
+          echo "Dry run of the portal upgrade to $IMAGE_REPO:$TAG passed"
+        else
+          head -8 "$RUNNER_TEMP/helm.out"
+        fi

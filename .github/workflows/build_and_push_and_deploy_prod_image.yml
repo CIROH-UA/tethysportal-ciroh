@@ -1,5 +1,7 @@
 name: build_push_deploy_prod_image
-# Push to docker hub if tag has been created.
+# A release tag (e.g. v1.2.0) builds the portal image, pushes it as
+# awiciroh/tethysapp-ciroh-portal:<tag> and :latest, and deploys that exact tag
+# through helm_deploy (behind the production environment's approval).
 on:
   push:
     tags:
@@ -7,6 +9,9 @@ on:
 env:
   DOCKER_HUB_ORG: awiciroh
   DOCKER_REPO: tethysapp-ciroh-portal
+
+permissions:
+  contents: read
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -27,23 +32,16 @@ jobs:
           fetch-depth: 1
           submodules: 'false'
 
-      - name: Update submodules recursively
-        run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive
-
-      - name: checkout Hydrocompute submodule
-        run: |
-          cd apps/tethysapp-hydrocompute/tethysapp/hydrocompute/public/HydroCompute && git submodule update --force --init --recursive --remote
-
+      # The release tag itself, so the deployed image names its release (and the
+      # dev_* cleanup in build_push_dev_image never touches it).
       - name: Set Tag
         run: |
-          echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "TAG_LATEST=latest" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          echo "TAG_LATEST=latest" >> "$GITHUB_ENV"
 
       - name: Test Tag
         run: |
-          echo $TAG
+          echo "$TAG"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -72,7 +70,6 @@ jobs:
       - name: Scan image with Anchore (Grype)
         id: scan
         uses: anchore/scan-action@v5
-        continue-on-error: true
         env:
           GRYPE_CONFIG: .github/security/.grype.yaml
         with:
@@ -82,17 +79,17 @@ jobs:
           severity-cutoff: high
           only-fixed: true
 
-      - name: Smoke test all apps import cleanly
+      # The portal ships no apps (each is its own image); check what it does ship.
+      - name: Smoke test the portal
         run: |
           docker run --rm \
             -e DJANGO_SETTINGS_MODULE=tethys_portal.settings \
             -e TETHYS_SECRET_KEY=ci-smoke \
-            -v ${{ github.workspace }}/dev/smoke_all_apps.py:/tmp/smoke_all_apps.py:ro \
+            -v ${{ github.workspace }}/dev/smoke_portal.py:/tmp/smoke_portal.py:ro \
             ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }} \
-            /opt/conda/envs/tethys/bin/python /tmp/smoke_all_apps.py
+            /opt/conda/envs/tethys/bin/python /tmp/smoke_portal.py
 
       - name: Push image
-        if: steps.scan.outcome == 'success'
         run: |
           docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
           docker push ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
@@ -100,10 +97,8 @@ jobs:
   # update chart deployment
   deploy_chart:
     needs: [build]
-    permissions:
-      id-token: write
-      contents: read
     uses: ./.github/workflows/helm_deploy.yml
     with:
+      image-tag: ${{ github.ref_name }}
       dry-run: false
     secrets: inherit

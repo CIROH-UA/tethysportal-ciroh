@@ -1,9 +1,20 @@
 name: build_push_app_images
 # Build every standalone app image on the CIROH Tethys base, test it when its
 # Dockerfile has a `test` stage, and push it to Docker Hub as awiciroh/<repo>.
-# Only apps whose deploy/ folder or submodule changed are built (all of them when
-# this workflow changes). Pull requests publish only the immutable <sha> tag;
-# push and manual dispatch also move :latest.
+# Only apps that changed are built: their deploy/ folder (minus overlays, ingress,
+# chart and docs) or submodule changed, or their APPS entry here did (including the
+# base they resolve to, so bumping DEFAULT_BUILDER rebuilds the apps on it). Other edits to this file rebuild
+# nothing; dispatch with apps=all to rebuild everything. A push is compared with
+# the previous push, and a pull request with its previous push too (the first one
+# with where it branched from main), so every commit only builds what it touched.
+# An app's <sha> tag therefore exists only for commits that built it.
+# Pull requests publish only the immutable <sha> tag; push and manual dispatch
+# also move :latest.
+#
+# Every app comes from a submodule. An app that can't be one can set source_repo
+# instead (see APPS): that repo is checked out and passed as the `app` named
+# build context, and the image is tagged <portal sha>-<app sha>. Changes in such
+# a repo don't trigger this workflow; dispatch it (optionally with source_ref).
 #
 # To add an app, add one entry to APPS below.
 
@@ -16,6 +27,10 @@ on:
         default: 'all'
       ciroh_tethys_builder:
         description: 'CIROH Tethys builder base image to build on (blank = each app''s default)'
+        required: false
+        default: ''
+      source_ref:
+        description: 'Branch, tag or sha of the app repo for source_repo apps (blank = each app''s default)'
         required: false
         default: ''
   push:
@@ -33,15 +48,19 @@ on:
 
 env:
   DOCKER_HUB_ORG: awiciroh
-  DEFAULT_BUILDER: awiciroh/ciroh-tethys:builder_9aa1fb30f333da7bead57939b0ac0651b0ea3090
-  # key = deploy/<key>/Dockerfile. builder is optional (defaults to DEFAULT_BUILDER);
-  # submodule_flags is optional.
+  DEFAULT_BUILDER: awiciroh/ciroh-tethys:builder_639eda75d3773cbd01655294c4b09d39ce734dff
+  # Keep DEFAULT_BUILDER and `ARG UVX_BUILDER` in deploy/*/Dockerfile on the same base.
+  # key = deploy/<key>/Dockerfile. builder is optional (defaults to DEFAULT_BUILDER;
+  # set it only for an app that can't move to the default yet, and say why);
+  # submodule_flags is optional. An app that can't be a submodule sets submodules
+  # to "" plus source_repo/source_ref (checked out as the `app` build context) and
+  # context (the docker build context, default "."); none does today.
   APPS: |
     [
-      {"key": "cses",                   "repo": "tethysapp-cses",                   "submodules": "apps/Tethys-CSES",
-       "builder": "awiciroh/ciroh-tethys:builder_2f82ca658945cb6f69818b3d98ed820b646cef99"},
-      {"key": "fimbench",               "repo": "tethysapp-fimbench",               "submodules": "apps/fimbench",
-       "builder": "awiciroh/ciroh-tethys:builder_7b6f2eb3f4ce67d81e1f10fc2ff7fce6fae14257"},
+      {"key": "cses",                   "repo": "tethysapp-cses",                   "submodules": "apps/Tethys-CSES"},
+      {"key": "fimbench",               "repo": "tethysapp-fimbench",               "submodules": "apps/fimbench"},
+      {"key": "fimeval",                "repo": "tethysapp-fimeval-gui",            "submodules": "apps/tethysapp-fimeval-gui"},
+      {"key": "fimserve",               "repo": "tethysapp-fimserve",               "submodules": "apps/fimserv-viewer"},
       {"key": "hydro-correlation-tool", "repo": "tethysapp-hydro-correlation-tool", "submodules": "apps/hydro-correlation-tool"},
       {"key": "hydrocompute",           "repo": "tethysapp-hydrocompute",           "submodules": "apps/tethysapp-hydrocompute",
        "submodule_flags": "--recursive"},
@@ -78,33 +97,75 @@ jobs:
           EVENT: ${{ github.event_name }}
           WANTED: ${{ github.event.inputs.apps }}
           BUILDER_OVERRIDE: ${{ github.event.inputs.ciroh_tethys_builder }}
-          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          SOURCE_REF_OVERRIDE: ${{ github.event.inputs.source_ref }}
+          PR_ACTION: ${{ github.event.action }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+          WORKFLOW: .github/workflows/build_and_push_app_images.yml
         run: |
+          is_commit() { [ -n "$1" ] && [ "$1" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$1^{commit}" 2>/dev/null; }
+
+          # The commit to compare against: the previous push, or for a new or
+          # rebased pull request the point where it branched from main.
+          OLD=""
+          if [ "$EVENT" = "pull_request" ]; then
+            NEW="$PR_HEAD"
+            if [ "$PR_ACTION" = "synchronize" ] && is_commit "$BEFORE" && git merge-base --is-ancestor "$BEFORE" "$NEW"; then
+              OLD="$BEFORE"
+            else
+              OLD=$(git merge-base "$PR_BASE" "$NEW")
+            fi
+          elif [ "$EVENT" = "push" ]; then
+            NEW="$GITHUB_SHA"
+            if is_commit "$BEFORE"; then OLD="$BEFORE"; fi
+          fi
+
           if [ "$EVENT" = "workflow_dispatch" ]; then
             if [ -z "$WANTED" ] || [ "$WANTED" = "all" ]; then
               keys=$(jq -c '[.[].key]' <<<"$APPS")
             else
               keys=$(jq -cR 'split(",") | map(gsub("^ +| +$"; ""))' <<<"$WANTED")
             fi
-          elif [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+          elif [ -z "$OLD" ]; then
             # new branch: no previous commit to compare against, build everything
             keys=$(jq -c '[.[].key]' <<<"$APPS")
           else
-            changed=$(git diff --name-only "$BASE" "$GITHUB_SHA" | jq -Rsc 'split("\n") | map(select(. != ""))')
-            echo "Changed files: $changed"
-            keys=$(jq -c --argjson changed "$changed" '
-              if ($changed | index(".github/workflows/build_and_push_app_images.yml")) then [.[].key]
-              else [ .[]
-                     | . as $app
-                     | (["deploy/\($app.key)/"] + ($app.submodules | split(" "))) as $paths
-                     | select(any($changed[]; . as $f | any($paths[]; . as $p | $f == $p or ($f | startswith($p)))))
-                     | .key ]
-              end' <<<"$APPS")
+            echo "Comparing $OLD..$NEW"
+            # Deploy-only files in deploy/<app>/ (overlays, ingress, chart, docs)
+            # don't go into the image, so they don't trigger a build.
+            changed=$(git diff --name-only "$OLD" "$NEW" | jq -Rsc '
+              split("\n") | map(select(. != "")
+                | select(test("^deploy/[^/]+/(values[^/]*\\.yaml|ingress\\.yaml|[^/]*\\.md|chart/.*)$") | not))')
+            echo "Changed files that can affect images: $changed"
+            # Each app's APPS entry with its builder resolved, before and after.
+            resolve='map(.builder //= $default) | map({key: .key, value: .}) | from_entries'
+            new_cfg=$(jq -c --arg default "$DEFAULT_BUILDER" "$resolve" <<<"$APPS")
+            if git cat-file -e "$OLD:$WORKFLOW" 2>/dev/null; then
+              old_wf=$(git show "$OLD:$WORKFLOW")
+              old_cfg=$(jq -c --arg default "$(yq -r '.env.DEFAULT_BUILDER' <<<"$old_wf")" "$resolve" \
+                          <<<"$(yq -r '.env.APPS' <<<"$old_wf")")
+            else
+              old_cfg='{}'
+            fi
+            keys=$(jq -c --argjson changed "$changed" --argjson old "$old_cfg" --argjson new "$new_cfg" '
+              [ .[]
+                | . as $app
+                | (["deploy/\($app.key)/"] + ($app.submodules | split(" ") | map(select(. != "")))) as $paths
+                | select(
+                    any($changed[]; . as $f | any($paths[]; . as $p | $f == $p or ($f | startswith($p))))
+                    or $old[$app.key] != $new[$app.key])
+                | .key ]' <<<"$APPS")
           fi
-          matrix=$(jq -c --argjson keys "$keys" --arg default "$DEFAULT_BUILDER" --arg override "$BUILDER_OVERRIDE" '
+          echo "Apps to build: $keys"
+          matrix=$(jq -c --argjson keys "$keys" --arg default "$DEFAULT_BUILDER" --arg override "$BUILDER_OVERRIDE" \
+                         --arg ref_override "$SOURCE_REF_OVERRIDE" '
             { include: [ .[] | select(.key as $k | $keys | index($k))
                          | .builder = (if $override != "" then $override else (.builder // $default) end)
-                         | .submodule_flags = (.submodule_flags // "") ] }' <<<"$APPS")
+                         | .submodule_flags = (.submodule_flags // "")
+                         | .source_repo = (.source_repo // "")
+                         | .source_ref = (if .source_repo != "" and $ref_override != "" then $ref_override else (.source_ref // "") end)
+                         | .context = (.context // ".") ] }' <<<"$APPS")
           echo "Matrix: $matrix"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "any=$(jq '.include | length > 0' <<<"$matrix")" >> "$GITHUB_OUTPUT"
@@ -137,7 +198,17 @@ jobs:
           submodules: 'false'
 
       - name: Check out the app submodule(s)
+        if: matrix.submodules != ''
         run: git submodule update --init ${{ matrix.submodule_flags }} --depth 1 ${{ matrix.submodules }}
+
+      - name: Check out the app repo
+        if: matrix.source_repo != ''
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.source_repo }}
+          ref: ${{ matrix.source_ref }}
+          path: _app_src
+          fetch-depth: 1
 
       - name: Set image tags
         run: |
@@ -145,6 +216,10 @@ jobs:
             SHA="${{ github.event.pull_request.head.sha }}"
           else
             SHA="${GITHUB_SHA}"
+          fi
+          if [ -n "${{ matrix.source_repo }}" ]; then
+            SHA="${SHA}-$(git -C _app_src rev-parse --short=7 HEAD)"
+            echo "BUILD_CONTEXTS=app=${GITHUB_WORKSPACE}/_app_src" >> "$GITHUB_ENV"
           fi
           {
             echo "IMAGE_TAGS<<EOF"
@@ -178,8 +253,9 @@ jobs:
         if: steps.has_test.outputs.test == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ env.DOCKERFILE }}
+          build-contexts: ${{ env.BUILD_CONTEXTS }}
           platforms: linux/amd64
           target: test
           load: true
@@ -195,8 +271,9 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ env.DOCKERFILE }}
+          build-contexts: ${{ env.BUILD_CONTEXTS }}
           platforms: linux/amd64
           push: true
           build-args: |

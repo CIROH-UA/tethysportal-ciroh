@@ -5,6 +5,20 @@
 {% block account_form_body %}
   {% if backends.not_associated %}
     {% include 'tethys_portal/accounts/social_buttons.html' with action='Sign in' backends=backends.not_associated %}
+    {% if 'tethys_portal' in backends.not_associated and not messages %}
+      {# Single sign-on: go straight to the portal; a user already signed in there #}
+      {# comes back without clicking. Skipped when a message is shown (a failed  #}
+      {# sign-in or logout notice) and at most once per 30 s, so it can't loop.  #}
+      <script>
+        (function () {
+          var key = 'ciroh-sso-redirect', now = Date.now(), last = 0;
+          try { last = parseInt(sessionStorage.getItem(key) || '0', 10); } catch (e) {}
+          if (now - last < 30000) { return; }
+          try { sessionStorage.setItem(key, String(now)); } catch (e) {}
+          window.location.replace("{% url 'social:begin' 'tethys_portal' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}");
+        })();
+      </script>
+    {% endif %}
   {% else %}
     <p class="ciroh-sub">No sign-in method is configured.</p>
   {% endif %}

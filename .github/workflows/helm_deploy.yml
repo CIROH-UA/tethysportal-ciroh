@@ -1,12 +1,25 @@
+name: helm_deploy
+# Deploy the portal release (charts/ciroh) to ciroh-portal-prod. Called by
+# build_push_deploy_prod_image on a release tag (real deploy, behind the
+# `production` environment's approval) and by build_push_dev_image (dry run).
+# The standalone apps are deployed by deploy_apps.yml.
+
 on:
   workflow_dispatch:
     inputs:
+      image-tag:
+        description: 'Portal image tag to deploy (e.g. v1.2.0)'
+        required: true
+        type: string
       dry-run:
         required: true
         type: boolean
         default: true
   workflow_call:
     inputs:
+      image-tag:
+        required: true
+        type: string
       dry-run:
         required: true
         type: boolean
@@ -16,74 +29,57 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
-jobs:
-  deploy-to-eks:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    env:
-      AWS_REGION: us-east-1
-      CLUSTER_NAME: ciroh-portal-prod
-      NAMESPACE: cirohportal
-      PORTAL_SECRET_NAME: ciroh-portal-secrets
-      RELEASE_NAME: cirohportal-prod
+# Reads only: the deploy uses the AWS secrets, not the GITHUB_TOKEN.
+permissions:
+  contents: read
 
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: ciroh-portal-prod
+  NAMESPACE: cirohportal
+  PORTAL_SECRET_NAME: ciroh-portal-secrets
+  RELEASE_NAME: cirohportal-prod
+  IMAGE_REPO: awiciroh/tethysapp-ciroh-portal
+
+jobs:
+  dry-run:
+    if: inputs.dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/deploy-portal
+        with:
+          image-tag: ${{ inputs.image-tag }}
+          dry-run: 'true'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  deploy-to-eks:
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-portal
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
-      - name: AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Install kubectl
+      # GitHub creates a missing environment on first use with no protection, which
+      # would deploy without approval. Refuse until an admin has set reviewers.
+      - name: Check the production environment requires approval
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-
-      - name: Setup Kubernetes context
-        run: aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
-
-      - name: Verify the portal secret exists
-        run: |
-          if ! kubectl get secret "${PORTAL_SECRET_NAME}" -n "${NAMESPACE}" > /dev/null 2>&1; then
-            echo "::error::Secret ${PORTAL_SECRET_NAME} not found in namespace ${NAMESPACE}."
-            echo "Create it once with the portal credentials before deploying:"
-            echo "  kubectl create secret generic ${PORTAL_SECRET_NAME} -n ${NAMESPACE} \\"
-            echo "    --from-literal=TETHYS_SECRET_KEY=... \\"
-            echo "    --from-literal=TETHYS_DB_PASSWORD=... \\"
-            echo "    --from-literal=TETHYS_PS_CONNECTION=user:pass@host:port \\"
-            echo "    --from-literal=HYDROSHARE_CLIENT_ID=... \\"
-            echo "    --from-literal=HYDROSHARE_SECRET_ID=... \\"
-            echo "    --from-file=OIDC_RSA_PRIVATE_KEY=key.pem \\"
-            echo "    --from-literal=CSES_ACCESS_KEY_ID=..."
+          rules=$(gh api "repos/$GITHUB_REPOSITORY/environments/production" \
+            -q '[.protection_rules[].type] | join(",")' 2>/dev/null || true)
+          if [[ ",$rules," != *",required_reviewers,"* ]]; then
+            echo "::error::The production environment is missing or has no required reviewers. A repo admin must add them (Settings > Environments > production) before the portal deploys."
             exit 1
           fi
 
-      - name: Set Tag
-        run: echo "TAG=dev_${GITHUB_SHA}" >> $GITHUB_ENV
-
-      - name: Install helm
-        uses: azure/setup-helm@v3
+      - uses: ./.github/actions/deploy-portal
         with:
-          version: 'v3.14.0'
-
-      - name: Build chart dependencies
-        run: helm dependency build charts/ciroh
-
-      # §4.1: provisioning is a single pre-upgrade hook Job that runs provision.sh (migrate +
-      # services + static + bootstrap + init.d hooks incl. store link + syncstores). The helm
-      # upgrade below runs it as part of the release - no separate provision step is needed.
-      - name: Deploy Helm chart to EKS
-        run: |
-          helm upgrade ${{ env.RELEASE_NAME }} charts/ciroh --install \
-            ${{ inputs.dry-run && '--dry-run' || '' }} \
-            --timeout=3600s \
-            -f charts/ciroh/ci/prod_aws_values.yaml \
-            --set secrets.existingSecretName=${{ env.PORTAL_SECRET_NAME }} \
-            --set image.tag=${{ env.TAG }} \
-            --namespace ${{ env.NAMESPACE }}
+          image-tag: ${{ inputs.image-tag }}
+          dry-run: 'false'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

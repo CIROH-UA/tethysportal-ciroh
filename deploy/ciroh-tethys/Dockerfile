@@ -6,10 +6,14 @@ ARG SP=/opt/conda/envs/tethys/lib/python3.12/site-packages
 # using LeadingSlashS3Storage 500s ("No module named 'storages'"/'boto3'). The
 # [s3] extra pulls boto3. Install here, not per app.
 RUN uv pip install "django-storages[s3]>=1.14"
-COPY oidc/ciroh_portal_oidc.py oidc/ciroh_portal_static.py ${SP}/
-COPY oidc/templates/login.html oidc/templates/social_buttons.html \
+COPY --chmod=0644 oidc/ciroh_portal_oidc.py oidc/ciroh_portal_static.py ${SP}/
+COPY --chmod=0644 oidc/templates/login.html oidc/templates/social_buttons.html \
      ${SP}/tethys_portal/templates/tethys_portal/accounts/
-COPY oidc/templates/accounts_base.html \
+COPY --chmod=0644 oidc/templates/accounts_base.html \
      ${SP}/tethys_portal/templates/tethys_portal/accounts/base.html
+# Provision hook: syncstores, so store initializers (schema migrations) run on every
+# upgrade. The base provision.sh runs /opt/portal/init.d/*.sh; app Dockerfiles copy
+# /opt/portal into their runtime stage.
+COPY --chmod=0755 ciroh-tethys/init.d/ /opt/portal/init.d/
 # Fail the build if the baked static backend's dependencies are missing.
 RUN /opt/conda/envs/tethys/bin/python -c "import storages, boto3"

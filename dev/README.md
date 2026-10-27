@@ -9,22 +9,22 @@ it against the built image, and you can run it locally too.
   Postgres doesn't have. On **RDS this is DBA work** — see README §2.5 (this script is the reference).
 - **`portal-seed.sh`** — one-time seed of a fresh dev portal: persistent-store service + store links +
   `syncstores`, branding, proxy apps, app settings. In **prod** the provision Job does link + syncstores.
-- **`smoke_all_apps.py`** — imports every installed app (its `app`, controllers, and deep native deps
-  like `fimserve`/`osgeo`), so a shared-pin regression is caught before the image ships. CI runs it
-  after the Grype scan and **blocks the push/deploy** on any failure. Run it yourself against a locally
-  built image before a pre-merge (`gioelkin`) deploy:
+- **`smoke_portal.py`** — checks what the portal image ships: the CIROH modules its settings name
+  (`portal_oidc`, `portal_storage`), the theme extension, the HydroShare login backend, and
+  `manage.py check`. The portal has no apps installed (each app is its own image, tested by
+  `build_push_app_images`). CI runs it after the Grype scan and **blocks the push/deploy** on any
+  failure. Run it yourself against a locally built image before deploying it:
 
   ```bash
-  # build first, e.g.:  docker compose -f docker-compose.dev.yml build web
-  #   (produces awiciroh/tethysapp-ciroh-portal:dev — swap in your gioelkin tag as needed)
+  docker build -t ciroh-portal:local .
   docker run --rm \
     -e DJANGO_SETTINGS_MODULE=tethys_portal.settings -e TETHYS_SECRET_KEY=ci-smoke \
-    -v "$PWD/dev/smoke_all_apps.py:/tmp/smoke_all_apps.py:ro" \
-    awiciroh/tethysapp-ciroh-portal:dev \
-    /opt/conda/envs/tethys/bin/python /tmp/smoke_all_apps.py
+    -v "$PWD/dev/smoke_portal.py:/tmp/smoke_portal.py:ro" \
+    ciroh-portal:local \
+    /opt/conda/envs/tethys/bin/python /tmp/smoke_portal.py
   ```
 
-  A clean run prints `PASS` per app and exits 0; any `FAIL` (with the import error) exits non-zero.
+  A clean run prints `PASS` per check and exits 0; any `FAIL` exits non-zero.
 
 The app/CI only ever manage two DB things, as the least-privilege `tethys_app` role: `tethys db migrate`
 and `tethys syncstores`. Everything else (roles, databases, ownership) is DBA work on the RDS instance.
