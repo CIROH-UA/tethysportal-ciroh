@@ -42,6 +42,23 @@ Arrows in the diagram emphasise that **portal Pods talk to PostgreSQL (durable) 
 | 11 | [FIM Visualization](https://hydroinformatics.uiowa.edu/lab/fims/) | Proxy |
 | 12 | [Numerical Flash-Flood Alerts](https://numericalflashfloodalertsolutions.com/) | Proxy |
 
+### Requesting an app update or a new app
+
+Open an issue with one of the forms on the [New issue](../../issues/new/choose) page:
+
+- **Update an app**: pick the app and the version (a branch, tag or commit; blank
+  means the latest of the branch the portal tracks). When a maintainer adds the
+  `approved` label, one run of `app_requests.yml` moves the app's submodule
+  there, builds the image, pins it in `deploy/<app>/values-prod.yaml`, opens the
+  PR and dry-runs the upgrade, reporting on the PR. Merging the PR deploys it
+  after the `production` approval, and closes the issue.
+- **Add a new app**: describe the app and what it needs. The bot posts the setup
+  checklist on the issue; a maintainer does the setup (some steps need an admin).
+
+The bot uses the built-in `GITHUB_TOKEN`; no extra secret is needed. It needs the
+labels `app-update`, `new-app` and `approved`. If the repo doesn't allow Actions to
+open pull requests, the bot posts a link for a maintainer to open it instead.
+
 ---
 
 ## Installation (on AWS)

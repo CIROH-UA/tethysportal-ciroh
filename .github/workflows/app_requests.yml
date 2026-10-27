@@ -1,0 +1,327 @@
+name: app_requests
+# Turns app issues (.github/ISSUE_TEMPLATE) into work:
+#   * "Add a new app" issues get the maintainers' setup checklist as a comment.
+#   * "Update an app" issues, once someone with write access adds the `approved`
+#     label, become a pull request in one run: move the app's submodule to the
+#     requested version and push a branch, build that commit's image (by calling
+#     build_push_app_images), pin the image in the app's overlay and open the PR,
+#     then dry-run the upgrade. Merging deploys it through deploy_apps (behind the
+#     production approval).
+#
+# Everything uses the built-in GITHUB_TOKEN. Its pushes and PRs don't trigger
+# other workflows, which is why this run builds and dry-runs the update itself
+# instead of leaving that to the PR's own checks; a maintainer's later pushes to
+# the branch run the usual checks.
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: read
+
+# One approval run per issue at a time, so a second approval waits for the first.
+# Other events (the form's own labels, other labels) get a group of their own, so
+# they can't replace a queued approval.
+concurrency:
+  group: app-request-${{ github.event.issue.number }}-${{ github.event.label.name == 'approved' && 'approved' || github.run_id }}
+  cancel-in-progress: false
+
+env:
+  ISSUE: ${{ github.event.issue.number }}
+
+jobs:
+  new-app-checklist:
+    if: github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'new-app')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Post the setup checklist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body-file - <<'EOF'
+          Thanks! A maintainer will review this. Setup checklist (see `deploy/oidc/README.md`):
+
+          - [ ] Add the repo as a submodule under `apps/`
+          - [ ] `deploy/<key>/Dockerfile` on the CIROH base, starting from the closest existing app
+          - [ ] Entry in `APPS` in `.github/workflows/build_and_push_app_images.yml`
+          - [ ] Database `tethys_platform_<key>` on RDS (admin)
+          - [ ] Portal OIDC client for the subdomain; keys in `ciroh-portal-secrets` (admin)
+          - [ ] Other secrets in `ciroh-portal-secrets` (admin)
+          - [ ] `deploy/<key>/values-prod.yaml` and `ingress.yaml`
+          - [ ] Add the app to `.github/ISSUE_TEMPLATE/update-app.yml`
+          - [ ] Merge, approve the deploy, and sign in at the subdomain
+          EOF
+
+  # Move the submodule(s) and push app-update/<key>-<issue>.
+  prepare:
+    if: >-
+      github.event.action == 'labeled' && github.event.label.name == 'approved'
+      && contains(github.event.issue.labels.*.name, 'app-update')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      changed: ${{ steps.bump.outputs.changed }}
+      app: ${{ steps.req.outputs.app }}
+      ref: ${{ steps.req.outputs.ref }}
+      branch: ${{ steps.push.outputs.branch }}
+      sha: ${{ steps.push.outputs.sha }}
+      changelog: ${{ steps.bump.outputs.changelog }}
+    steps:
+      - name: Check who approved
+        env:
+          SENDER: ${{ github.event.sender.login }}
+        run: |
+          perm=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" -q .permission)
+          case "$perm" in
+            admin|maintain|write) echo "Approved by $SENDER ($perm)" ;;
+            *) gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" \
+                 --body "@$SENDER the \`approved\` label only starts an update when added by someone with write access."
+               exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: 'false'
+
+      - name: Read the request
+        id: req
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          APPS=$(yq -r '.env.APPS' .github/workflows/build_and_push_app_images.yml)
+          export APPS
+          if ! python3 .github/scripts/parse_update_request.py > "$RUNNER_TEMP/req" 2> "$RUNNER_TEMP/err"; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Can't start this update: $(cat "$RUNNER_TEMP/err")"
+            exit 1
+          fi
+          tee -a "$GITHUB_OUTPUT" < "$RUNNER_TEMP/req"
+
+      - name: Move the submodules
+        id: bump
+        env:
+          APP: ${{ steps.req.outputs.app }}
+          REF: ${{ steps.req.outputs.ref }}
+          SUBMODULES: ${{ steps.req.outputs.submodules }}
+        run: |
+          set -euo pipefail
+          first=1; changed=0; : > "$RUNNER_TEMP/log"
+          for path in $SUBMODULES; do
+            git submodule update --init "$path"
+            name=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk -v p="$path" '$2 == p {sub(/^submodule\./, "", $1); sub(/\.path$/, "", $1); print $1}')
+            tracked=$(git config -f .gitmodules --get "submodule.$name.branch" || true)
+            # The requested version applies to the app's own repo (the first
+            # submodule); any others move to their tracked branch.
+            want="$tracked"
+            if [ "$first" = 1 ] && [ -n "$REF" ]; then want="$REF"; fi
+            if [ -z "$want" ]; then want=$(git -C "$path" remote show origin | sed -n 's/.*HEAD branch: //p'); fi
+            if ! git -C "$path" fetch -q origin "$want"; then
+              gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Can't find \`$want\` in \`$path\`'s repo."
+              exit 1
+            fi
+            old=$(git -C "$path" rev-parse HEAD)
+            new=$(git -C "$path" rev-parse FETCH_HEAD)
+            if [ "$old" != "$new" ]; then
+              git -C "$path" checkout -q "$new"
+              git add "$path"
+              changed=1
+              url=$(git -C "$path" remote get-url origin | sed 's#\.git$##')
+              {
+                echo "**\`$path\`** → \`$want\`: [\`${old:0:7}...${new:0:7}\`]($url/compare/$old...$new)"
+                echo
+                git -C "$path" log -50 --format='- %h %s' "$old..$new"
+                echo
+              } >> "$RUNNER_TEMP/log"
+            fi
+            first=0
+          done
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          if [ "$changed" = 0 ]; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Nothing to do: $APP is already at that version."
+            exit 0
+          fi
+          delim="EOF_$(openssl rand -hex 8)"
+          { echo "changelog<<$delim"; cat "$RUNNER_TEMP/log"; echo "$delim"; } >> "$GITHUB_OUTPUT"
+
+      - name: Push the branch
+        id: push
+        if: steps.bump.outputs.changed == '1'
+        env:
+          APP: ${{ steps.req.outputs.app }}
+          REF: ${{ steps.req.outputs.ref }}
+        run: |
+          set -euo pipefail
+          branch="app-update/$APP-$ISSUE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898729+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -q -m "Update $APP to ${REF:-the tip of its tracked branch}" -m "Requested in #$ISSUE."
+          git push -f origin "$branch"
+          { echo "branch=$branch"; echo "sha=$(git rev-parse HEAD)"; } >> "$GITHUB_OUTPUT"
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" \
+            --body "Building $APP from \`$branch\`; the PR opens once the image is built. Progress: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+  # Build that commit's image; only the immutable <sha> tag is published.
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.changed == '1'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build_and_push_app_images.yml
+    with:
+      apps: ${{ needs.prepare.outputs.app }}
+      ref: ${{ needs.prepare.outputs.sha }}
+    secrets:
+      DOCKER_BUILDER_USERNAME: ${{ secrets.DOCKER_BUILDER_USERNAME }}
+      DOCKER_BUILDER_TOKEN: ${{ secrets.DOCKER_BUILDER_TOKEN }}
+
+  # Pin the image in deploy/<key>/values-prod.yaml and open (or update) the PR.
+  pin:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      APP: ${{ needs.prepare.outputs.app }}
+      REF: ${{ needs.prepare.outputs.ref }}
+      BRANCH: ${{ needs.prepare.outputs.branch }}
+      SHA: ${{ needs.prepare.outputs.sha }}
+      CHANGELOG: ${{ needs.prepare.outputs.changelog }}
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+      pr: ${{ steps.pr.outputs.pr }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.branch }}
+          fetch-depth: 1
+          submodules: 'false'
+
+      - name: Pin the image and push
+        id: pin
+        run: |
+          set -euo pipefail
+          if [ "$(git rev-parse HEAD)" != "$SHA" ]; then
+            echo "::error::$BRANCH moved past $SHA during the build; approve the issue again to restart."
+            exit 1
+          fi
+          repo=$(yq -r '.env.APPS' .github/workflows/build_and_push_app_images.yml \
+            | jq -r --arg k "$APP" '.[] | select(.key == $k) | .repo')
+          image="awiciroh/$repo:$SHA"
+          docker manifest inspect "$image" > /dev/null
+          f="deploy/$APP/values-prod.yaml"
+          # A local chart (deploy/<key>/chart) nests the tethys-app values. yq finds
+          # the tag's line and sed swaps its value, so the rest of the file (blank
+          # lines, quoting, comments) stays exactly as written.
+          tag='(.image.tag // .["tethys-app"].image.tag)'
+          line=$(yq "$tag | line" "$f")
+          if [ -z "$line" ] || [ "$line" = 0 ]; then echo "::error::No image tag in $f"; exit 1; fi
+          sed -i -E "${line}s/^(\s*tag:\s*\"?)[^\"[:space:]]*/\1$SHA/" "$f"
+          [ "$(yq -r "$tag" "$f")" = "$SHA" ] || { echo "::error::Couldn't pin $f"; exit 1; }
+          git diff
+          git config user.name "github-actions[bot]"
+          git config user.email "41898729+github-actions[bot]@users.noreply.github.com"
+          git commit -q -am "Pin $APP to the image built from ${SHA:0:7}"
+          git push origin "HEAD:$BRANCH"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Open the pull request
+        id: pr
+        run: |
+          set -euo pipefail
+          version=${REF:-the tip of its tracked branch}
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          {
+            echo "Updates **$APP** to $version, as requested in #$ISSUE."
+            echo
+            printf '%s\n' "$CHANGELOG"
+            echo "The image \`awiciroh/…:${SHA:0:7}\` was built and pinned in \`deploy/$APP/values-prod.yaml\` by [this run]($run_url), which then dry-runs the upgrade and reports here."
+            echo
+            echo "This PR was opened by the built-in token, so its own checks don't start; the run above is its build and dry run. Review the changes and the issue's notes (database, settings) before merging. Merging deploys it after the production approval."
+            echo
+            echo "Closes #$ISSUE"
+          } > "$RUNNER_TEMP/body"
+          existing=$(gh pr list -R "$GITHUB_REPOSITORY" --head "$BRANCH" --json number -q '.[0].number')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/body"
+            pr="$existing"
+          elif url=$(gh pr create -R "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
+                       --title "Update $APP to $version" --body-file "$RUNNER_TEMP/body"); then
+            pr="${url##*/}"
+          else
+            # The repo setting "Allow GitHub Actions to create and approve pull
+            # requests" is off: hand the PR to a maintainer instead.
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" \
+              --body "The image is built and pinned on \`$BRANCH\`, but this repo doesn't let Actions open pull requests. A maintainer can open it here: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...$BRANCH?expand=1 (a PR opened by a person runs the usual checks, including the dry run)."
+            echo "pr=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "Opened #$pr with the new image pinned. The dry run of the upgrade reports there."
+
+  # Server-side dry run of the upgrade, as deploy_apps does on pull requests.
+  dry-run:
+    needs: [prepare, pin]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      AWS_REGION: us-east-1
+      CLUSTER_NAME: ciroh-portal-prod
+      NAMESPACE: cirohportal
+      TETHYS_APP_CHART: oci://ghcr.io/aquaveo/charts/tethys-app
+      TETHYS_APP_CHART_VERSION: 0.1.5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.pin.outputs.sha }}
+          submodules: 'false'
+      - uses: ./.github/actions/deploy-app
+        with:
+          app: ${{ needs.prepare.outputs.app }}
+          dry-run: 'true'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  # Say how it went on the PR (or the issue, if there's no PR).
+  report:
+    needs: [prepare, build, pin, dry-run]
+    if: always() && needs.prepare.outputs.changed == '1'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ needs.pin.outputs.pr }}
+      BUILD: ${{ needs.build.result }}
+      PIN: ${{ needs.pin.result }}
+      DRY_RUN: ${{ needs.dry-run.result }}
+    steps:
+      - name: Comment
+        run: |
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          if [ "$DRY_RUN" = success ]; then
+            msg="Dry run of the upgrade passed. Merge to deploy (after the production approval)."
+          elif [ "$BUILD" != success ]; then
+            msg="The image build failed ($BUILD); see $run_url. Fix the app or pick another version, then remove and re-add \`approved\`."
+          elif [ "$PIN" != success ]; then
+            msg="Pinning the image failed ($PIN); see $run_url."
+          else
+            msg="Dry run of the upgrade failed ($DRY_RUN); see $run_url. Don't merge until it's fixed."
+          fi
+          if [ -n "$PR" ]; then
+            gh pr comment "$PR" -R "$GITHUB_REPOSITORY" --body "$msg"
+          else
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body "$msg"
+          fi

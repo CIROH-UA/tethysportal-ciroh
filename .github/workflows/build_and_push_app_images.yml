@@ -9,7 +9,9 @@ name: build_push_app_images
 # with where it branched from main), so every commit only builds what it touched.
 # An app's <sha> tag therefore exists only for commits that built it.
 # Pull requests publish only the immutable <sha> tag; push and manual dispatch
-# also move :latest.
+# also move :latest. Another workflow can call this one with apps and ref (a full
+# commit sha) to build that commit's images; it publishes only the <sha> tag
+# (app_requests.yml does this for its update PRs).
 #
 # Every app comes from a submodule. An app that can't be one can set source_repo
 # instead (see APPS): that repo is checked out and passed as the `app` named
@@ -33,6 +35,21 @@ on:
         description: 'Branch, tag or sha of the app repo for source_repo apps (blank = each app''s default)'
         required: false
         default: ''
+  workflow_call:
+    inputs:
+      apps:
+        description: Comma-separated app keys to build
+        type: string
+        required: true
+      ref:
+        description: Full commit sha to build; images are tagged with it
+        type: string
+        required: true
+    secrets:
+      DOCKER_BUILDER_USERNAME:
+        required: true
+      DOCKER_BUILDER_TOKEN:
+        required: true
   push:
     branches:
       - '*'
@@ -76,7 +93,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: app-images-${{ github.ref }}
+  group: app-images-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -86,6 +103,8 @@ jobs:
       matrix: ${{ steps.pick.outputs.matrix }}
       any: ${{ steps.pick.outputs.any }}
     steps:
+      # The workflow's own commit, never inputs.ref: a call names its apps, so
+      # nothing here reads the checkout (the builds below check out inputs.ref).
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -94,8 +113,9 @@ jobs:
       - name: Pick the apps to build
         id: pick
         env:
-          EVENT: ${{ github.event_name }}
-          WANTED: ${{ github.event.inputs.apps }}
+          # A call from another workflow names its apps, like a dispatch.
+          EVENT: ${{ inputs.ref != '' && 'workflow_dispatch' || github.event_name }}
+          WANTED: ${{ inputs.apps }}
           BUILDER_OVERRIDE: ${{ github.event.inputs.ciroh_tethys_builder }}
           SOURCE_REF_OVERRIDE: ${{ github.event.inputs.source_ref }}
           PR_ACTION: ${{ github.event.action }}
@@ -194,6 +214,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 1
           submodules: 'false'
 
@@ -211,9 +232,13 @@ jobs:
           fetch-depth: 1
 
       - name: Set image tags
+        env:
+          CALL_REF: ${{ inputs.ref }}
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             SHA="${{ github.event.pull_request.head.sha }}"
+          elif [ -n "$CALL_REF" ]; then
+            SHA="$CALL_REF"
           else
             SHA="${GITHUB_SHA}"
           fi
@@ -224,7 +249,7 @@ jobs:
           {
             echo "IMAGE_TAGS<<EOF"
             echo "${IMAGE}:${SHA}"
-            if [ "${{ github.event_name }}" != "pull_request" ]; then
+            if [ "${{ github.event_name }}" != "pull_request" ] && [ -z "$CALL_REF" ]; then
               echo "${IMAGE}:latest"
             fi
             echo "EOF"
