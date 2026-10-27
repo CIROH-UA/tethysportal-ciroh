@@ -46,23 +46,23 @@ Arrows in the diagram emphasise that **portal Pods talk to PostgreSQL (durable) 
 
 ## Installation (on AWS)
 
-> **Terraform + EKS = easy reproducible infra**
+> **OpenTofu + EKS = easy reproducible infra**
 
 ### 1 · Prerequisites
 
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 * AWS credentials / named profile
   (`~/.aws/credentials`)
-* [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+* [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.9, and a git.aquaveo.com token for the
+  GitLab-managed state (see `terraform/README.md`)
 
-### 2 · Terraform Modules Structure
+### 2 · OpenTofu Modules Structure
 
 ```bash
 terraform/
 ├── modules
 │ └── ciroh_portal
 │ ├── alb.tf
-│ ├── efs.tf
 │ ├── eks.tf
 │ ├── iam-policy.json
 │ ├── karpenter.tf
@@ -89,13 +89,8 @@ region = "us-east-1"
 profile = "456531024327"
 cluster_name = "ciroh-portal-prod"
 app_name = "cirohportal"
-helm_chart = "ciroh"
-helm_repo = "https://docs.ciroh.org/tethysportal-ciroh"
-helm_ci_path = "../../charts/ciroh/ci"
 environment = "prod"
 single_nat_gate_way = false
-use_elastic_ips = true
-eips = ["...", "..."]
 ```
 
 ### 2.5 · Database roles & bootstrap
@@ -139,37 +134,26 @@ In order to deploy the following commands can needs to be run:
 aws eks update-kubeconfig \
   --name <cluster_name> --region <region> --profile <profile>
 
-# 2 Terraform workflow
-terraform init
-terraform plan # review
-terraform apply #
+# 2 OpenTofu workflow (from terraform/prod; backend credentials in terraform/README.md)
+tofu init
+tofu plan # review
+tofu apply #
 
 # (dev only) clean-up afterwards
-terraform destroy
+tofu destroy
 ```
 
-If the environment is a development one: the following code needs to be run after the dev env has been tested: `terraform destroy`
+If the environment is a development one: the following code needs to be run after the dev env has been tested: `tofu destroy`
 
->**__NOTE__**: When terrafrom is deployed. It deploys the tethys portal using the helm provider. You need to be careful to check the the paths `charts/ciroh/ci/prod_aws_values.yaml` and `charts/ciroh/ci/dev_aws_values.yaml` depending on the environment that you are deploying to. You might need to check that you are using the correct configuration (docker image, etc)
+>**__NOTE__**: OpenTofu builds the infrastructure only (VPC, EKS, Karpenter, the load balancer controller). It does not deploy the portal: that is the `helm_deploy` workflow, below.
 
 ### 4 · Upgrade Deployment only
 
-Once the deployment is completed, it is not necessary to deploy the whole infrastructure every time there is a change. If there is an update in the image that the portal is using the following command can be used:
+The portal release (`cirohportal-prod`, chart `charts/ciroh`) is deployed by CI. A release tag builds the image and runs `.github/workflows/helm_deploy.yml`, which upgrades the release with `charts/ciroh/ci/prod_aws_values.yaml` and takes its secrets from the pre-created `ciroh-portal-secrets` Secret. To deploy an existing image by hand, run that workflow with the image tag:
 
 ```bash
-# add the helm repo
-helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh
-
-helm upgrade cirohportal-prod tethysportal-ciroh/ciroh \
-  --install --wait --timeout 3600 \
-  -f charts/ciroh/ci/prod_aws_values.yaml \
-  --set storageClass.parameters.fileSystemId=<EFS_ID> \
-  --set image.tag=<newTag> \
-  --namespace cirohportal
+gh workflow run helm_deploy.yml -f image-tag=<newTag> -f dry-run=false
 ```
-
-
->** Remember:** You need to use the `--set storageClass.parameters.fileSystemId` to upgrade because it was not referenced when the chart was deployed with the terraform scripts. Therefore, you need to do it manually also for the upgrade. Similarly, in the values.yaml that you use you need to have `enabled: true` in the **StorageClass** section or it will produce an error.
 
 If you upgrade fails with the following error:
 
@@ -188,7 +172,7 @@ More on this in the following [medium article](https://medium.com/nerd-for-tech/
 
 ### 5 · Troubleshooting
 
-- When the `terraform destroy` command does not work in one run, it can be du to a couple of reasons:
+- When the `tofu destroy` command does not work in one run, it can be du to a couple of reasons:
   - The ALB ingress gets destroy before, so the ingresses of the Tethys portal do nto get deleted. You might need to delete them in the AWS dashboard --> EC2--> Load Balancers
   - The VPC cannot be deleted, This is also realted to the ALB ingress being deleted before (leaving the ingresses of the Tethys Portal hanging around after the creation) As a result, the VPC is still being used by these Load Balancers. Delete the Load Balancers, and then the VPC in the AWS dashboard
 - Deleting manually can sometimes cause the following error:

@@ -114,7 +114,7 @@ tolerations: []
 affinity: {}
 
 ephemeralStorage:
-  className: gp2
+  className: gp3
   size: 10Gi
 
 strategy: RollingUpdate

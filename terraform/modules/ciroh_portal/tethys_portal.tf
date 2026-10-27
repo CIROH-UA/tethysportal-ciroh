@@ -1,10 +1,7 @@
 
-
-## Commenting out this file has the same effect as targeting module.eks (see READMED.md)
-
-data "external" "helm-secrets" {
-  program = ["helm", "secrets", "decrypt", "--terraform", "${var.helm_ci_path}/secrets.yaml"]
-}
+# The portal itself (helm release cirohportal-prod) is deployed by CI
+# (.github/workflows/helm_deploy.yml) with its secrets in the pre-created
+# ciroh-portal-secrets Secret. Terraform only prepares the namespace and storage.
 
 resource "kubernetes_namespace" "tethysportal" {
 
@@ -21,6 +18,26 @@ resource "kubernetes_namespace" "tethysportal" {
   }
 }
 #basically removed the gp2 as the default class
+# gp3 is ~20% cheaper than gp2 with a 3000 IOPS baseline at any size; the charts
+# ask for it by name (ephemeralStorage.className) and it is the default for the rest.
+resource "kubernetes_storage_class_v1" "gp3" {
+  metadata {
+    name = "gp3"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+  storage_provisioner    = "ebs.csi.aws.com"
+  reclaim_policy         = "Delete"
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+  parameters = {
+    type      = "gp3"
+    fsType    = "ext4"
+    encrypted = "true"
+  }
+}
+
 resource "kubernetes_annotations" "default-storageclass" {
   api_version = "storage.k8s.io/v1"
   kind        = "StorageClass"
@@ -32,27 +49,4 @@ resource "kubernetes_annotations" "default-storageclass" {
   annotations = {
     "storageclass.kubernetes.io/is-default-class" = "false"
   }
-}
-
-# Tethys portal 
-resource "helm_release" "tethysportal_helm_release" {
-  name              = "${var.app_name}-${var.environment}"
-  chart             = var.helm_chart
-  repository        = var.helm_repo
-  namespace         = var.app_name
-  timeout           = 3600
-  dependency_update = true
-  values = [
-    file("${var.helm_ci_path}/prod_aws_values.yaml"),
-    base64decode(data.external.helm-secrets.result.content_base64),
-  ]
-
-  set = [
-    {
-      name  = "storageClass.parameters.fileSystemId"
-      value = aws_efs_file_system.efs.id
-    }
-  ]
-
-   depends_on = [kubernetes_annotations.default-storageclass]
 }

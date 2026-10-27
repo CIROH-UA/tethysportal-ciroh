@@ -1,0 +1,27 @@
+# Values for the KEDA HTTP add-on (release http-add-on in namespace keda, chart
+# kedacore/keda-add-ons-http 0.16.0), which holds the scale-to-zero apps' traffic
+# while they start. Not deployed by CI; upgrade it by hand:
+#
+#   helm upgrade http-add-on kedacore/keda-add-ons-http -n keda --version 0.16.0 \
+#     -f deploy/keda/http-add-on-values.yaml
+#
+# The chart defaults (3 interceptors, 3 scalers, 250m CPU each) reserved ~1.5 CPU
+# for a component that idles at a few millicores, enough to keep an extra node up.
+interceptor:
+  readinessTimeout: 90s
+  # Every app request passes through an interceptor, so keep two: one can be on a
+  # node Karpenter is replacing while the other serves.
+  replicas:
+    min: 2
+  resources:
+    requests:
+      cpu: 50m
+scaler:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+operator:
+  resources:
+    requests:
+      cpu: 50m
