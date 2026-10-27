@@ -23,6 +23,10 @@ interceptor:
         matchLabels:
           app.kubernetes.io/component: interceptor
           app.kubernetes.io/instance: http-add-on
+      # Count only pods of the same rollout; otherwise the old pods still
+      # running during an upgrade skew the count and both new ones can land together.
+      matchLabelKeys:
+        - pod-template-hash
   resources:
     requests:
       cpu: 50m
