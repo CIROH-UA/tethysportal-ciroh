@@ -13,6 +13,16 @@ interceptor:
   # node Karpenter is replacing while the other serves.
   replicas:
     min: 2
+  # Prefer separate nodes; ScheduleAnyway so it never holds a pod back or makes
+  # Karpenter start a node just for the spread.
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: interceptor
+          app.kubernetes.io/instance: http-add-on
   resources:
     requests:
       cpu: 50m
