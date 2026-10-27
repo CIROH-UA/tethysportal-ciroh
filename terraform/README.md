@@ -14,7 +14,6 @@
 
 * Karpenter has been added to the cluster in order to save cost per EC2 instaces
   * EKS managed nodes
-* EFS instead of the EBS in order to share filesystems between deployments
 
 ## Variables (terraform.tfvars) Template
 
@@ -55,8 +54,12 @@ Read the plan before every apply. Things it can show that aren't obvious:
   the newest AMI. Apply those in a maintenance window.
 - The cluster role (`module.ciroh_portal.module.eks.aws_iam_role.this[0]`) carries a
   hand-added trust statement for an admin user that the EKS module can't express.
-  A full apply would remove it; skip it with
-  `tofu apply -exclude='module.ciroh_portal.module.eks.aws_iam_role.this[0]'`.
+  Any apply that touches the cluster removes it (targeting pulls the role in as a
+  dependency). `-exclude` on the role skips it *and everything that depends on it*,
+  i.e. the whole cluster, which is useful for non-EKS changes only.
+- `-target` follows dependencies, and `-destroy -target` destroys everything that
+  depends on the targets: `-destroy -target` on anything the node group or cluster
+  uses would take them down too. Read that plan especially carefully.
 - The EKS module makes the user who applies the cluster KMS key's administrator.
 
 In order to destroy de infrastructure run the following:

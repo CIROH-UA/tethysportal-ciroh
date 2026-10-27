@@ -1,30 +1,3 @@
-resource "aws_iam_policy" "node_efs_policy" {
-  name        = "eks_node_efs-${var.app_name}-${var.environment}"
-  path        = "/"
-  description = "Policy for EFKS nodes to use EFS"
-
-  policy = jsonencode({
-    "Statement" : [
-      {
-        "Action" : [
-          "elasticfilesystem:DescribeMountTargets",
-          "elasticfilesystem:DescribeFileSystems",
-          "elasticfilesystem:DescribeAccessPoints",
-          "elasticfilesystem:CreateAccessPoint",
-          "elasticfilesystem:DeleteAccessPoint",
-          "ec2:DescribeAvailabilityZones"
-        ],
-        "Effect" : "Allow",
-        "Resource" : "*",
-        "Sid" : ""
-      }
-    ],
-    "Version" : "2012-10-17"
-    }
-  )
-}
-
-
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "21.1.0"
@@ -51,7 +24,6 @@ module "eks" {
     kube-proxy = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
     coredns    = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
     aws-ebs-csi-driver = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
-    aws-efs-csi-driver = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
     metrics-server     = { most_recent = true, resolve_conflicts_on_create = "OVERWRITE" }
     eks-pod-identity-agent = { before_compute = true, most_recent = true }
   
@@ -81,9 +53,6 @@ module "eks" {
       ami_type       = "BOTTLEROCKET_x86_64"
       disk_size                  = 40
       iam_role_attach_cni_policy = false
-      iam_role_additional_policies = {
-        eks_node_efs = resource.aws_iam_policy.node_efs_policy.arn
-      }
       labels = {
         # Used to ensure Karpenter runs on nodes that it does not manage
         "karpenter.sh/controller" = "true"

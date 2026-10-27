@@ -63,7 +63,6 @@ terraform/
 ├── modules
 │ └── ciroh_portal
 │ ├── alb.tf
-│ ├── efs.tf
 │ ├── eks.tf
 │ ├── iam-policy.json
 │ ├── karpenter.tf
@@ -146,7 +145,7 @@ tofu destroy
 
 If the environment is a development one: the following code needs to be run after the dev env has been tested: `tofu destroy`
 
->**__NOTE__**: OpenTofu builds the infrastructure only (VPC, EKS, Karpenter, EFS, the load balancer controller). It does not deploy the portal: that is the `helm_deploy` workflow, below.
+>**__NOTE__**: OpenTofu builds the infrastructure only (VPC, EKS, Karpenter, the load balancer controller). It does not deploy the portal: that is the `helm_deploy` workflow, below.
 
 ### 4 · Upgrade Deployment only
 
