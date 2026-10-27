@@ -4,7 +4,11 @@
 
 - AWS Client (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - AWS access to specific account/profile (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
-- Terraform (https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- OpenTofu >= 1.9 (https://opentofu.org/docs/intro/install/). The code is plain HCL and
+  also validates with Terraform, but the state has been written by OpenTofu since
+  2026-10, so use `tofu`.
+- A GitLab token (api scope) on git.aquaveo.com with access to
+  `tethys/ciroh/cirohportal-terraform-backend`, where the state lives.
 
 ## Features
 
@@ -29,18 +33,36 @@ Terraform builds the infrastructure only. The portal release is deployed by CI
 
 ## How to Run
 
-The initial Run can be done with the following:
+The state is GitLab-managed (`prod/backend.tf`). Give the backend your GitLab
+credentials through the environment, then work from `prod/`:
 
 ```bash
-terraform init
-terrafrom plan
-terraform apply
+cd terraform/prod
+export TF_HTTP_USERNAME=<gitlab user>
+export TF_HTTP_PASSWORD=<gitlab token>   # or: $(glab config get token --host git.aquaveo.com)
+tofu init
+tofu plan     # always read the plan before applying
+tofu apply
 ```
+
+GitLab keeps every state version (project > Operate > Terraform states), so an
+earlier one can be restored.
+
+Read the plan before every apply. Things it can show that aren't obvious:
+
+- The EKS add-ons use `most_recent = true`, so a plan upgrades any add-on AWS has
+  released a newer build of since the last apply, and the core node group rolls to
+  the newest AMI. Apply those in a maintenance window.
+- The cluster role (`module.ciroh_portal.module.eks.aws_iam_role.this[0]`) carries a
+  hand-added trust statement for an admin user that the EKS module can't express.
+  A full apply would remove it; skip it with
+  `tofu apply -exclude='module.ciroh_portal.module.eks.aws_iam_role.this[0]'`.
+- The EKS module makes the user who applies the cluster KMS key's administrator.
 
 In order to destroy de infrastructure run the following:
 
 ```bash
-terrafrom destroy
+tofu destroy
 ```
 
 After the first run, you will se the following errors:
@@ -75,20 +97,20 @@ After the first run, you will se the following errors:
 
 The contexty deadline is only a timeout error while the second indicated is related to two load balancers(internal and internet-facing) that were not deleted with the destruction of the tethys portal. You might need to go to the AWS dashboard and delete them manually.
 
-Run `terraform destroy` again, if the problem ios still the same delete the vpc manually and run again `terrafrom destroy`
+Run `tofu destroy` again, if the problem ios still the same delete the vpc manually and run again `tofu destroy`
 
 ## Configure kubectl
 
 `aws eks update-kubeconfig --name <cluster_name> --region <region> --profile <profile>`
 
-## Specify kubeconfig for Terraform
+## Specify kubeconfig for OpenTofu
 
 - Unix: KUBE_CONFIG_PATH=/path/to/kubeconfig
 - Powershell: $Env:KUBE_CONFIG_PATH=/path/to/kubeconfig
 
 ## TroubleShooting
 
-- When the `terraform destroy` command does not work in one run, it can be du to a couple of reasons:
+- When the `tofu destroy` command does not work in one run, it can be du to a couple of reasons:
   - The ALB ingress gets destroy before, so the ingresses of the Tethys portal do nto get deleted. You might need to delete them in the AWS dashboard --> EC2--> Load Balancers
   - The VPC cannot be deleted, This is also realted to the ALB ingress being deleted before (leaving the ingresses of the Tethys Portal hanging around after the creation) As a result, the VPC is still being used by these Load Balancers. Delete the Load Balancers, and then the VPC in the AWS dashboard
 - Deleting manually can sometimes cause the following error:

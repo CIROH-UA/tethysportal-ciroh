@@ -46,16 +46,17 @@ Arrows in the diagram emphasise that **portal Pods talk to PostgreSQL (durable) 
 
 ## Installation (on AWS)
 
-> **Terraform + EKS = easy reproducible infra**
+> **OpenTofu + EKS = easy reproducible infra**
 
 ### 1 · Prerequisites
 
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 * AWS credentials / named profile
   (`~/.aws/credentials`)
-* [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+* [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.9, and a git.aquaveo.com token for the
+  GitLab-managed state (see `terraform/README.md`)
 
-### 2 · Terraform Modules Structure
+### 2 · OpenTofu Modules Structure
 
 ```bash
 terraform/
@@ -134,18 +135,18 @@ In order to deploy the following commands can needs to be run:
 aws eks update-kubeconfig \
   --name <cluster_name> --region <region> --profile <profile>
 
-# 2 Terraform workflow
-terraform init
-terraform plan # review
-terraform apply #
+# 2 OpenTofu workflow (from terraform/prod; backend credentials in terraform/README.md)
+tofu init
+tofu plan # review
+tofu apply #
 
 # (dev only) clean-up afterwards
-terraform destroy
+tofu destroy
 ```
 
-If the environment is a development one: the following code needs to be run after the dev env has been tested: `terraform destroy`
+If the environment is a development one: the following code needs to be run after the dev env has been tested: `tofu destroy`
 
->**__NOTE__**: Terraform builds the infrastructure only (VPC, EKS, Karpenter, EFS, the load balancer controller). It does not deploy the portal: that is the `helm_deploy` workflow, below.
+>**__NOTE__**: OpenTofu builds the infrastructure only (VPC, EKS, Karpenter, EFS, the load balancer controller). It does not deploy the portal: that is the `helm_deploy` workflow, below.
 
 ### 4 · Upgrade Deployment only
 
@@ -172,7 +173,7 @@ More on this in the following [medium article](https://medium.com/nerd-for-tech/
 
 ### 5 · Troubleshooting
 
-- When the `terraform destroy` command does not work in one run, it can be du to a couple of reasons:
+- When the `tofu destroy` command does not work in one run, it can be du to a couple of reasons:
   - The ALB ingress gets destroy before, so the ingresses of the Tethys portal do nto get deleted. You might need to delete them in the AWS dashboard --> EC2--> Load Balancers
   - The VPC cannot be deleted, This is also realted to the ALB ingress being deleted before (leaving the ingresses of the Tethys Portal hanging around after the creation) As a result, the VPC is still being used by these Load Balancers. Delete the Load Balancers, and then the VPC in the AWS dashboard
 - Deleting manually can sometimes cause the following error:

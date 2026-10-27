@@ -62,13 +62,14 @@ data "aws_iam_policy_document" "efs_podidentity_trust" {
       values   = [data.aws_caller_identity.current.account_id]
     }
 
-    # Scope to *this* cluster’s Pod Identity associations
+    # Scope to *this* cluster’s Pod Identity associations, whose ARNs are
+    # podidentityassociation/<cluster>/a-... (no "cluster/" segment).
     # Note: use var.region (no deprecated data.aws_region.name)
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
       values = [
-        "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:podidentityassociation/cluster/${module.eks.cluster_name}/*"
+        "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:podidentityassociation/${module.eks.cluster_name}/*"
       ]
     }
   }
