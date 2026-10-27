@@ -48,17 +48,16 @@ Open an issue with one of the forms on the [New issue](../../issues/new/choose) 
 
 - **Update an app**: pick the app and the version (a branch, tag or commit; blank
   means the latest of the branch the portal tracks). When a maintainer adds the
-  `approved` label, a bot opens a PR that moves the app's submodule there
-  (`app_requests.yml`). CI builds the app's image on that PR, the bot pins the
-  new image in `deploy/<app>/values-prod.yaml` (`app_update_pin.yml`), and
-  `deploy_apps` dry-runs the upgrade. Merging the PR deploys it after the
-  `production` approval, and closes the issue.
+  `approved` label, one run of `app_requests.yml` moves the app's submodule
+  there, builds the image, pins it in `deploy/<app>/values-prod.yaml`, opens the
+  PR and dry-runs the upgrade, reporting on the PR. Merging the PR deploys it
+  after the `production` approval, and closes the issue.
 - **Add a new app**: describe the app and what it needs. The bot posts the setup
   checklist on the issue; a maintainer does the setup (some steps need an admin).
 
-The bot needs the `APP_REQUEST_TOKEN` secret (a GitHub App token or fine-grained
-PAT with contents and pull-requests write on this repo): pushes and PRs made with
-the built-in `GITHUB_TOKEN` don't trigger the build and dry-run workflows.
+The bot uses the built-in `GITHUB_TOKEN`; no extra secret is needed. It needs the
+labels `app-update`, `new-app` and `approved`. If the repo doesn't allow Actions to
+open pull requests, the bot posts a link for a maintainer to open it instead.
 
 ---
 
