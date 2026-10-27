@@ -22,7 +22,7 @@ terraform {
     }
   }
 
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.7.0"
 }
 
 
@@ -34,13 +34,20 @@ module "ciroh_portal" {
   cluster_name        = "ciroh-portal-prod"
   kubernetes_version  = "1.36"
   app_name            = "cirohportal"
-  helm_chart          = "ciroh"
-  helm_repo           = "https://docs.ciroh.org/tethysportal-ciroh"
-  helm_ci_path        = "../../charts/ciroh/ci"
   environment         = "prod"
   single_nat_gate_way = false
 }
 
+# The portal release is deployed by CI (helm_deploy.yml) now. Forget it, don't
+# uninstall it: without destroy = false the next apply would remove the portal.
+removed {
+  from = module.ciroh_portal.helm_release.tethysportal_helm_release
+  lifecycle {
+    destroy = false
+  }
+}
+
+# Created by hand on 2026-10-27; adopt it rather than create a second one.
 import {
   to = module.ciroh_portal.aws_vpc_endpoint.s3
   id = "vpce-0139ac1cfa57b0b32"

@@ -1,10 +1,7 @@
 
-
-## Commenting out this file has the same effect as targeting module.eks (see READMED.md)
-
-data "external" "helm-secrets" {
-  program = ["helm", "secrets", "decrypt", "--terraform", "${var.helm_ci_path}/secrets.yaml"]
-}
+# The portal itself (helm release cirohportal-prod) is deployed by CI
+# (.github/workflows/helm_deploy.yml) with its secrets in the pre-created
+# ciroh-portal-secrets Secret. Terraform only prepares the namespace and storage.
 
 resource "kubernetes_namespace" "tethysportal" {
 
@@ -32,27 +29,4 @@ resource "kubernetes_annotations" "default-storageclass" {
   annotations = {
     "storageclass.kubernetes.io/is-default-class" = "false"
   }
-}
-
-# Tethys portal 
-resource "helm_release" "tethysportal_helm_release" {
-  name              = "${var.app_name}-${var.environment}"
-  chart             = var.helm_chart
-  repository        = var.helm_repo
-  namespace         = var.app_name
-  timeout           = 3600
-  dependency_update = true
-  values = [
-    file("${var.helm_ci_path}/prod_aws_values.yaml"),
-    base64decode(data.external.helm-secrets.result.content_base64),
-  ]
-
-  set = [
-    {
-      name  = "storageClass.parameters.fileSystemId"
-      value = aws_efs_file_system.efs.id
-    }
-  ]
-
-   depends_on = [kubernetes_annotations.default-storageclass]
 }

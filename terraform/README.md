@@ -18,22 +18,14 @@
 region = "aws_region"
 profile = "aws_profile"
 cluster_name = "tethysportal-ciroh"
+kubernetes_version = "1.36"
 app_name = "tethysportal"
-helm_chart = "./helm_package.tgz"  # add helm package to working directory
-helm_values_file = "./values.yaml"  # add custom values.yaml to working directory
+environment = "prod"
+single_nat_gate_way = false
 ```
 
-or
-
-```yaml
-region = "aws_region"
-profile = "aws_profile"
-cluster_name = "tethysportal-ciroh"
-app_name = "tethysportal"
-helm_chart = "chart_name"
-helm_repo = "url_to_helm_repo"
-helm_values_file = "./values.yaml" # add custom values.yaml to working directory
-```
+Terraform builds the infrastructure only. The portal release is deployed by CI
+(`.github/workflows/helm_deploy.yml`), not by Terraform.
 
 ## How to Run
 

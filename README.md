@@ -89,9 +89,6 @@ region = "us-east-1"
 profile = "456531024327"
 cluster_name = "ciroh-portal-prod"
 app_name = "cirohportal"
-helm_chart = "ciroh"
-helm_repo = "https://docs.ciroh.org/tethysportal-ciroh"
-helm_ci_path = "../../charts/ciroh/ci"
 environment = "prod"
 single_nat_gate_way = false
 ```
@@ -148,26 +145,15 @@ terraform destroy
 
 If the environment is a development one: the following code needs to be run after the dev env has been tested: `terraform destroy`
 
->**__NOTE__**: When terrafrom is deployed. It deploys the tethys portal using the helm provider. You need to be careful to check the the paths `charts/ciroh/ci/prod_aws_values.yaml` and `charts/ciroh/ci/dev_aws_values.yaml` depending on the environment that you are deploying to. You might need to check that you are using the correct configuration (docker image, etc)
+>**__NOTE__**: Terraform builds the infrastructure only (VPC, EKS, Karpenter, EFS, the load balancer controller). It does not deploy the portal: that is the `helm_deploy` workflow, below.
 
 ### 4 · Upgrade Deployment only
 
-Once the deployment is completed, it is not necessary to deploy the whole infrastructure every time there is a change. If there is an update in the image that the portal is using the following command can be used:
+The portal release (`cirohportal-prod`, chart `charts/ciroh`) is deployed by CI. A release tag builds the image and runs `.github/workflows/helm_deploy.yml`, which upgrades the release with `charts/ciroh/ci/prod_aws_values.yaml` and takes its secrets from the pre-created `ciroh-portal-secrets` Secret. To deploy an existing image by hand, run that workflow with the image tag:
 
 ```bash
-# add the helm repo
-helm repo add tethysportal-ciroh https://docs.ciroh.org/tethysportal-ciroh
-
-helm upgrade cirohportal-prod tethysportal-ciroh/ciroh \
-  --install --wait --timeout 3600 \
-  -f charts/ciroh/ci/prod_aws_values.yaml \
-  --set storageClass.parameters.fileSystemId=<EFS_ID> \
-  --set image.tag=<newTag> \
-  --namespace cirohportal
+gh workflow run helm_deploy.yml -f image-tag=<newTag> -f dry-run=false
 ```
-
-
->** Remember:** You need to use the `--set storageClass.parameters.fileSystemId` to upgrade because it was not referenced when the chart was deployed with the terraform scripts. Therefore, you need to do it manually also for the upgrade. Similarly, in the values.yaml that you use you need to have `enabled: true` in the **StorageClass** section or it will produce an error.
 
 If you upgrade fails with the following error:
 
