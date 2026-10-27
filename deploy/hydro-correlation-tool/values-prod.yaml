@@ -1,6 +1,6 @@
 image:
   repository: awiciroh/tethysapp-hydro-correlation-tool
-  tag: db779dfe43d1f5df0d5958e325dc16ef1654de2d
+  tag: 3f0fe1c29a0606a1224fe5568e970529b1f4a60e
   pullPolicy: Always
 tethys:
   mode: single
