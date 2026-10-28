@@ -85,7 +85,8 @@ account still have the whole bucket, through `ciroh-portal-irsa`; to move one, c
 its data to `apps/<key>/`, change its values as above, deploy, and delete the old
 prefix once it works. When an app is removed, delete its association
 (`aws eks list-pod-identity-associations --cluster-name ciroh-portal-prod
---service-account <key>`, then `delete-pod-identity-association`) and its folder.
+--namespace cirohportal --service-account <key>`, then
+`delete-pod-identity-association`) and its folder.
 
 The bot uses the built-in `GITHUB_TOKEN`; no extra secret is needed. It needs the
 labels `app-update`, `new-app` and `approved`. If the repo doesn't allow Actions to
