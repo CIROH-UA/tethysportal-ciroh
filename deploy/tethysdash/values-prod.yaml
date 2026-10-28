@@ -17,9 +17,11 @@ s3Static:
   enabled: true
   bucket: ciroh-portal-assets
   region: us-east-1
+# Its own service account, linked by deploy-app to the apps S3 role (static/,
+# media/ and apps/tethysdash/), not the bucket-wide ciroh-portal one.
 serviceAccount:
-  create: false
-  name: ciroh-portal
+  create: true
+  name: tethysdash
 secrets:
   existingSecretName: ciroh-portal-secrets
   secretEnv:

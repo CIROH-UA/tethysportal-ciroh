@@ -23,10 +23,11 @@ tethys-app:
     enabled: true
     bucket: ciroh-portal-assets
     region: us-east-1
+  # Its own service account, linked by deploy-app to the apps S3 role (static/,
+  # media/ and apps/fimserve/), not the bucket-wide ciroh-portal one.
   serviceAccount:
-    create: false
-    name: ciroh-portal
-    roleArn: arn:aws:iam::456531024327:role/ciroh-portal-irsa
+    create: true
+    name: fimserve
   secrets:
     existingSecretName: ciroh-portal-secrets
     secretEnv:
@@ -73,7 +74,7 @@ tethys-app:
 
 dask:
   enabled: true
-  serviceAccountName: ciroh-portal
+  serviceAccountName: fimserve
   # Always on; idles at ~10m CPU / ~70Mi.
   scheduler:
     resources:
