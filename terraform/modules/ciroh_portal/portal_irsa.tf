@@ -5,7 +5,8 @@
 # still on this account (sweml) use:
 #   static/, media/  collectstatic and Django default storage (ngiab runs live in
 #                    media/ngiab_visualizer)
-#   usgs-mrms/       the portal's USGS-MRMS app reads its dataset there
+#   apps/usgs-mrms/  the portal's USGS-MRMS app reads its dataset from the
+#                    standalone app's folder
 #   858933856877     sweml assumes ciroh-portal-s3-reader for national-snow-model
 resource "aws_iam_role" "portal_irsa" {
   name = "ciroh-portal-irsa"
@@ -46,7 +47,7 @@ resource "aws_iam_policy" "portal_assets" {
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject"]
-        Resource = "arn:aws:s3:::${local.assets_bucket}/usgs-mrms/*"
+        Resource = "arn:aws:s3:::${local.assets_bucket}/apps/usgs-mrms/*"
       },
     ]
   })
