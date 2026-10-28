@@ -9,8 +9,9 @@ tethys:
   env:
     USGS_MRMS_S3_BUCKET:
       value: "ciroh-portal-assets"
+    # Its own folder; the dataset moved here from usgs-mrms/ in 2026-10.
     USGS_MRMS_S3_PREFIX:
-      value: "usgs-mrms"
+      value: "apps/usgs-mrms"
     USGS_MRMS_S3_REGION:
       value: "us-east-1"
     HYDRO_HISTORY_S3_PREFIX:
@@ -28,9 +29,11 @@ s3Static:
   enabled: true
   bucket: ciroh-portal-assets
   region: us-east-1
+# Its own service account, linked by deploy-app to the apps S3 role (static/,
+# media/ and apps/usgs-mrms/), not the bucket-wide ciroh-portal one.
 serviceAccount:
-  create: false
-  name: ciroh-portal
+  create: true
+  name: usgs-mrms
 resources:
   requests:
     cpu: 500m

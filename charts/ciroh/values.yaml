@@ -58,11 +58,11 @@ tethys:
     FIMSERVE_CACHE_MAX_GB:
       value: '3'
     # USGS-MRMS app: read data from the CIROH bucket via IRSA (no keys). The MRMS
-    # dataset was copied to ciroh-portal-assets under the usgs-mrms/ prefix.
+    # dataset lives in the standalone usgs-mrms app's folder, apps/usgs-mrms/.
     USGS_MRMS_S3_BUCKET:
       value: ciroh-portal-assets
     USGS_MRMS_S3_PREFIX:
-      value: usgs-mrms
+      value: apps/usgs-mrms
     USGS_MRMS_S3_REGION:
       value: us-east-1
     HYDRO_HISTORY_S3_PREFIX:
