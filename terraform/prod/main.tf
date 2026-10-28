@@ -35,7 +35,7 @@ module "ciroh_portal" {
   kubernetes_version  = "1.36"
   app_name            = "cirohportal"
   environment         = "prod"
-  single_nat_gate_way = false
+  single_nat_gate_way = true # one NAT (us-east-1a) for both private subnets; ~$37/mo less, no zone redundancy
 }
 
 # The portal release is deployed by CI (helm_deploy.yml) now. Forget it, don't
