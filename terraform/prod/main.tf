@@ -85,3 +85,24 @@ import {
   to = module.ciroh_portal.kubernetes_service_account_v1.alb_sa
   id = "kube-system/aws-load-balancer-controller"
 }
+
+# The portal's IRSA role and its policies, made by hand in 2025; adopt them.
+import {
+  to = module.ciroh_portal.aws_iam_role.portal_irsa
+  id = "ciroh-portal-irsa"
+}
+
+import {
+  to = module.ciroh_portal.aws_iam_policy.portal_assets
+  id = "arn:aws:iam::456531024327:policy/ciroh-portal-assets-rw"
+}
+
+import {
+  to = module.ciroh_portal.aws_iam_role_policy_attachment.portal_assets
+  id = "ciroh-portal-irsa/arn:aws:iam::456531024327:policy/ciroh-portal-assets-rw"
+}
+
+import {
+  to = module.ciroh_portal.aws_iam_role_policy.portal_s3_reader
+  id = "ciroh-portal-irsa:s3-reader-assume"
+}
