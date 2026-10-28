@@ -41,6 +41,9 @@ runs:
         values="deploy/$APP/values-prod.yaml"
         image=$(yq -r '(.image // .["tethys-app"].image) | .repository + ":" + .tag' "$values")
         echo "Image: $image"
+        # The cluster pulls through the ECR cache (<registry>/docker-hub/<repo>);
+        # check the Docker Hub image behind it.
+        image=${image#*.amazonaws.com/docker-hub/}
         if ! docker manifest inspect "$image" > /dev/null; then
           echo "::error::$image is not on Docker Hub. Point $values at a tag build_push_app_images built."
           exit 1

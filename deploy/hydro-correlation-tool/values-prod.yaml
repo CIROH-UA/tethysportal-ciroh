@@ -1,5 +1,5 @@
 image:
-  repository: awiciroh/tethysapp-hydro-correlation-tool
+  repository: 456531024327.dkr.ecr.us-east-1.amazonaws.com/docker-hub/awiciroh/tethysapp-hydro-correlation-tool
   tag: 3f0fe1c29a0606a1224fe5568e970529b1f4a60e
   pullPolicy: Always
 tethys:

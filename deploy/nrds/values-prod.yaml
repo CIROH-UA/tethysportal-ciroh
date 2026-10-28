@@ -1,5 +1,5 @@
 image:
-  repository: awiciroh/tethysapp-nrds
+  repository: 456531024327.dkr.ecr.us-east-1.amazonaws.com/docker-hub/awiciroh/tethysapp-nrds
   tag: db779dfe43d1f5df0d5958e325dc16ef1654de2d
   pullPolicy: Always
 tethys:
