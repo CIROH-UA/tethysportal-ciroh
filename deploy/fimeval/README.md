@@ -69,7 +69,9 @@ These live in the app database, so set them once per fresh database. Either use
 Site Admin, App Settings, FIMeval GUI, or the CLI.
 
 1. Custom setting `s3_bucket` = `ciroh-portal-assets` (S3 credentials stay blank so
-   IRSA is used).
+   the pods use the `fimeval` service account's Pod Identity credentials). Uploads
+   and results live under `apps/fimeval/` (`FIMEVAL_S3_KEY_PREFIX`); before
+   2026-10 they were under `fimeval/`.
 2. A Dask scheduler pointing at the in cluster scheduler, linked to the app's
    `dask_primary` scheduler setting. Give it a positive `timeout` (for example 60);
    a zero timeout triggers a Tethys client init error.

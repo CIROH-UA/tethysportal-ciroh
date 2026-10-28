@@ -7,9 +7,9 @@ tethys-app:
     mode: single
     standaloneApp: fimeval_gui
     env:
-      # Prod data predates the configurable prefix and lives under fimeval/.
+      # The app's own folder (see "Files on S3" in the top-level README).
       FIMEVAL_S3_KEY_PREFIX:
-        value: fimeval/
+        value: apps/fimeval/
     initContainers:
       waitForDb: false
   externalDatabase:
@@ -23,9 +23,11 @@ tethys-app:
     enabled: true
     bucket: ciroh-portal-assets
     region: us-east-1
+  # Its own service account, linked by deploy-app to the apps S3 role: read/write
+  # on ciroh-portal-assets/apps/fimeval/ only (plus static/ and media/).
   serviceAccount:
-    create: false
-    name: ciroh-portal
+    create: true
+    name: fimeval
   secrets:
     existingSecretName: ciroh-portal-secrets
     secretEnv:
@@ -76,7 +78,7 @@ tethys-app:
       memory: 512Mi
 
 dask:
-  serviceAccountName: ciroh-portal
+  serviceAccountName: fimeval
   # Always on; idles at ~10m CPU / ~70Mi.
   scheduler:
     resources:
@@ -86,4 +88,4 @@ dask:
       karpenter.sh/capacity-type: spot
     env:
       FIMEVAL_TARGET_CRS: EPSG:5070
-      FIMEVAL_S3_KEY_PREFIX: fimeval/
+      FIMEVAL_S3_KEY_PREFIX: apps/fimeval/
