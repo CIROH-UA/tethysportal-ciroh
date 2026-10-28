@@ -2,7 +2,8 @@ name: deploy-app
 description: >
   helm upgrade one standalone app (deploy/<app>) on ciroh-portal-prod and apply its
   ingress, or do both as a server-side dry run. Expects AWS_REGION, CLUSTER_NAME,
-  NAMESPACE, TETHYS_APP_CHART and TETHYS_APP_CHART_VERSION in the job env.
+  NAMESPACE, TETHYS_APP_CHART, TETHYS_APP_CHART_VERSION and APPS_S3_ROLE_ARN in the
+  job env.
 inputs:
   app:
     description: App key (deploy/<app>)
@@ -47,6 +48,53 @@ runs:
         if ! docker manifest inspect "$image" > /dev/null; then
           echo "::error::$image is not on Docker Hub. Point $values at a tag build_push_app_images built."
           exit 1
+        fi
+
+    - name: Link the app's service account to the apps S3 role
+      shell: bash
+      env:
+        APP: ${{ inputs.app }}
+        DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        set -euo pipefail
+        # An app with its own service account (serviceAccount.create: true) gets
+        # read/write on ciroh-portal-assets/apps/<service account>/ through the
+        # shared apps role; apps on the shared ciroh-portal account are skipped.
+        values="deploy/$APP/values-prod.yaml"
+        sa=$(yq -r '(.serviceAccount // .["tethys-app"].serviceAccount) | select(.create == true) | .name // ""' "$values")
+        [ -n "$sa" ] || { echo "No own service account"; exit 0; }
+        # The name decides the S3 folder, so an app can only have its own.
+        if [ "$sa" != "$APP" ]; then
+          echo "::error::$values: serviceAccount.name must be $APP (it names the app's S3 folder)"
+          exit 1
+        fi
+        assoc=$(aws eks list-pod-identity-associations --cluster-name "$CLUSTER_NAME" \
+          --namespace "$NAMESPACE" --service-account "$sa" \
+          --query 'associations[0].associationId' --output text)
+        if [ "$assoc" != "None" ]; then
+          role=$(aws eks describe-pod-identity-association --cluster-name "$CLUSTER_NAME" \
+            --association-id "$assoc" --query association.roleArn --output text)
+          if [ "$role" != "$APPS_S3_ROLE_ARN" ]; then
+            echo "::error::$NAMESPACE/$sa is linked to $role, not $APPS_S3_ROLE_ARN. An admin set that up; leave it or remove it by hand."
+            exit 1
+          fi
+          echo "$sa is linked to the apps role (S3 folder apps/$sa/)"
+        elif [ "$DRY_RUN" = "true" ]; then
+          echo "The deploy will link $sa to the apps role (S3 folder apps/$sa/)"
+        else
+          aws eks create-pod-identity-association --cluster-name "$CLUSTER_NAME" \
+            --namespace "$NAMESPACE" --service-account "$sa" --role-arn "$APPS_S3_ROLE_ARN" > /dev/null
+          echo "Linked $sa to the apps role (S3 folder apps/$sa/)"
+        fi
+        [ "$DRY_RUN" = "true" ] && exit 0
+        # Pods get Pod Identity credentials only if the link exists when they start,
+        # and the provision job (a pre-upgrade hook) starts before Helm creates the
+        # service account. Create it now with Helm's ownership marks so Helm adopts it.
+        if ! kubectl -n "$NAMESPACE" get serviceaccount "$sa" > /dev/null 2>&1; then
+          kubectl -n "$NAMESPACE" create serviceaccount "$sa"
+          kubectl -n "$NAMESPACE" label serviceaccount "$sa" app.kubernetes.io/managed-by=Helm
+          kubectl -n "$NAMESPACE" annotate serviceaccount "$sa" \
+            meta.helm.sh/release-name="$APP" meta.helm.sh/release-namespace="$NAMESPACE"
         fi
 
     - name: helm upgrade
