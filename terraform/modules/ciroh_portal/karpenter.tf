@@ -13,6 +13,7 @@ module "karpenter" {
   
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    ecr_pull_through             = aws_iam_policy.ecr_pull_through.arn
   }
 
   tags = {

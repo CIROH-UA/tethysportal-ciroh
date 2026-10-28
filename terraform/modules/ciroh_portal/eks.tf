@@ -53,6 +53,9 @@ module "eks" {
       ami_type       = "BOTTLEROCKET_x86_64"
       disk_size                  = 40
       iam_role_attach_cni_policy = false
+      iam_role_additional_policies = {
+        ecr_pull_through = aws_iam_policy.ecr_pull_through.arn
+      }
       labels = {
         # Used to ensure Karpenter runs on nodes that it does not manage
         "karpenter.sh/controller" = "true"
