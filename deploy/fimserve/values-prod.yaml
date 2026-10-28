@@ -1,7 +1,7 @@
 tethys-app:
   fullnameOverride: fimserve
   image:
-    repository: awiciroh/tethysapp-fimserve
+    repository: 456531024327.dkr.ecr.us-east-1.amazonaws.com/docker-hub/awiciroh/tethysapp-fimserve
     tag: "332ba8e66971ee00bd273c0df8ef7e93bd89d4e2"
     pullPolicy: Always
   tethys:
