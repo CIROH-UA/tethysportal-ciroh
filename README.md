@@ -55,6 +55,38 @@ Open an issue with one of the forms on the [New issue](../../issues/new/choose) 
 - **Add a new app**: describe the app and what it needs. The bot posts the setup
   checklist on the issue; a maintainer does the setup (some steps need an admin).
 
+#### Files on S3
+
+An app that keeps its own files gets a private folder,
+`s3://ciroh-portal-assets/apps/<key>/`, with no IAM change per app. In its
+`values-prod.yaml` (under `tethys-app:` for an app with its own chart):
+
+```yaml
+serviceAccount:
+  create: true
+  name: <key>          # must be the app key: it names the folder
+tethys:
+  env:
+    APP_S3_BUCKET: { value: ciroh-portal-assets }
+    APP_S3_PREFIX: { value: apps/<key>/ }
+```
+
+and the Dask scheduler and workers, if any, use `serviceAccountName: <key>`.
+On the first deploy, `deploy-app` links the service account to the
+`ciroh-portal-prod-apps-s3` role with an EKS Pod Identity association. Pod Identity
+tags the app's credentials with its service account name, and the role's policy
+(`terraform/modules/ciroh_portal/apps_s3.tf`) allows read, write and delete on
+`apps/${service account}/*` only, plus `static/` and `media/` for `collectstatic`,
+and listing key names. The app uses boto3 with no keys (botocore 1.34 or newer).
+
+Data outside its folder (another app's files, a bucket in another account) is an
+admin's job: a statement for that app. Apps on the shared `ciroh-portal` service
+account still have the whole bucket, through `ciroh-portal-irsa`; to move one, copy
+its data to `apps/<key>/`, change its values as above, deploy, and delete the old
+prefix once it works. When an app is removed, delete its association
+(`aws eks list-pod-identity-associations --cluster-name ciroh-portal-prod
+--service-account <key>`, then `delete-pod-identity-association`) and its folder.
+
 The bot uses the built-in `GITHUB_TOKEN`; no extra secret is needed. It needs the
 labels `app-update`, `new-app` and `approved`. If the repo doesn't allow Actions to
 open pull requests, the bot posts a link for a maintainer to open it instead.

@@ -21,3 +21,8 @@ output "cluster_oidc_provider_arn" {
 output "cluster_name" {
   value = module.eks.cluster_name
 }
+
+output "apps_s3_role_arn" {
+  description = "Pod Identity role deploy-app links app service accounts to (APPS_S3_ROLE_ARN in deploy_apps.yml)."
+  value       = aws_iam_role.apps_s3.arn
+}

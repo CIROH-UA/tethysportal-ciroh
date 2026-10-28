@@ -44,7 +44,8 @@ body:
       label: What the app needs
       options:
         - label: A database (persistent stores)
-        - label: Files on S3
+        - label: Its own files on S3 (a private folder it reads and writes)
+        - label: Other S3 data (another app's files, a public dataset, a bucket elsewhere)
         - label: Background compute (Dask)
         - label: API keys or other secrets
         - label: System packages beyond Python (for example GDAL)
@@ -53,7 +54,7 @@ body:
     id: details
     attributes:
       label: Details for the boxes above
-      description: Store names and initializers, buckets, which keys, packages, build commands.
+      description: Store names and initializers, which S3 data and whether it writes there, which keys, packages, build commands.
   - type: input
     id: contact
     attributes:

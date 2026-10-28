@@ -39,6 +39,8 @@ env:
   NAMESPACE: cirohportal
   TETHYS_APP_CHART: oci://ghcr.io/aquaveo/charts/tethys-app
   TETHYS_APP_CHART_VERSION: 0.1.5
+  # Pod Identity role for apps with their own S3 folder (terraform apps_s3.tf)
+  APPS_S3_ROLE_ARN: arn:aws:iam::456531024327:role/ciroh-portal-prod-apps-s3
 
 jobs:
   changes:

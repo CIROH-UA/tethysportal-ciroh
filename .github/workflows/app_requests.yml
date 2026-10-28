@@ -51,6 +51,8 @@ jobs:
           - [ ] Portal OIDC client for the subdomain; keys in `ciroh-portal-secrets` (admin)
           - [ ] Other secrets in `ciroh-portal-secrets` (admin)
           - [ ] `deploy/<key>/values-prod.yaml` and `ingress.yaml`
+          - [ ] Own S3 folder (if asked): `serviceAccount: {create: true, name: <key>}` and `APP_S3_PREFIX: apps/<key>/` in values-prod.yaml; the first deploy links the role (README, Files on S3)
+          - [ ] Other S3 data (if asked): an IAM statement for it (admin)
           - [ ] Add the app to `.github/ISSUE_TEMPLATE/update-app.yml`
           - [ ] Merge, approve the deploy, and sign in at the subdomain
           EOF
@@ -281,6 +283,8 @@ jobs:
       NAMESPACE: cirohportal
       TETHYS_APP_CHART: oci://ghcr.io/aquaveo/charts/tethys-app
       TETHYS_APP_CHART_VERSION: 0.1.5
+      # Pod Identity role for apps with their own S3 folder (terraform apps_s3.tf)
+      APPS_S3_ROLE_ARN: arn:aws:iam::456531024327:role/ciroh-portal-prod-apps-s3
     steps:
       - uses: actions/checkout@v4
         with:
