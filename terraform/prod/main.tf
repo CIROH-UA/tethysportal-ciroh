@@ -58,3 +58,30 @@ import {
   to = module.ciroh_portal.kubernetes_storage_class_v1.gp3
   id = "gp3"
 }
+
+# kubernetes_service_account and kubernetes_namespace are deprecated. Switch to the
+# _v1 types by forgetting the old entries (keeping the objects) and adopting them
+# again; no object is changed.
+removed {
+  from = module.ciroh_portal.kubernetes_namespace.tethysportal
+  lifecycle {
+    destroy = false
+  }
+}
+
+import {
+  to = module.ciroh_portal.kubernetes_namespace_v1.tethysportal["cirohportal"]
+  id = "cirohportal"
+}
+
+removed {
+  from = module.ciroh_portal.kubernetes_service_account.alb_sa
+  lifecycle {
+    destroy = false
+  }
+}
+
+import {
+  to = module.ciroh_portal.kubernetes_service_account_v1.alb_sa
+  id = "kube-system/aws-load-balancer-controller"
+}

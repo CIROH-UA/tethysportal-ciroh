@@ -14,7 +14,7 @@ module "alb_irsa" {
   }
 }
 
-resource "kubernetes_service_account" "alb_sa" {
+resource "kubernetes_service_account_v1" "alb_sa" {
   metadata {
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"

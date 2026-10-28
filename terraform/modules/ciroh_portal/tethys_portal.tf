@@ -3,7 +3,7 @@
 # (.github/workflows/helm_deploy.yml) with its secrets in the pre-created
 # ciroh-portal-secrets Secret. Terraform only prepares the namespace and storage.
 
-resource "kubernetes_namespace" "tethysportal" {
+resource "kubernetes_namespace_v1" "tethysportal" {
 
   for_each = toset([var.app_name])
   metadata {
