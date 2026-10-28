@@ -11,9 +11,9 @@ name: deploy_apps
 # `production` environment. Manual dispatch deploys the listed apps.
 #
 # Apps with a chart in deploy/<app>/chart (FIMeval, FIMserve) also run a Dask
-# cluster. The Dask operator doesn't replace running scheduler/worker pods when
-# the image changes, so when it changed the cluster is deleted and the release
-# upgraded again to recreate it.
+# cluster. The Dask operator applies only worker-count changes to a running
+# cluster, so when anything else in its spec changed (image, resources, env) the
+# deploy deletes the cluster and upgrades the release again to recreate it.
 #
 # The portal itself (charts/ciroh) is deployed by helm_deploy.yml.
 

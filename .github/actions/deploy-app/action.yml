@@ -72,20 +72,32 @@ runs:
           exit 0
         fi
 
-        # The Dask operator doesn't roll its pods on an image change; note the
-        # image before the upgrade to tell whether the cluster must be recreated.
+        # The Dask operator builds the scheduler and workers when a DaskCluster is
+        # created and applies only worker-count changes after that, so any other
+        # spec change (image, resources, env, args) means recreating the cluster.
+        # Compare the spec without the worker count before and after the upgrade.
         dask="$APP-dask"
-        dask_image() {
-          kubectl -n "$NAMESPACE" get daskcluster "$dask" \
-            -o jsonpath='{.spec.worker.spec.containers[0].image}' 2>/dev/null || true
+        dask_spec() {
+          kubectl -n "$NAMESPACE" get daskcluster "$dask" -o json 2>/dev/null \
+            | jq -cS '.spec | del(.worker.replicas)' || true
         }
-        before=$(dask_image)
+        before=$(dask_spec)
         upgrade
-        after=$(dask_image)
+        after=$(dask_spec)
         if [ -n "$before" ] && [ "$before" != "$after" ]; then
-          echo "Dask image changed ($before -> $after); recreating $dask"
-          kubectl -n "$NAMESPACE" delete daskcluster "$dask" --wait
+          # Name the changed parts only; the spec holds env values.
+          changed=$(jq -rn --argjson a "$before" --argjson b "$after" \
+            '[$a, $b | keys[]] | unique | map(select($a[.] != $b[.])) | join(", ")')
+          echo "$dask changed ($changed); recreating it"
+          kubectl -n "$NAMESPACE" delete daskcluster "$dask" --wait --timeout=5m
+          # Helm creates the missing DaskCluster again; then wait for the operator
+          # to bring up the new scheduler.
           upgrade
+          for _ in $(seq 60); do
+            kubectl -n "$NAMESPACE" get deploy "$dask-scheduler" > /dev/null 2>&1 && break
+            sleep 5
+          done
+          kubectl -n "$NAMESPACE" rollout status deploy "$dask-scheduler" --timeout=10m
         fi
         helm -n "$NAMESPACE" status "$APP" | head -8
 
