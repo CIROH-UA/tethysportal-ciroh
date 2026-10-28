@@ -3,8 +3,8 @@
 # Identity tags the credentials with the service account's name, so this one policy
 # gives each app its own folder: ciroh-portal-assets/apps/<service account>/.
 #
-# Apps on the shared ciroh-portal service account (IRSA role ciroh-portal-irsa,
-# made by hand) keep their access to the whole bucket until they move.
+# The portal itself, and apps that still run as its ciroh-portal service account,
+# use ciroh-portal-irsa (portal_irsa.tf).
 locals {
   assets_bucket = "ciroh-portal-assets"
   own_folder    = "apps/$${aws:PrincipalTag/kubernetes-service-account}"
