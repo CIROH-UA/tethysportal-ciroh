@@ -54,19 +54,20 @@ Open an issue with one of the forms on the [New issue](../../issues/new/choose) 
   after the `production` approval, and closes the issue.
 - **Add a new app**: describe the app and what it needs. The bot posts the setup
   checklist on the issue; a maintainer does the setup (some steps need an admin).
+  For files on S3, see below.
 
 #### Files on S3
 
-An app that keeps its own files gets a private folder,
-`s3://ciroh-portal-assets/apps/<key>/`, with no IAM change per app. In its
-`values-prod.yaml` (under `tethys-app:` for an app with its own chart):
+Every app runs as its own service account, named after the app key, and gets a
+private folder, `s3://ciroh-portal-assets/apps/<key>/`, with no IAM change per app.
+In its `values-prod.yaml` (under `tethys-app:` for an app with its own chart):
 
 ```yaml
 serviceAccount:
   create: true
   name: <key>          # must be the app key: it names the folder
 tethys:
-  env:
+  env:               # only if the app keeps files on S3
     APP_S3_BUCKET: { value: ciroh-portal-assets }
     APP_S3_PREFIX: { value: apps/<key>/ }
 ```
@@ -76,14 +77,27 @@ On the first deploy, `deploy-app` links the service account to the
 `ciroh-portal-prod-apps-s3` role with an EKS Pod Identity association. Pod Identity
 tags the app's credentials with its service account name, and the role's policy
 (`terraform/modules/ciroh_portal/apps_s3.tf`) allows read, write and delete on
-`apps/${service account}/*` only, plus `static/` and `media/` for `collectstatic`,
-and listing key names. The app uses boto3 with no keys (botocore 1.34 or newer).
+`apps/${service account}/*` only, plus `static/` and `media/` (`collectstatic` and
+Django's default storage; both are publicly readable) and listing key names.
+`deploy-app` refuses an app on the portal's `ciroh-portal` service account, which
+has more access; only sweml uses it (its data is in another account, whose role
+trusts only the portal's).
 
-Data outside its folder (another app's files, a bucket in another account) is an
-admin's job: a statement for that app. Apps on the shared `ciroh-portal` service
-account still have the whole bucket, through `ciroh-portal-irsa`; to move one, copy
-its data to `apps/<key>/`, change its values as above, deploy, and delete the old
-prefix once it works. When an app is removed, delete its association
+In the app's code, no keys: boto3 (botocore 1.34.41 or newer), GDAL's `/vsis3/`
+(3.10 or newer) and DuckDB's `credential_chain` provider all find the Pod Identity
+credentials themselves.
+
+```python
+import os, boto3
+s3 = boto3.client("s3")
+s3.put_object(Bucket=os.environ["APP_S3_BUCKET"],
+              Key=os.environ["APP_S3_PREFIX"] + "results/out.csv", Body=data)
+```
+
+Data outside its folder is an admin's job. Read-only access to another prefix of
+the bucket is one line in `app_extra_read` (`apps_s3.tf`, then `tofu apply` before
+the app deploys); anything else (writes, a bucket in another account) needs its own
+statement or role. When an app is removed, delete its association
 (`aws eks list-pod-identity-associations --cluster-name ciroh-portal-prod
 --namespace cirohportal --service-account <key>`, then
 `delete-pod-identity-association`) and its folder.
