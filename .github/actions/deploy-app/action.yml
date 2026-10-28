@@ -57,12 +57,23 @@ runs:
         DRY_RUN: ${{ inputs.dry-run }}
       run: |
         set -euo pipefail
-        # An app with its own service account (serviceAccount.create: true) gets
-        # read/write on ciroh-portal-assets/apps/<service account>/ through the
-        # shared apps role; apps on the shared ciroh-portal account are skipped.
+        # Every app runs as its own service account (serviceAccount.create: true,
+        # named after the app), which gets read/write on
+        # ciroh-portal-assets/apps/<app>/ through the shared apps role. Only sweml
+        # may share the portal's ciroh-portal account: its data is in another AWS
+        # account, whose role trusts only the portal's.
         values="deploy/$APP/values-prod.yaml"
-        sa=$(yq -r '(.serviceAccount // .["tethys-app"].serviceAccount) | select(.create == true) | .name // ""' "$values")
-        [ -n "$sa" ] || { echo "No own service account"; exit 0; }
+        account='(.serviceAccount // .["tethys-app"].serviceAccount)'
+        create=$(yq -r "$account | .create // \"unset\"" "$values")
+        sa=$(yq -r "$account | .name // \"\"" "$values")
+        if [ "$create" != "true" ]; then
+          if [ "$APP" = sweml ] && [ "$sa" = ciroh-portal ]; then
+            echo "Shares the portal's ciroh-portal service account"
+            exit 0
+          fi
+          echo "::error::$values: give $APP its own service account (serviceAccount: {create: true, name: $APP}); see Files on S3 in the README"
+          exit 1
+        fi
         # The name decides the S3 folder, so an app can only have its own.
         if [ "$sa" != "$APP" ]; then
           echo "::error::$values: serviceAccount.name must be $APP (it names the app's S3 folder)"

@@ -59,6 +59,19 @@ body:
         - "Not sure"
     validations:
       required: true
+  - type: dropdown
+    id: s3
+    attributes:
+      label: Does it change what the app needs on S3?
+      description: >
+        Every app can read and write its own folder (APP_S3_PREFIX) once a maintainer
+        sets the two variables; data anywhere else needs an admin.
+      options:
+        - "No"
+        - "It starts keeping its own files on S3"
+        - "It needs other S3 data (describe below)"
+    validations:
+      required: true
   - type: textarea
     id: settings
     attributes:

@@ -44,8 +44,8 @@ body:
       label: What the app needs
       options:
         - label: A database (persistent stores)
-        - label: Its own files on S3 (a private folder it reads and writes)
-        - label: Other S3 data (another app's files, a public dataset, a bucket elsewhere)
+        - label: Its own files on S3 (a private folder it reads and writes; set up by the deploy)
+        - label: Other S3 data (another app's files, a dataset elsewhere, a bucket in another account; needs an admin)
         - label: Background compute (Dask)
         - label: API keys or other secrets
         - label: System packages beyond Python (for example GDAL)
@@ -54,7 +54,19 @@ body:
     id: details
     attributes:
       label: Details for the boxes above
-      description: Store names and initializers, which S3 data and whether it writes there, which keys, packages, build commands.
+      description: >
+        Store names and initializers; for S3, roughly how much data, whether anything
+        must be public, and for other data the bucket, prefix and whether it writes
+        there; which keys, packages, build commands.
+  - type: markdown
+    attributes:
+      value: |
+        **Files on S3.** The app gets a private folder in the portal's bucket and two
+        environment variables, `APP_S3_BUCKET` and `APP_S3_PREFIX` (`apps/<app>/`).
+        Use them with no access keys: boto3 (botocore 1.34.41+), GDAL `/vsis3/`
+        (3.10+) and DuckDB's `credential_chain` pick up the credentials themselves.
+        Django media (`default_storage`) goes to the shared, publicly readable
+        `media/`; keep private files under `APP_S3_PREFIX` instead.
   - type: input
     id: contact
     attributes:

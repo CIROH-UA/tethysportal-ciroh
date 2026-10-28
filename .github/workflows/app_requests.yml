@@ -50,9 +50,9 @@ jobs:
           - [ ] Database `tethys_platform_<key>` on RDS (admin)
           - [ ] Portal OIDC client for the subdomain; keys in `ciroh-portal-secrets` (admin)
           - [ ] Other secrets in `ciroh-portal-secrets` (admin)
-          - [ ] `deploy/<key>/values-prod.yaml` and `ingress.yaml`
-          - [ ] Own S3 folder (if asked): `serviceAccount: {create: true, name: <key>}` and `APP_S3_PREFIX: apps/<key>/` in values-prod.yaml; the first deploy links the role (README, Files on S3)
-          - [ ] Other S3 data (if asked): an IAM statement for it (admin)
+          - [ ] `deploy/<key>/values-prod.yaml` and `ingress.yaml`, with `serviceAccount: {create: true, name: <key>}` (and `serviceAccountName: <key>` for Dask); the first deploy links it to the apps S3 role
+          - [ ] Own files on S3 (if asked): `APP_S3_BUCKET: ciroh-portal-assets` and `APP_S3_PREFIX: apps/<key>/` in the env (README, Files on S3)
+          - [ ] Other S3 data (if asked): a read-only prefix in `app_extra_read` (terraform `apps_s3.tf`, applied before the deploy), else its own statement or role (admin)
           - [ ] Add the app to `.github/ISSUE_TEMPLATE/update-app.yml`
           - [ ] Merge, approve the deploy, and sign in at the subdomain
           EOF
@@ -72,6 +72,7 @@ jobs:
       changed: ${{ steps.bump.outputs.changed }}
       app: ${{ steps.req.outputs.app }}
       ref: ${{ steps.req.outputs.ref }}
+      s3: ${{ steps.req.outputs.s3 }}
       branch: ${{ steps.push.outputs.branch }}
       sha: ${{ steps.push.outputs.sha }}
       changelog: ${{ steps.bump.outputs.changelog }}
@@ -199,6 +200,7 @@ jobs:
       BRANCH: ${{ needs.prepare.outputs.branch }}
       SHA: ${{ needs.prepare.outputs.sha }}
       CHANGELOG: ${{ needs.prepare.outputs.changelog }}
+      S3: ${{ needs.prepare.outputs.s3 }}
     outputs:
       sha: ${{ steps.pin.outputs.sha }}
       pr: ${{ steps.pr.outputs.pr }}
@@ -249,6 +251,10 @@ jobs:
             printf '%s\n' "$CHANGELOG"
             echo "The image \`awiciroh/…:${SHA:0:7}\` was built and pinned in \`deploy/$APP/values-prod.yaml\` by [this run]($run_url), which then dry-runs the upgrade and reports here."
             echo
+            case "$S3" in
+              own) echo "**S3:** the request says the app now keeps its own files on S3. Before merging, add \`APP_S3_BUCKET\` and \`APP_S3_PREFIX: apps/$APP/\` to its env in this PR (README, Files on S3)."; echo ;;
+              other) echo "**S3:** the request says the app needs S3 data outside its folder (see the issue). An admin adds it (\`app_extra_read\` or its own statement) and applies it before this deploys."; echo ;;
+            esac
             echo "This PR was opened by the built-in token, so its own checks don't start; the run above is its build and dry run. Review the changes and the issue's notes (database, settings) before merging. Merging deploys it after the production approval."
             echo
             echo "Closes #$ISSUE"
