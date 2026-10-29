@@ -13,6 +13,9 @@ module "karpenter" {
   service_account = "karpenter"
 
   create_iam_role = true
+  # The controller policy for 1.15 is over the 6,144-character limit of a managed
+  # IAM policy (LimitExceeded); an inline role policy allows 10,240.
+  enable_inline_policy = true
 
   create_instance_profile = true
 
