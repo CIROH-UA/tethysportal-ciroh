@@ -1,6 +1,6 @@
 image:
   repository: 456531024327.dkr.ecr.us-east-1.amazonaws.com/docker-hub/awiciroh/tethysapp-tethysdash
-  tag: db779dfe43d1f5df0d5958e325dc16ef1654de2d
+  tag: c017cc832fde6245b8378f91f2e5f2f3b7e46e71
   pullPolicy: Always
 tethys:
   mode: single
