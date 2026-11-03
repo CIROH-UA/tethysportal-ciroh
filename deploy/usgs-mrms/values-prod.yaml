@@ -34,10 +34,11 @@ s3Static:
 serviceAccount:
   create: true
   name: usgs-mrms
+# Idles at ~340Mi (measured 2026-11-02); the 8Gi limit covers its raster reads.
 resources:
   requests:
-    cpu: 500m
-    memory: 2Gi
+    cpu: 250m
+    memory: 1Gi
   limits:
     memory: 8Gi
 secrets:
