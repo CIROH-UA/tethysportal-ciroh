@@ -71,6 +71,8 @@ portalConfig:
 scaleToZero:
   enabled: true
   hosts: ["fimbench.tethys.ciroh.org"]
+  # One replica stays up so users skip the cold start (~$3.5-4/mo at 250m/512Mi).
+  minReplicas: 1
   maxReplicas: 2
   scaledownPeriod: 300
 pdb:
