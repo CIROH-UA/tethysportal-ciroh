@@ -70,11 +70,12 @@ scaleToZero:
 pdb:
   enabled: true
 
+# It idles at ~1.5Gi (measured 2026-11-02), so it requests that and has room above.
 resources:
   requests:
     cpu: 250m
-    memory: 512Mi
+    memory: 1536Mi
     ephemeral-storage: 2Gi
   limits:
-    memory: 2Gi
+    memory: 3Gi
     ephemeral-storage: 4Gi
