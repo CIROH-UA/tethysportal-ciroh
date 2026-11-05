@@ -1,6 +1,6 @@
 image:
   repository: 456531024327.dkr.ecr.us-east-1.amazonaws.com/docker-hub/awiciroh/tethysapp-fimbench
-  tag: 3267673ee096617150de9e3f2b73b73357214010
+  tag: 7fe877e182b051e844bbec4bf684379a2ee2c6ba
   pullPolicy: Always
 tethys:
   mode: single

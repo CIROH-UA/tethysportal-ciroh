@@ -24,9 +24,13 @@ COPY apps/fimbench ${TETHYS_HOME}/apps/fimbench
 # The React bundle also hardcodes '/static/fimbench_gui/' image paths (logo, docs,
 # CSS backgrounds) as app-origin URLs, but static is served from S3 under
 # s3Static, so those 404. Rewrite them to the S3 static base in the built output.
+#
+# The "evaluate in FIMeval" handoff links to FIMeval's own host. Vite bakes
+# VITE_FIMEVAL_ORIGIN into the bundle at build time, so changing it means a rebuild.
 ARG STATIC_BASE=https://ciroh-portal-assets.s3.amazonaws.com/static
+ARG VITE_FIMEVAL_ORIGIN=https://fimeval.tethys.ciroh.org
 RUN --mount=type=cache,target=/cache/uv --mount=type=cache,target=/cache/npm \
-    cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && npm run build -- --base=/ \
+    cd ${TETHYS_HOME}/apps/fimbench/reactapp && npm install && VITE_FIMEVAL_ORIGIN=${VITE_FIMEVAL_ORIGIN} npm run build -- --base=/ \
     && find ../tethysapp/fimbench_gui/public/frontend -type f \( -name '*.js' -o -name '*.css' \) -print0 \
        | xargs -0 sed -i "s#/static/fimbench_gui/#${STATIC_BASE}/fimbench_gui/#g" \
     && cd ${TETHYS_HOME}/apps/fimbench \
